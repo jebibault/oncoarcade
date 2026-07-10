@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>GTV — Grand Theft Volume · Onco Arcade</title>
+<meta name="description" content="Contourez les organes à risque en 30 secondes. Score = Dice réel. Un jeu Onco Arcade." />
+
+<!-- Charte graphique partagée : habillage identique à tous les jeux -->
+<link rel="stylesheet" href="../../assets/onco-arcade.css" />
+<link rel="icon" href="../../favicon.ico" />
+
+<style>
+  /* Styles PROPRES à ce jeu uniquement (préfixe .g-). Accent = magenta (.contour). */
+  .g-scope { --game-color: var(--magenta); }
+
+  .g-instruct {
+    display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+    margin: 0 0 10px;
+  }
+  .g-instruct .lbl { color: var(--muted); font-size: 13px; }
+  .g-instruct .tgt {
+    font-size: clamp(19px, 3.4vw, 26px); font-weight: 560; letter-spacing: -.03em;
+    color: var(--magenta);
+  }
+  .g-instruct .side { color: var(--muted); font-size: 13px; }
+
+  .g-canvaswrap { position: absolute; inset: 0; }
+  #ct, #ink, #over { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  #ct   { z-index: 1; }
+  #over { z-index: 2; pointer-events: none; }
+  #ink  { z-index: 3; touch-action: none; cursor: crosshair; }
+  .g-idle #ink { cursor: default; }
+
+  /* Bandeau de départ / repos dans la scène */
+  .g-hint { position: absolute; inset: 0; z-index: 4; display: grid; place-items: center; text-align: center; padding: 26px; }
+  .g-hint .card {
+    max-width: 360px; padding: 18px 20px; border-radius: var(--radius);
+    border: 1px solid var(--stroke); background: color-mix(in srgb, var(--card-strong) 86%, transparent);
+    backdrop-filter: var(--glass-blur); box-shadow: var(--shadow-soft);
+  }
+  .g-hint h3 { margin: 0 0 6px; font-size: 20px; letter-spacing: -.03em; font-weight: 520; }
+  .g-hint p { margin: 0 0 14px; color: var(--muted); font-size: 14px; }
+
+  /* Barre de temps */
+  .g-timer { height: 6px; border-radius: 999px; overflow: hidden; background: color-mix(in srgb, var(--muted) 18%, transparent); margin: 10px 0 0; }
+  .g-timer span { display: block; height: 100%; width: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--green), var(--cyan)); transition: width .25s linear, background .25s linear; }
+  .g-timer.warn span { background: linear-gradient(90deg, var(--amber), var(--red)); }
+
+  /* Verdict Dice affiché sur la scène */
+  .g-verdict { position: absolute; z-index: 5; left: 50%; top: 14px; transform: translateX(-50%); text-align: center; pointer-events: none; opacity: 0; transition: opacity .18s ease; }
+  .g-verdict.show { opacity: 1; }
+  .g-verdict .dice { font-size: clamp(40px, 9vw, 58px); font-weight: 560; letter-spacing: -.04em; line-height: 1; text-shadow: 0 2px 18px rgba(0,0,0,.5); }
+  .g-verdict .pts { font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .g-verdict .t-good { color: var(--green); }
+  .g-verdict .t-ok   { color: var(--amber); }
+  .g-verdict .t-bad  { color: var(--red); }
+
+  /* Légende overlay */
+  .g-legend { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 10px; font-size: 12px; color: var(--muted); }
+  .g-legend b { display: inline-flex; align-items: center; gap: 6px; font-weight: 420; color: var(--muted); }
+  .g-legend i { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
+  .g-sw-hit  { background: rgba(52,211,153,.75); }
+  .g-sw-miss { background: rgba(251,113,133,.80); }
+  .g-sw-over { background: rgba(96,165,250,.80); }
+
+  /* Bandeau Garantie Humaine (round IA) */
+  .g-ai {
+    display: none; align-items: center; gap: 10px; margin: 0 0 10px;
+    padding: 9px 12px; border: 1px solid var(--stroke); border-left: 3px solid var(--violet);
+    border-radius: var(--radius-sm); background: color-mix(in srgb, var(--violet) 8%, transparent); font-size: 13.5px;
+  }
+  .g-ai.show { display: flex; }
+  .g-ai .tag { display:inline-flex; align-items:center; gap:6px; color: var(--violet); font-weight: 520; }
+
+  .g-tiers { display: grid; gap: 6px; margin-top: 4px; }
+  .g-tier { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 12.5px; color: var(--muted); }
+  .g-tier b { color: var(--text); font-weight: 500; }
+
+  .g-grid { font-size: 20px; letter-spacing: 2px; line-height: 1.35; margin: 10px 0 2px; word-break: break-word; }
+
+  .g-seg { display: inline-flex; border: 1px solid var(--stroke); border-radius: 999px; overflow: hidden; }
+  .g-seg button { min-height: 34px; padding: 7px 14px; border: 0; background: transparent; color: var(--muted); cursor: pointer; font-weight: 450; font-size: 13px; }
+  .g-seg button[aria-pressed="true"] { color: #fff; background: linear-gradient(135deg, var(--magenta), color-mix(in srgb, var(--magenta) 62%, var(--violet))); }
+
+  @media (max-width: 980px){
+    .oa-stage { min-height: min(64vh, 420px); }
+  }
+</style>
+
+<script id="onco-arcade-query-sync">
+(function(){
+  try{
+    var p=new URLSearchParams(location.search);
+    var theme=(p.get('theme')||'').toLowerCase();
+    if(theme==='dark'||theme==='light'){document.documentElement.setAttribute('data-theme',theme);localStorage.setItem('oa-theme',theme);}
+    var lang=(p.get('lang')||'').toLowerCase();
+    if(lang==='fr'||lang==='en'){document.documentElement.lang=lang;localStorage.setItem('oa-lang',lang);localStorage.setItem('vrt_lang',lang);}
+  }catch(e){}
+})();
+</script>
+</head>
+<body class="g-scope">
+
+<!-- ============ TOPBAR COMMUNE ============ -->
+<header class="shell topbar">
+  <a href="../../index.html" class="brand" aria-label="Onco Arcade">
+    <span class="mark" aria-hidden="true"></span>
+    <span class="brand-text">
+      <span class="brand-title">Onco Arcade</span>
+      <span class="brand-subtitle fr">GTV · Grand Theft Volume</span>
+      <span class="brand-subtitle en">GTV · Grand Theft Volume</span>
+    </span>
+  </a>
+  <nav class="nav" aria-label="Navigation">
+    <a class="btn small" href="../../index.html#games"><span class="fr">Tous les jeux</span><span class="en">All games</span></a>
+    <a class="btn small" href="../../index.html#about"><span class="fr">À propos</span><span class="en">About</span></a>
+    <button class="btn small ghost" id="soundBtn" type="button" aria-pressed="true">♪ <span class="fr">Son</span><span class="en">Sound</span></button>
+    <button class="btn small ghost" data-oa-lang-toggle type="button">FR / EN</button>
+    <button class="toggle" data-oa-theme-toggle type="button" aria-label="Thème clair/sombre"><span></span></button>
+  </nav>
+</header>
+
+<main class="shell" style="padding-top:20px;">
+  <section style="padding-top:8px;">
+    <div class="eyebrow"><i></i><span class="fr">Contourage · score au Dice réel</span><span class="en">Contouring · scored on real Dice</span></div>
+
+    <div class="oa-game">
+      <!-- Scène -->
+      <div>
+        <div class="oa-hud" style="margin-bottom:12px;">
+          <span class="oa-score" id="score">0</span>
+          <span class="oa-chip"><span class="fr">Cas</span><span class="en">Case</span>&nbsp;<b id="caseNo">0</b>/<b id="caseTot">12</b></span>
+          <span class="oa-chip"><span class="fr">Temps</span><span class="en">Time</span>&nbsp;<b id="time">30</b>s</span>
+          <span class="oa-chip"><span class="fr">Combo</span><span class="en">Combo</span>&nbsp;×<b id="combo">1</b></span>
+          <span class="g-seg" style="margin-left:auto;" role="group" aria-label="Mode">
+            <button id="modeEndless" type="button" aria-pressed="true"><span class="fr">Entraînement</span><span class="en">Training</span></button>
+            <button id="modeDaily" type="button" aria-pressed="false"><span class="fr">Quotidien</span><span class="en">Daily</span></button>
+          </span>
+        </div>
+
+        <div class="g-ai" id="aiBanner">
+          <span class="tag">✦ <span class="fr">Garantie humaine</span><span class="en">Human guarantee</span></span>
+          <span class="fr">Une IA a proposé ce contour. Le validez-vous, ou le corrigez-vous ?</span>
+          <span class="en">An AI proposed this contour. Do you approve it, or correct it?</span>
+        </div>
+
+        <div class="g-instruct" id="instruct" style="visibility:hidden;">
+          <span class="lbl fr">Contourez</span><span class="lbl en">Contour</span>
+          <span class="tgt" id="tgtName">—</span>
+          <span class="side" id="tgtSide"></span>
+        </div>
+
+        <div class="oa-stage g-idle" id="stage" aria-label="Coupe axiale">
+          <div class="g-canvaswrap">
+            <canvas id="ct"></canvas>
+            <canvas id="over"></canvas>
+            <canvas id="ink"></canvas>
+          </div>
+          <div class="g-verdict" id="verdict"><div class="dice" id="vDice">—</div><div class="pts" id="vPts"></div></div>
+          <div class="g-hint" id="hint">
+            <div class="card">
+              <h3 class="fr">Grand Theft Volume</h3><h3 class="en">Grand Theft Volume</h3>
+              <p class="fr">Tracez le contour de l'organe demandé, au doigt ou à la souris. Votre score est le coefficient de Dice réel contre le contour de référence.</p>
+              <p class="en">Draw the requested structure, with finger or mouse. Your score is the real Dice coefficient against the reference contour.</p>
+              <button class="btn primary" id="startBtn"><span class="fr">Démarrer</span><span class="en">Start</span></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="g-timer" id="timerBar"><span id="timerFill"></span></div>
+
+        <div class="oa-hud" style="margin-top:12px;">
+          <button class="btn" id="clearBtn" disabled><span class="fr">Effacer</span><span class="en">Clear</span></button>
+          <button class="btn primary" id="validateBtn" disabled><span class="fr">Valider le contour</span><span class="en">Validate contour</span></button>
+          <button class="btn" id="aiAcceptBtn" style="display:none;"><span class="fr">Valider l'IA</span><span class="en">Approve AI</span></button>
+          <button class="btn" id="aiRejectBtn" style="display:none;"><span class="fr">Corriger</span><span class="en">Correct it</span></button>
+        </div>
+
+        <div class="g-legend" id="legend" style="display:none;">
+          <b><i class="g-sw-hit"></i><span class="fr">Bien contouré</span><span class="en">Correct</span></b>
+          <b><i class="g-sw-miss"></i><span class="fr">Manqué (sous-contourage)</span><span class="en">Missed (under)</span></b>
+          <b><i class="g-sw-over"></i><span class="fr">En trop (sur-contourage)</span><span class="en">Over-contoured</span></b>
+        </div>
+      </div>
+
+      <!-- Panneau latéral -->
+      <aside class="oa-side">
+        <div class="control-card">
+          <h4 class="fr">Comment jouer</h4><h4 class="en">How to play</h4>
+          <p class="fr">Un seul geste : appuyez et tracez la boucle fermée autour de la structure nommée. On valide au relâchement (ou avec le bouton). Dice ≥ 0,85 enchaîné = combo.</p>
+          <p class="en">One stroke: press and draw a closed loop around the named structure. It validates on release (or the button). Chained Dice ≥ 0.85 = combo.</p>
+          <div class="pill-row"><span class="pill pink"><span class="fr">Dice réel</span><span class="en">Real Dice</span></span><span class="pill green">Mobile + Desktop</span></div>
+        </div>
+
+        <div class="control-card">
+          <h4 class="fr">Barème (Dice)</h4><h4 class="en">Scoring (Dice)</h4>
+          <div class="g-tiers">
+            <div class="g-tier"><span>🟩 <b>≥ 0,85</b></span><span class="fr">excellent · combo</span><span class="en">excellent · combo</span></div>
+            <div class="g-tier"><span>🟨 <b>0,70–0,85</b></span><span class="fr">acceptable</span><span class="en">acceptable</span></div>
+            <div class="g-tier"><span>🟧 <b>0,50–0,70</b></span><span class="fr">à revoir</span><span class="en">needs work</span></div>
+            <div class="g-tier"><span>🟥 <b>&lt; 0,50</b></span><span class="fr">recontourage</span><span class="en">recontour</span></div>
+          </div>
+        </div>
+
+        <div class="control-card" id="teachCard" style="display:none;">
+          <h4 id="teachName" class="fr">Note</h4>
+          <p id="teachNote"></p>
+        </div>
+
+        <div class="control-card">
+          <h4 class="fr">Classement · GTV</h4><h4 class="en">Leaderboard · GTV</h4>
+          <div class="leaderboard" id="miniBoard" style="margin-top:6px;">
+            <div class="score-row"><span class="rank">—</span><span class="player"><strong class="fr">Chargement…</strong><strong class="en">Loading…</strong></span><span class="points"></span></div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </section>
+</main>
+
+<!-- ============ MODALE DE FIN DE PARTIE ============ -->
+<div class="oa-overlay" id="over-modal">
+  <div class="oa-modal" role="dialog" aria-modal="true">
+    <h2 class="fr">Série terminée</h2><h2 class="en">Run complete</h2>
+    <div class="oa-big" id="finalScore">0</div>
+    <p class="fr" style="margin:0 0 2px;">points · Dice moyen <b id="avgDice">—</b></p>
+    <p class="en" style="margin:0 0 2px;">points · mean Dice <b id="avgDiceEn">—</b></p>
+
+    <div class="g-grid" id="shareGrid"></div>
+
+    <div class="oa-note">
+      <strong class="fr">À retenir :</strong><strong class="en">Takeaway:</strong>
+      <span class="fr"> le Dice chute vite sur les petites structures (moelle, chiasma) : quelques pixels de marge y coûtent bien plus que sur un poumon. C'est le vrai piège du contourage automatique.</span>
+      <span class="en"> Dice collapses on small structures (cord, chiasm): a few pixels of margin cost far more there than on a lung. That's the real trap of auto-contouring.</span>
+    </div>
+
+    <div class="oa-actions">
+      <button class="btn primary" id="submitBtn"><span class="fr">Envoyer le score</span><span class="en">Submit score</span></button>
+      <button class="btn" id="shareBtn"><span class="fr">Partager</span><span class="en">Share</span></button>
+      <button class="btn" id="replayBtn"><span class="fr">Rejouer</span><span class="en">Replay</span></button>
+    </div>
+    <p id="rankLine" style="margin:12px 0 0; font-size:13px; color:var(--muted);"></p>
+  </div>
+</div>
+
+<!-- ============ SCRIPTS COMMUNS ============ -->
+<script src="../../assets/onco-arcade.js"></script>
+<script src="../../assets/leaderboard.js"></script>
+<script>
+/* ================================================================
+   GTV — GRAND THEFT VOLUME
+   Contourage scoré au coefficient de Dice réel.
+   ================================================================ */
+OncoLeaderboard.config({ base: "../../api", secret: "" });
+const GAME_ID = "gtv";
+const N_ENDLESS = 12, N_DAILY = 8;
+
+/* ---------- utilitaires ---------- */
+const $ = (id) => document.getElementById(id);
+const isEn = () => (document.documentElement.lang === "en");
+const clamp = (v,a,b) => v<a?a:v>b?b:v;
+function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+/* ---------- géométrie : lissage + rastérisation + Dice (pur, testable) ---------- */
+function smooth(ctrl, samples){           // Catmull-Rom fermé -> polygone dense
+  samples = samples || 14;
+  const n = ctrl.length, out = [];
+  for(let i=0;i<n;i++){
+    const p0=ctrl[(i-1+n)%n], p1=ctrl[i], p2=ctrl[(i+1)%n], p3=ctrl[(i+2)%n];
+    for(let s=0;s<samples;s++){
+      const t=s/samples, t2=t*t, t3=t2*t;
+      out.push([
+        0.5*((2*p1[0])+(-p0[0]+p2[0])*t+(2*p0[0]-5*p1[0]+4*p2[0]-p3[0])*t2+(-p0[0]+3*p1[0]-3*p2[0]+p3[0])*t3),
+        0.5*((2*p1[1])+(-p0[1]+p2[1])*t+(2*p0[1]-5*p1[1]+4*p2[1]-p3[1])*t2+(-p0[1]+3*p1[1]-3*p2[1]+p3[1])*t3)
+      ]);
+    }
+  }
+  return out;
+}
+function rasterize(poly, grid){           // remplissage even-odd -> masque Uint8
+  const m=new Uint8Array(grid*grid), n=poly.length;
+  if(n<3) return m;
+  for(let gy=0; gy<grid; gy++){
+    const y=(gy+0.5)/grid; const xs=[];
+    for(let i=0,j=n-1;i<n;j=i++){
+      const yi=poly[i][1], yj=poly[j][1];
+      if((yi>y)!==(yj>y)){ const t=(y-yi)/(yj-yi); xs.push(poly[i][0]+t*(poly[j][0]-poly[i][0])); }
+    }
+    xs.sort((a,b)=>a-b);
+    for(let k=0;k+1<xs.length;k+=2){
+      let xa=Math.ceil(xs[k]*grid-0.5), xb=Math.floor(xs[k+1]*grid-0.5);
+      if(xa<0)xa=0; if(xb>grid-1)xb=grid-1;
+      for(let gx=xa;gx<=xb;gx++) m[gy*grid+gx]=1;
+    }
+  }
+  return m;
+}
+function diceMasks(a,b){ let A=0,B=0,I=0; for(let i=0;i<a.length;i++){ if(a[i])A++; if(b[i])B++; if(a[i]&&b[i])I++; } return (A+B)? (2*I)/(A+B) : 0; }
+function pointsToNorm(pts, w, h){ return pts.map(p=>[p[0]/w, p[1]/h]); }
+if (typeof module!=="undefined" && module.exports){ module.exports={mulberry32,smooth,rasterize,diceMasks}; }
+
+/* ---------- helpers de formes ---------- */
+function ell(cx,cy,rx,ry,pts,jit,seed){   // anneau elliptique organique déterministe
+  const rnd=mulberry32(seed|0), a=[];
+  for(let i=0;i<pts;i++){ const t=i/pts*Math.PI*2, jr=1+(rnd()*2-1)*(jit||0);
+    a.push([cx+Math.cos(t)*rx*jr, cy+Math.sin(t)*ry*jr]); }
+  return a;
+}
+function crescent(cx,cy,rOut,rIn,a0,a1,thick){ // croissant fin (constricteurs)
+  const out=[], N=16;
+  for(let i=0;i<=N;i++){ const t=a0+(a1-a0)*i/N; out.push([cx+Math.cos(t)*rOut, cy+Math.sin(t)*rOut*1.02]); }
+  for(let i=N;i>=0;i--){ const t=a0+(a1-a0)*i/N; out.push([cx+Math.cos(t)*rIn, cy+Math.sin(t)*rIn*1.02]); }
+  return out;
+}
+function kidney(cx,cy,s,flip){            // haricot avec hile médial
+  const f=flip?-1:1;
+  const raw=[[0,-1],[.55,-.9],[.9,-.4],[.95,.35],[.6,.92],[0,1],[-.35,.85],[-.12,.35],[-.4,0],[-.12,-.35],[-.35,-.85]];
+  return raw.map(p=>[cx+f*p[0]*s, cy+p[1]*s*1.28]);
+}
+
+/* ---------- SCÈNES (anterior = haut, gauche-écran = droite-patient) ---------- */
+/* Chaque structure : id, poly (contrôle), fill, target?, easy?, teach{fr,en}. */
+const SCENES = {
+  pelvis: {
+    body: ell(.5,.53,.42,.34,26,.03,11),
+    bone: "#e8edf6",
+    structs: [
+      { id:"sacrum", poly: ell(.5,.80,.10,.07,14,.05,3), fill:"bone", decor:true },
+      { id:"pubis_l", poly: ell(.40,.30,.045,.035,10,.05,4), fill:"bone", decor:true },
+      { id:"pubis_r", poly: ell(.60,.30,.045,.035,10,.05,5), fill:"bone", decor:true },
+      { id:"vessie", poly: ell(.50,.42,.115,.105,16,.05,7), fill:"fluid", target:true, diff:1,
+        fr:{name:"la vessie", side:""}, en:{name:"the bladder", side:""},
+        teach:{fr:"Vessie : on contoure la paroi ET le contenu, en pleine réplétion. Repère central antérieur, au-dessus du rectum.",
+               en:"Bladder: contour wall AND contents, in filling. Central anterior landmark, above the rectum."} },
+      { id:"rectum", poly: ell(.50,.66,.062,.058,14,.06,9), fill:"soft", target:true, diff:3,
+        fr:{name:"le rectum", side:""}, en:{name:"the rectum", side:""},
+        teach:{fr:"Rectum : petite structure postérieure, tubulaire. On s'arrête à la jonction recto-sigmoïdienne / canal anal.",
+               en:"Rectum: small posterior tubular structure. Stop at recto-sigmoid junction / anal canal."} },
+      { id:"femur_r", poly: ell(.24,.55,.075,.075,14,.03,13), fill:"bone", target:true, diff:1,
+        fr:{name:"la tête fémorale", side:"droite"}, en:{name:"the femoral head", side:"right"},
+        teach:{fr:"Tête fémorale : OAR osseux, contraste franc. Contour facile — c'est l'échauffement.",
+               en:"Femoral head: bony OAR, sharp contrast. Easy contour — the warm-up."} },
+      { id:"femur_l", poly: ell(.76,.55,.075,.075,14,.03,14), fill:"bone", target:true, diff:1,
+        fr:{name:"la tête fémorale", side:"gauche"}, en:{name:"the femoral head", side:"left"},
+        teach:{fr:"Tête fémorale gauche. Attention à la latéralité : gauche patient = droite de l'écran.",
+               en:"Left femoral head. Mind laterality: patient-left is screen-right."} }
+    ]
+  },
+  abdomen: {
+    body: ell(.5,.50,.40,.37,26,.03,21),
+    structs: [
+      { id:"vertebra", poly: ell(.50,.74,.075,.06,14,.05,22), fill:"bone", decor:true },
+      { id:"liver", poly: ell(.30,.36,.20,.15,18,.05,23), fill:"soft2", decor:true },
+      { id:"aorta", poly: ell(.46,.66,.026,.026,10,.04,24), fill:"fluid", decor:true },
+      { id:"ivc", poly: ell(.55,.66,.03,.024,10,.04,25), fill:"fluid", decor:true },
+      { id:"rein_r", poly: kidney(.28,.58,.085,true), fill:"soft", target:true, diff:2,
+        fr:{name:"le rein", side:"droit"}, en:{name:"the kidney", side:"right"},
+        teach:{fr:"Rein droit : haricot rétropéritonéal, hile médial vers le rachis. La contrainte dose-volume porte sur le rein entier.",
+               en:"Right kidney: retroperitoneal bean, medial hilum toward the spine. The dose constraint is on the whole kidney."} },
+      { id:"rein_l", poly: kidney(.72,.58,.085,false), fill:"soft", target:true, diff:2,
+        fr:{name:"le rein", side:"gauche"}, en:{name:"the kidney", side:"left"},
+        teach:{fr:"Rein gauche. Les deux reins comptent : mean kidney dose bilatérale.",
+               en:"Left kidney. Both kidneys matter: bilateral mean kidney dose."} },
+      { id:"moelle_abdo", poly: ell(.50,.72,.024,.024,12,.02,26), fill:"cord", target:true, diff:5, small:true,
+        fr:{name:"la moelle épinière", side:""}, en:{name:"the spinal cord", side:""},
+        teach:{fr:"Moelle : structure minuscule dans le canal rachidien. Sur une si petite cible, le Dice s'effondre pour quelques pixels — d'où les marges PRV.",
+               en:"Cord: tiny structure inside the spinal canal. On such a small target Dice collapses over a few pixels — hence PRV margins."} }
+    ]
+  },
+  thorax: {
+    body: ell(.5,.50,.42,.33,26,.03,31),
+    structs: [
+      { id:"sternum", poly: ell(.50,.20,.05,.03,10,.05,32), fill:"bone", decor:true },
+      { id:"vert_t", poly: ell(.50,.78,.06,.05,12,.05,33), fill:"bone", decor:true },
+      { id:"poumon_r", poly: ell(.30,.50,.155,.20,18,.05,34), fill:"air", target:true, diff:2,
+        fr:{name:"le poumon", side:"droit"}, en:{name:"the lung", side:"right"},
+        teach:{fr:"Poumon : grand volume, contraste air/tissu maximal. Dice élevé facilement — mais attention à ne pas mordre sur le médiastin.",
+               en:"Lung: large volume, maximal air/tissue contrast. High Dice easily — but don't bite into the mediastinum."} },
+      { id:"poumon_l", poly: ell(.70,.51,.145,.19,18,.05,35), fill:"air", target:true, diff:2,
+        fr:{name:"le poumon", side:"gauche"}, en:{name:"the lung", side:"left"},
+        teach:{fr:"Poumon gauche, échancré par le cœur. La limite médiale suit le péricarde.",
+               en:"Left lung, notched by the heart. The medial border follows the pericardium."} },
+      { id:"coeur", poly: ell(.55,.60,.135,.115,16,.05,36), fill:"soft", target:true, diff:3,
+        fr:{name:"le cœur", side:""}, en:{name:"the heart", side:""},
+        teach:{fr:"Cœur : OAR central-gauche. On contoure le péricarde. Limite supérieure = bifurcation de l'artère pulmonaire (pas sur cette coupe unique).",
+               en:"Heart: central-left OAR. Contour the pericardium. Superior limit = pulmonary artery bifurcation (not on this single slice)."} },
+      { id:"moelle_thx", poly: ell(.50,.76,.023,.023,12,.02,37), fill:"cord", target:true, diff:5, small:true,
+        fr:{name:"la moelle épinière", side:""}, en:{name:"the spinal cord", side:""},
+        teach:{fr:"Moelle thoracique. Contrainte à quasi-tolérance zéro : la précision prime sur la vitesse.",
+               en:"Thoracic cord. Near-zero-tolerance constraint: precision beats speed."} }
+    ]
+  },
+  hn: {
+    body: ell(.5,.50,.31,.31,24,.02,41),
+    structs: [
+      { id:"mandible_l", poly: ell(.30,.30,.05,.035,12,.06,42), fill:"bone", decor:true },
+      { id:"mandible_r", poly: ell(.70,.30,.05,.035,12,.06,43), fill:"bone", decor:true },
+      { id:"vert_c", poly: ell(.50,.74,.06,.05,12,.05,44), fill:"bone", decor:true },
+      { id:"airway", poly: ell(.50,.50,.045,.045,12,.04,45), fill:"air", decor:true },
+      { id:"parotid_r", poly: ell(.24,.52,.075,.06,14,.10,46), fill:"soft", target:true, diff:3,
+        fr:{name:"la parotide", side:"droite"}, en:{name:"the parotid", side:"right"},
+        teach:{fr:"Parotide : OAR clé pour la xérostomie. Bords irréguliers, entre ramus mandibulaire et muscle sterno-cléido-mastoïdien.",
+               en:"Parotid: key OAR for xerostomia. Irregular borders, between mandibular ramus and sternocleidomastoid."} },
+      { id:"parotid_l", poly: ell(.76,.52,.075,.06,14,.10,47), fill:"soft", target:true, diff:3,
+        fr:{name:"la parotide", side:"gauche"}, en:{name:"the parotid", side:"left"},
+        teach:{fr:"Parotide gauche. Épargner au moins une parotide change la qualité de vie du patient.",
+               en:"Left parotid. Sparing at least one parotid changes patient quality of life."} },
+      { id:"constrict", poly: crescent(.50,.53,.115,.075,-.35,Math.PI+0.35,1), fill:"soft", target:true, diff:4, thin:true,
+        fr:{name:"les constricteurs pharyngés", side:""}, en:{name:"the pharyngeal constrictors", side:""},
+        teach:{fr:"Constricteurs : muscle fin en fer à cheval autour du pharynx. On EXCLUT la lumière aérienne. Structure fine = Dice sévère.",
+               en:"Constrictors: thin horseshoe muscle around the pharynx. EXCLUDE the air lumen. Thin structure = harsh Dice."} },
+      { id:"gtv_orl", poly: ell(.38,.47,.075,.065,16,.12,48), fill:"tumor", target:true, diff:5, boss:true, artifact:true,
+        fr:{name:"le GTV oropharyngé", side:""}, en:{name:"the oropharyngeal GTV", side:""},
+        teach:{fr:"Boss : GTV amygdalien, avec artefacts métalliques dentaires qui brouillent les bords. C'est là que le contourage manuel garde l'avantage sur l'auto-segmentation.",
+               en:"Boss: tonsillar GTV, with dental metal artefacts blurring the borders. Exactly where manual contouring still beats auto-segmentation."} }
+    ]
+  }
+};
+
+/* ---------- construction des cas ---------- */
+function targetsOf(region){ return SCENES[region].structs.filter(s=>s.target); }
+function makeCase(region, id){ return { region, id, struct: SCENES[region].structs.find(s=>s.id===id) }; }
+
+// séquence d'entraînement : difficulté croissante, 2 rounds "Garantie humaine" insérés
+const ENDLESS_SEQ = [
+  {t:["pelvis","vessie"]},
+  {t:["pelvis","femur_r"]},
+  {t:["thorax","poumon_r"]},
+  {ai:["abdomen","rein_l"]},                 // GH — contour correct
+  {t:["abdomen","rein_r"]},
+  {t:["thorax","coeur"]},
+  {t:["hn","parotid_l"]},
+  {ai:["hn","parotid_r"], flaw:"laterality"},// GH — mauvaise latéralité
+  {t:["pelvis","rectum"]},
+  {t:["abdomen","moelle_abdo"]},
+  {t:["hn","constrict"]},
+  {t:["hn","gtv_orl"]}
+];
+
+function buildEndless(){ return ENDLESS_SEQ.map(makeStep); }
+function buildDaily(seed){
+  const rnd=mulberry32(seed);
+  const pool=[["pelvis","vessie"],["pelvis","rectum"],["pelvis","femur_r"],["pelvis","femur_l"],
+    ["abdomen","rein_r"],["abdomen","rein_l"],["abdomen","moelle_abdo"],
+    ["thorax","poumon_r"],["thorax","poumon_l"],["thorax","coeur"],
+    ["hn","parotid_r"],["hn","parotid_l"],["hn","constrict"],["hn","gtv_orl"]];
+  // mélange déterministe
+  for(let i=pool.length-1;i>0;i--){ const j=Math.floor(rnd()*(i+1)); [pool[i],pool[j]]=[pool[j],pool[i]]; }
+  const picks=pool.slice(0,N_DAILY-1).map(p=>({t:p}));
+  // un round Garantie humaine à position aléatoire
+  const ghPos=1+Math.floor(rnd()*(N_DAILY-1));
+  const ghPair=pool[N_DAILY-1]; const ghFlaw=rnd()<0.5?null:"shrink";
+  picks.splice(ghPos,0, ghFlaw?{ai:ghPair,flaw:ghFlaw}:{ai:ghPair});
+  return picks.slice(0,N_DAILY).map(makeStep);
+}
+function makeStep(step){
+  const pair = step.t || step.ai;
+  const c = makeCase(pair[0], pair[1]);
+  c.mode = step.ai ? "ai" : "draw";
+  c.flaw = step.flaw || null;   // null = contour IA correct
+  return c;
+}
+
+/* ---------- rendu de la coupe ---------- */
+const stage=$("stage"), ctCanvas=$("ct"), overCanvas=$("over"), inkCanvas=$("ink");
+const ctx=ctCanvas.getContext("2d"), octx=overCanvas.getContext("2d"), ictx=inkCanvas.getContext("2d");
+let W=0, H=0, DPR=1;
+
+function fitCanvas(){
+  DPR = Math.min(window.devicePixelRatio||1, 2);
+  const r = stage.getBoundingClientRect();
+  W = Math.max(40, Math.round(r.width)); H = Math.max(40, Math.round(r.height));
+  [ctCanvas,overCanvas,inkCanvas].forEach(cv=>{ cv.width=W*DPR; cv.height=H*DPR; });
+  [ctx,octx,ictx].forEach(c=>{ c.setTransform(DPR,0,0,DPR,0,0); });
+  if(state.cur) drawSlice(state.cur);
+}
+const FILLS = {
+  air:  {a:"#05070c", b:"#0a0f18"},
+  fluid:{a:"#3b4a63", b:"#28374d"},
+  soft: {a:"#586377", b:"#454f61"},
+  soft2:{a:"#4b5566", b:"#3c4553"},
+  cord: {a:"#6f7a8e", b:"#59647a"},
+  tumor:{a:"#7a6270", b:"#5f4c58"},
+  bone: {a:"#eef2f9", b:"#c7cfdb"}
+};
+function P(ctxx, dense){ ctxx.beginPath(); dense.forEach((p,i)=> i? ctxx.lineTo(p[0]*W,p[1]*H): ctxx.moveTo(p[0]*W,p[1]*H)); ctxx.closePath(); }
+function drawStruct(s){
+  const dense=smooth(s.poly, 14);
+  const fk = FILLS[s.fill] || FILLS.soft;
+  // centre approximatif
+  let cx=0,cy=0; dense.forEach(p=>{cx+=p[0];cy+=p[1];}); cx/=dense.length; cy/=dense.length;
+  const g=ctx.createRadialGradient(cx*W,cy*H,2, cx*W,cy*H, Math.max(W,H)*0.16);
+  g.addColorStop(0, fk.a); g.addColorStop(1, fk.b);
+  ctx.save(); P(ctx,dense); ctx.fillStyle=g; ctx.fill();
+  ctx.lineWidth=1; ctx.strokeStyle="rgba(255,255,255,.06)"; ctx.stroke(); ctx.restore();
+  return dense;
+}
+function drawSlice(c){
+  const sc=SCENES[c.region];
+  // fond radiologique
+  const bg=ctx.createLinearGradient(0,0,0,H);
+  bg.addColorStop(0,"#070a12"); bg.addColorStop(1,"#04060b");
+  ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+  // corps
+  const body=smooth(sc.body,16);
+  ctx.save(); P(ctx,body);
+  const bgrad=ctx.createRadialGradient(W*.5,H*.5,10, W*.5,H*.5, Math.max(W,H)*.6);
+  bgrad.addColorStop(0,"#2b3446"); bgrad.addColorStop(1,"#161d2b");
+  ctx.fillStyle=bgrad; ctx.fill();
+  ctx.clip();
+  // grain
+  const grain=ctx.createLinearGradient(0,0,W,H);
+  grain.addColorStop(0,"rgba(255,255,255,.02)"); grain.addColorStop(.5,"rgba(0,0,0,.05)"); grain.addColorStop(1,"rgba(255,255,255,.02)");
+  ctx.fillStyle=grain; ctx.fillRect(0,0,W,H);
+  // structures (décor + cible, sans surlignage)
+  sc.structs.forEach(s=>{ if(s.id!==c.id) drawStruct(s); });
+  drawStruct(c.struct);
+  // artefacts dentaires pour le boss
+  if(c.struct.artifact){
+    ctx.save(); ctx.globalCompositeOperation="lighter";
+    for(let k=0;k<7;k++){ const ang=(k/7)*Math.PI*2 + .3;
+      const grd=ctx.createLinearGradient(W*.5,H*.42,W*.5+Math.cos(ang)*W,H*.42+Math.sin(ang)*H);
+      grd.addColorStop(0,"rgba(255,255,255,.0)"); grd.addColorStop(.5,"rgba(255,255,255,.16)"); grd.addColorStop(1,"rgba(255,255,255,0)");
+      ctx.strokeStyle=grd; ctx.lineWidth=2+Math.random()*2; ctx.beginPath();
+      ctx.moveTo(W*.5,H*.42); ctx.lineTo(W*.5+Math.cos(ang)*W, H*.42+Math.sin(ang)*H); ctx.stroke(); }
+    ctx.restore();
+  }
+  ctx.restore();
+  // vignette
+  const vg=ctx.createRadialGradient(W*.5,H*.5,H*.3, W*.5,H*.5,H*.72);
+  vg.addColorStop(0,"rgba(0,0,0,0)"); vg.addColorStop(1,"rgba(0,0,0,.45)");
+  ctx.fillStyle=vg; ctx.fillRect(0,0,W,H);
+}
+
+/* overlay diff (heatmap masqué) */
+function drawOverlay(refMask, plMask, grid){
+  octx.clearRect(0,0,W,H);
+  const off=document.createElement("canvas"); off.width=grid; off.height=grid;
+  const oc=off.getContext("2d"); const img=oc.createImageData(grid,grid); const d=img.data;
+  for(let i=0;i<grid*grid;i++){
+    const r=refMask[i], p=plMask[i]; let R=0,G=0,B=0,A=0;
+    if(r&&p){ R=52;G=211;B=153;A=150; }       // vert : intersection
+    else if(r&&!p){ R=251;G=113;B=133;A=165; }// rouge : manqué
+    else if(p&&!r){ R=96;G=165;B=250;A=160; } // bleu : en trop
+    const k=i*4; d[k]=R; d[k+1]=G; d[k+2]=B; d[k+3]=A;
+  }
+  oc.putImageData(img,0,0);
+  octx.imageSmoothingEnabled=true; octx.imageSmoothingQuality="high";
+  octx.drawImage(off,0,0,grid,grid,0,0,W,H);
+  // contour de référence net
+  const dense=smooth(state.cur.struct.poly,14);
+  octx.save(); P(octx,dense); octx.lineWidth=1.5; octx.setLineDash([5,4]);
+  octx.strokeStyle="rgba(255,255,255,.55)"; octx.stroke(); octx.restore();
+}
+function drawAiContour(poly){
+  octx.clearRect(0,0,W,H);
+  const dense=smooth(poly,14);
+  octx.save(); P(octx,dense);
+  octx.fillStyle="rgba(167,139,250,.20)"; octx.fill();
+  octx.lineWidth=2; octx.strokeStyle="rgba(167,139,250,.95)"; octx.stroke(); octx.restore();
+}
+function clearOverlay(){ octx.clearRect(0,0,W,H); }
+
+/* ---------- saisie freehand ---------- */
+let drawing=false, path=[];
+function inkClear(){ ictx.clearRect(0,0,W,H); }
+function inkDraw(){
+  ictx.clearRect(0,0,W,H);
+  if(path.length<2) return;
+  ictx.beginPath(); ictx.moveTo(path[0][0],path[0][1]);
+  for(let i=1;i<path.length;i++) ictx.lineTo(path[i][0],path[i][1]);
+  if(!drawing) ictx.closePath();
+  ictx.lineWidth=2.4; ictx.lineJoin="round"; ictx.lineCap="round";
+  ictx.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue("--magenta")||"#c02678";
+  ictx.stroke();
+  if(!drawing){ ictx.fillStyle="rgba(192,38,120,.12)"; ictx.fill(); }
+}
+function localPt(e){ const r=inkCanvas.getBoundingClientRect(); return [clamp(e.clientX-r.left,0,W), clamp(e.clientY-r.top,0,H)]; }
+function onDown(e){ if(state.phase!=="draw") return; e.preventDefault(); drawing=true; path=[localPt(e)]; inkCanvas.setPointerCapture&&inkCanvas.setPointerCapture(e.pointerId); }
+function onMove(e){ if(!drawing) return; e.preventDefault(); const p=localPt(e); const last=path[path.length-1];
+  if(Math.hypot(p[0]-last[0],p[1]-last[1])>=3){ path.push(p); inkDraw(); } }
+function onUp(e){ if(!drawing) return; drawing=false; inkDraw();
+  $("clearBtn").disabled = path.length<3; $("validateBtn").disabled = path.length<8;
+  if(path.length>=10 && state.autoValidate) validate(); }
+inkCanvas.addEventListener("pointerdown",onDown);
+inkCanvas.addEventListener("pointermove",onMove);
+inkCanvas.addEventListener("pointerup",onUp);
+inkCanvas.addEventListener("pointercancel",onUp);
+
+/* ---------- boucle de jeu ---------- */
+const GRID=180;
+const state = { seq:[], idx:0, phase:"idle", cur:null, mode:"endless",
+  score:0, combo:1, timeLeft:0, tickId:null, results:[], autoValidate:true };
+
+function setPhase(p){
+  state.phase=p;
+  stage.classList.toggle("g-idle", p!=="draw");
+}
+function T(fr,en){ return isEn()?en:fr; }
+
+function startRun(){
+  if($("over-modal").classList.contains("open")) $("over-modal").classList.remove("open");
+  state.seq = state.mode==="daily" ? buildDaily(todaySeed()) : buildEndless();
+  state.idx=0; state.score=0; state.combo=1; state.results=[];
+  $("score").textContent="0"; $("combo").textContent="1";
+  $("caseTot").textContent = state.seq.length;
+  $("hint").style.display="none";
+  $("legend").style.display="none";
+  $("teachCard").style.display="none";
+  nextCase();
+}
+function nextCase(){
+  clearOverlay(); inkClear(); path=[]; $("verdict").classList.remove("show");
+  $("teachCard").style.display="none"; $("legend").style.display="none";
+  if(state.idx>=state.seq.length){ return endRun(); }
+  const c=state.seq[state.idx]; state.cur=c;
+  $("caseNo").textContent=(state.idx+1);
+  fitCanvas(); drawSlice(c);
+  // instruction
+  const info = isEn()? c.struct.en : c.struct.fr;
+  $("tgtName").textContent = info.name;
+  $("tgtSide").textContent = info.side ? (isEn()? "· "+info.side : "· "+info.side) : "";
+  $("instruct").style.visibility="visible";
+
+  if(c.mode==="ai"){ startAiRound(c); } else { startDrawRound(c); }
+}
+function baseTime(diff){ return 34 - diff*2; }   // 32s (facile) -> 24s (dur)
+
+function startDrawRound(c){
+  setPhase("draw");
+  $("aiBanner").classList.remove("show");
+  $("aiAcceptBtn").style.display="none"; $("aiRejectBtn").style.display="none";
+  $("validateBtn").style.display=""; $("clearBtn").style.display="";
+  $("validateBtn").disabled=true; $("clearBtn").disabled=true;
+  runTimer(baseTime(c.struct.diff), ()=>validate());
+}
+function startAiRound(c){
+  setPhase("ai");
+  $("aiBanner").classList.add("show");
+  $("validateBtn").style.display="none"; $("clearBtn").style.display="none";
+  $("aiAcceptBtn").style.display=""; $("aiRejectBtn").style.display="";
+  // contour IA : correct (léger bruit) ou biaisé (flaw)
+  const ref = c.struct.poly;
+  let ai;
+  if(c.flaw==="laterality"){
+    // reflète horizontalement -> mauvais côté
+    ai = ref.map(p=>[1-p[0], p[1]]);
+  } else if(c.flaw==="shrink"){
+    const cx=avg(ref,0), cy=avg(ref,1);
+    ai = ref.map(p=>[cx+(p[0]-cx)*0.68, cy+(p[1]-cy)*0.68]);
+  } else {
+    const rnd=mulberry32(700+state.idx);
+    ai = ref.map(p=>[p[0]+(rnd()*2-1)*0.012, p[1]+(rnd()*2-1)*0.012]);
+  }
+  c._ai=ai;
+  drawAiContour(ai);
+  runTimer(baseTime(c.struct.diff), ()=>resolveAi(true)); // temps écoulé = accepte par défaut
+}
+function avg(poly,k){ let s=0; poly.forEach(p=>s+=p[k]); return s/poly.length; }
+
+function runTimer(sec, onEnd){
+  clearInterval(state.tickId);
+  state.timeLeft=sec; $("time").textContent=sec;
+  setTimer(1);
+  state.tickId=setInterval(()=>{
+    state.timeLeft--; $("time").textContent=Math.max(0,state.timeLeft);
+    setTimer(state.timeLeft/sec);
+    if(state.timeLeft<=0){ clearInterval(state.tickId); onEnd(); }
+  },1000);
+}
+function setTimer(frac){ frac=clamp(frac,0,1); $("timerFill").style.width=(frac*100)+"%"; $("timerBar").classList.toggle("warn", frac<0.34); }
+
+/* validation d'un contour dessiné */
+function validate(){
+  if(state.phase!=="draw") return;
+  clearInterval(state.tickId); setPhase("reveal");
+  const c=state.cur;
+  const refDense=smooth(c.struct.poly,14);
+  const refMask=rasterize(refDense, GRID);
+  let dice=0, plMask=new Uint8Array(GRID*GRID);
+  if(path.length>=3){
+    const norm=pointsToNorm(path, W, H);
+    plMask=rasterize(norm, GRID);
+    dice=diceMasks(refMask, plMask);
+  }
+  drawOverlay(refMask, plMask, GRID);
+  inkClear();
+  commitResult(c, dice, false);
+}
+/* résolution d'un round Garantie humaine */
+function resolveAi(accepted){
+  if(state.phase!=="ai") return;
+  clearInterval(state.tickId); setPhase("reveal");
+  const c=state.cur;
+  const flawed = !!c.flaw;
+  const refDense=smooth(c.struct.poly,14);
+  const refMask=rasterize(refDense,GRID);
+  const aiMask=rasterize(smooth(c._ai,14),GRID);
+  drawOverlay(refMask, aiMask, GRID);
+  // jugement correct : accepter un bon / refuser un mauvais
+  const correct = (accepted && !flawed) || (!accepted && flawed);
+  const dice = diceMasks(refMask, aiMask);
+  commitResult(c, dice, true, {accepted, flawed, correct});
+}
+
+function commitResult(c, dice, isAi, ai){
+  // barème
+  let pts;
+  if(isAi){
+    pts = ai.correct ? 700 : 0;
+    if(ai.correct) state.combo=Math.min(state.combo+1,3); else state.combo=1;
+  } else {
+    const graded = dice<0.5 ? 0 : Math.round(Math.pow(dice,1.6)*1000);
+    const timeBonus = Math.round(Math.max(0,state.timeLeft)* (dice>=0.7?8:2));
+    pts = Math.round((graded+timeBonus)*state.combo);
+    if(dice>=0.85) state.combo=Math.min(state.combo+1,3); else state.combo=1;
+  }
+  state.score += pts; state.results.push({dice, isAi, correct: isAi?ai.correct:null});
+  $("score").textContent = state.score.toLocaleString(isEn()?"en-US":"fr-FR");
+  $("combo").textContent = state.combo;
+
+  // verdict visuel
+  const tier = tierOf(isAi? (ai.correct?0.9:0.2) : dice);
+  const v=$("verdict"); const vd=$("vDice"), vp=$("vPts");
+  vd.className="dice "+tier.cls;
+  vd.textContent = isAi ? (ai.correct? T("Bon appel","Good call") : T("Raté","Missed"))
+                        : (dice*100).toFixed(0)+"%";
+  vp.textContent = (pts>0?"+":"")+pts.toLocaleString(isEn()?"en-US":"fr-FR")+" "+T("pts","pts");
+  v.classList.add("show");
+  $("legend").style.display = isAi? "none":"flex";
+
+  // note pédagogique
+  const info=isEn()?c.struct.en:c.struct.fr;
+  $("teachName").textContent = info.name.charAt(0).toUpperCase()+info.name.slice(1);
+  $("teachNote").textContent = (isEn()?c.struct.teach.en:c.struct.teach.fr) +
+     (isAi && ai.flawed ? " "+T("Le contour IA était biaisé ("+flawLabel(c.flaw,false)+").","The AI contour was biased ("+flawLabel(c.flaw,true)+").") : "");
+  $("teachCard").style.display="";
+
+  playTone(isAi? (ai.correct?"good":"bad") : (dice>=0.85?"good":dice>=0.7?"ok":"bad"));
+
+  state.idx++;
+  setTimeout(nextCase, 1700);
+}
+function flawLabel(f,en){ if(f==="laterality") return en?"wrong laterality":"mauvaise latéralité"; if(f==="shrink") return en?"missed extension":"extension manquée"; return en?"bias":"biais"; }
+function tierOf(d){ if(d>=0.85) return {cls:"t-good",e:"🟩"}; if(d>=0.70) return {cls:"t-ok",e:"🟨"}; if(d>=0.50) return {cls:"t-bad",e:"🟧"}; return {cls:"t-bad",e:"🟥"}; }
+
+/* ---------- fin de série ---------- */
+function endRun(){
+  setPhase("idle");
+  $("instruct").style.visibility="hidden";
+  $("aiBanner").classList.remove("show");
+  const dices=state.results.map(r=>r.dice);
+  const mean = dices.length? dices.reduce((a,b)=>a+b,0)/dices.length : 0;
+  $("finalScore").textContent = state.score.toLocaleString(isEn()?"en-US":"fr-FR");
+  $("avgDice").textContent = mean.toFixed(2).replace(".",",");
+  $("avgDiceEn").textContent = mean.toFixed(2);
+  $("shareGrid").textContent = state.results.map(r=> r.isAi ? (r.correct?"🟪":"⬛") : tierOf(r.dice).e).join("");
+  $("pseudoName") && ($("pseudoName").value = OncoLeaderboard.lastName());
+  $("rankLine").textContent="";
+  $("over-modal").classList.add("open");
+  $("hint").style.display="grid";
+}
+
+/* ---------- son ---------- */
+let AC=null, soundOn=true;
+function ac(){ if(!AC){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } return AC; }
+function playTone(kind){
+  if(!soundOn) return; const a=ac(); if(!a) return;
+  const o=a.createOscillator(), g=a.createGain(); o.connect(g); g.connect(a.destination);
+  const f = kind==="good"?[660,880]: kind==="ok"?[520,600]:[300,200];
+  o.type="sine"; o.frequency.setValueAtTime(f[0],a.currentTime);
+  o.frequency.exponentialRampToValueAtTime(f[1],a.currentTime+0.12);
+  g.gain.setValueAtTime(0.0001,a.currentTime); g.gain.exponentialRampToValueAtTime(0.14,a.currentTime+0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001,a.currentTime+0.22);
+  o.start(); o.stop(a.currentTime+0.24);
+}
+
+/* ---------- daily seed / partage ---------- */
+function todaySeed(){ const d=new Date(); return d.getFullYear()*10000 + (d.getMonth()+1)*100 + d.getDate(); }
+function shareText(){
+  const grid=state.results.map(r=> r.isAi ? (r.correct?"🟪":"⬛") : tierOf(r.dice).e).join("");
+  const mode = state.mode==="daily" ? "Quotidien "+todaySeed() : "Entraînement";
+  return (isEn()?"GTV — Grand Theft Volume\n":"GTV — Grand Theft Volume\n")+
+    grid+"\n"+ state.score.toLocaleString(isEn()?"en-US":"fr-FR")+" pts · "+mode+"\nprbibault.fr/arcade/games/gtv/";
+}
+
+/* ---------- câblage ---------- */
+$("startBtn").addEventListener("click", ()=>{ ac(); startRun(); });
+$("replayBtn").addEventListener("click", ()=>{ $("over-modal").classList.remove("open"); startRun(); });
+$("validateBtn").addEventListener("click", validate);
+$("clearBtn").addEventListener("click", ()=>{ path=[]; inkClear(); $("clearBtn").disabled=true; $("validateBtn").disabled=true; });
+$("aiAcceptBtn").addEventListener("click", ()=>resolveAi(true));
+$("aiRejectBtn").addEventListener("click", ()=>resolveAi(false));
+
+$("modeEndless").addEventListener("click", ()=>setMode("endless"));
+$("modeDaily").addEventListener("click", ()=>setMode("daily"));
+function setMode(m){
+  state.mode=m;
+  $("modeEndless").setAttribute("aria-pressed", m==="endless");
+  $("modeDaily").setAttribute("aria-pressed", m==="daily");
+  $("caseTot").textContent = m==="daily"? N_DAILY : N_ENDLESS;
+}
+
+$("soundBtn").addEventListener("click", ()=>{ soundOn=!soundOn; $("soundBtn").setAttribute("aria-pressed",soundOn); $("soundBtn").style.opacity=soundOn?1:.55; });
+
+$("shareBtn").addEventListener("click", async ()=>{
+  const txt=shareText();
+  try{
+    if(navigator.share){ await navigator.share({text:txt}); }
+    else { await navigator.clipboard.writeText(txt); OncoArcade.toast(T("Résultat copié","Result copied"),"ok"); }
+  }catch(e){ try{ await navigator.clipboard.writeText(txt); OncoArcade.toast(T("Résultat copié","Result copied"),"ok"); }catch(_){} }
+});
+
+$("submitBtn").addEventListener("click", async ()=>{
+  const btn=$("submitBtn"); btn.disabled=true;
+  const meta = (state.mode==="daily"?"daily|"+todaySeed():"training")+"|d"+
+    (state.results.length? (state.results.reduce((a,r)=>a+r.dice,0)/state.results.length).toFixed(2):"0");
+  try{
+    // le module namegate intercepte submit.php et injecte pseudo + équipe
+    const r = await OncoLeaderboard.submit({ game: GAME_ID, name: OncoLeaderboard.lastName()||"", score: state.score, meta });
+    $("rankLine").textContent = isEn()
+      ? ("Rank "+r.rank+" / "+r.total+" · best: "+r.best)
+      : ("Rang "+r.rank+" / "+r.total+" · meilleur : "+r.best);
+    OncoArcade.toast(T("Score enregistré","Score saved"),"ok");
+    loadBoard();
+  }catch(e){ OncoArcade.toast(T("Erreur réseau","Network error"),"err"); }
+  finally{ btn.disabled=false; }
+});
+
+async function loadBoard(){
+  const box=$("miniBoard");
+  try{
+    const data=await OncoLeaderboard.top({ game:GAME_ID, period:"week", limit:5 });
+    if(!data.rows||!data.rows.length){
+      box.innerHTML='<div class="score-row"><span class="rank">—</span><span class="player"><strong class="fr">Aucun score cette semaine</strong><strong class="en">No score this week</strong></span><span class="points"></span></div>';
+      return;
+    }
+    box.innerHTML=data.rows.map(r=>
+      '<div class="score-row"><span class="rank">'+String(r.rank).padStart(2,"0")+
+      '</span><span class="player"><strong>'+escapeHtml(r.name)+'</strong>'+
+      (r.team?'<span>'+escapeHtml(r.team)+'</span>':'')+
+      '</span><span class="points">'+Number(r.score).toLocaleString(isEn()?"en-US":"fr-FR")+'</span></div>'
+    ).join("");
+  }catch(e){
+    box.innerHTML='<div class="score-row"><span class="rank">—</span><span class="player"><strong class="fr">Classement indisponible</strong><strong class="en">Leaderboard unavailable</strong></span><span class="points"></span></div>';
+  }
+}
+
+/* langue : redessiner l'instruction courante */
+document.addEventListener("oa:langchange", ()=>{
+  if(state.cur){ const info=isEn()?state.cur.struct.en:state.cur.struct.fr;
+    $("tgtName").textContent=info.name; $("tgtSide").textContent=info.side?"· "+info.side:""; }
+  loadBoard();
+});
+window.addEventListener("resize", fitCanvas);
+
+/* init */
+setMode("endless");
+fitCanvas();
+loadBoard();
+</script>
+
+<!-- ============ MODULE NAMEGATE (identique à tous les jeux) ============ -->
+<div id="oaNameAsk" style="display:none;position:fixed;inset:0;z-index:2147483000;background:rgba(3,8,18,.74);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif">
+  <div style="width:min(360px,94vw);background:#0f1626;color:#f8fafc;border:1px solid rgba(255,255,255,.14);border-radius:18px;padding:22px;box-shadow:0 30px 80px rgba(0,0,0,.55)">
+    <div id="oaNameAskTitle" style="font-size:18px;font-weight:560;letter-spacing:-.01em;margin-bottom:4px">Ton pseudo</div>
+    <div id="oaNameAskSub" style="font-size:13px;color:#a7b0c2;line-height:1.4;margin-bottom:14px">Pour enregistrer ton score au classement.</div>
+    <input id="oaNameAskInput" maxlength="18" placeholder="Dr …" autocomplete="off" spellcheck="false" style="width:100%;box-sizing:border-box;font:inherit;font-size:15px;font-weight:520;color:#f8fafc;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:12px 14px;outline:none">
+    <div id="oaTeamLabel" style="font-size:12px;color:#a7b0c2;margin:12px 0 5px">Équipe (optionnel)</div>
+    <div id="oaTeamWrap" style="position:relative">
+    <input id="oaNameAskTeam" maxlength="24" placeholder="Ton équipe…" autocomplete="off" spellcheck="false" style="width:100%;box-sizing:border-box;font:inherit;font-size:15px;font-weight:520;color:#f8fafc;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:12px 14px;outline:none">
+    <div id="oaTeamMenu" style="position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:6;background:#0f1626;border:1px solid rgba(255,255,255,.16);border-radius:12px;box-shadow:0 22px 55px rgba(0,0,0,.55);max-height:172px;overflow:auto;display:none"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
+      <button id="oaNameAskSkip" type="button" style="font:inherit;font-weight:520;color:#a7b0c2;background:none;border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:9px 14px;cursor:pointer">Passer</button>
+      <button id="oaNameAskOk" type="button" style="font:inherit;font-weight:560;color:#fff;background:linear-gradient(135deg,#2557d6,#0891b2);border:none;border-radius:999px;padding:9px 16px;cursor:pointer">Enregistrer</button>
+    </div>
+  </div>
+</div>
+<script id="oa-namegate">
+(function(){
+  var DEFAULTS = ['','—','-','dr','dr …','dr...','anonyme','anonymous','ninja','joueur','player','name','nom','pseudo'];
+  function isDefault(n){ return DEFAULTS.indexOf((n||'').trim().toLowerCase()) >= 0; }
+  function isEn(){ var l=(document.documentElement.getAttribute('lang')||document.documentElement.lang||navigator.language||'fr'); return String(l).slice(0,2).toLowerCase()==='en'; }
+  function lget(k){ try{ return localStorage.getItem(k)||''; }catch(e){ return ''; } }
+  function lset(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+
+  var teamsLoaded=false;
+  function loadTeams(){
+    if(teamsLoaded) return; teamsLoaded=true;
+    try{
+      fetch('../../api/teams.php',{cache:'no-store'}).then(function(r){return r.ok?r.json():null;}).then(function(d){
+        if(d&&d.ok&&Array.isArray(d.teams)){ window.__oaTeams=d.teams.map(function(t){return String(t);}); }
+      }).catch(function(){});
+    }catch(e){}
+  }
+  function oaRenderTeamMenu(){
+    var tinp=document.getElementById('oaNameAskTeam'), menu=document.getElementById('oaTeamMenu');
+    if(!tinp||!menu) return;
+    var q=(tinp.value||'').toLowerCase();
+    var list=(window.__oaTeams||[]).filter(function(t){return t && t.toLowerCase().indexOf(q)>=0;}).slice(0,8);
+    if(!list.length){ menu.style.display='none'; menu.innerHTML=''; return; }
+    menu.innerHTML=list.map(function(t){return '<div style="padding:11px 14px;font-size:14px;color:#f8fafc;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.07)">'+String(t).replace(/</g,'&lt;')+'</div>';}).join('');
+    Array.prototype.forEach.call(menu.children,function(el){
+      el.onmousedown=function(e){ e.preventDefault(); tinp.value=el.textContent; menu.style.display='none'; };
+      el.ontouchstart=function(e){ e.preventDefault(); tinp.value=el.textContent; menu.style.display='none'; };
+    });
+    menu.style.display='block';
+  }
+  function oaWireTeam(){
+    var tinp=document.getElementById('oaNameAskTeam'), menu=document.getElementById('oaTeamMenu');
+    if(!tinp||tinp._oaWired) return; tinp._oaWired=true;
+    tinp.addEventListener('focus', oaRenderTeamMenu);
+    tinp.addEventListener('input', oaRenderTeamMenu);
+    tinp.addEventListener('blur', function(){ setTimeout(function(){ if(menu) menu.style.display='none'; }, 180); });
+  }
+  window.oaEnsureIdentity = function(bodyName){
+    return new Promise(function(resolve){
+      var sName=lget('oa-name').trim(), sTeam=lget('oa-team').trim(), asked=lget('oa-id2')==='1';
+      var haveName = (bodyName && !isDefault(bodyName)) ? String(bodyName).trim() : sName;
+      if(asked && haveName){ resolve({name:haveName, team:sTeam}); return; }
+      var el=document.getElementById('oaNameAsk');
+      if(!el){ resolve({name:haveName||(isEn()?'Anonymous':'Anonyme'), team:sTeam}); return; }
+      loadTeams(); oaWireTeam();
+      var inp=document.getElementById('oaNameAskInput'), tinp=document.getElementById('oaNameAskTeam');
+      var ok=document.getElementById('oaNameAskOk'), skip=document.getElementById('oaNameAskSkip');
+      var en=isEn();
+      document.getElementById('oaNameAskTitle').textContent = en?'Your name':'Ton pseudo';
+      document.getElementById('oaNameAskSub').textContent   = en?'To save your score on the leaderboard.':'Pour enregistrer ton score au classement.';
+      document.getElementById('oaTeamLabel').textContent    = en?'Team (optional)':'Équipe (optionnel)';
+      tinp.placeholder = en?'Your team…':'Ton équipe…';
+      ok.textContent = en?'Save':'Enregistrer'; skip.textContent = en?'Skip':'Passer';
+      inp.value=haveName||''; tinp.value=sTeam||'';
+      el.style.display='flex'; setTimeout(function(){ try{(inp.value?tinp:inp).focus();}catch(e){} },60);
+      function done(nm,tm,persist){
+        el.style.display='none'; ok.onclick=null; skip.onclick=null; inp.onkeydown=null; tinp.onkeydown=null;
+        if(persist){ lset('oa-name',nm); lset('oa-team',tm); lset('oa-identity','1'); lset('oa-id2','1'); }
+        resolve({name:nm, team:tm});
+      }
+      ok.onclick=function(){ done(inp.value.trim()||(en?'Anonymous':'Anonyme'), tinp.value.trim(), true); };
+      skip.onclick=function(){ done(haveName||(en?'Anonymous':'Anonyme'), sTeam||'', false); };
+      inp.onkeydown=function(e){ if(e.key==='Enter'){ e.preventDefault(); tinp.focus(); } };
+      tinp.onkeydown=function(e){ if(e.key==='Enter'){ e.preventDefault(); ok.onclick(); } };
+    });
+  };
+  window.oaAskName = function(cur){ return window.oaEnsureIdentity(cur).then(function(id){ return id.name; }); };
+  setTimeout(function(){ try{ if(lget('oa-id2')!=='1') window.oaEnsureIdentity(''); }catch(e){} }, 500);
+
+  if(window.fetch && !window.__oaNameGate){
+    window.__oaNameGate = true;
+    var orig = window.fetch;
+    window.fetch = function(url, opts){
+      try{
+        var u = (typeof url==='string') ? url : (url && url.url) || '';
+        if(u.indexOf('submit.php')>=0 && opts && opts.method && String(opts.method).toUpperCase()==='POST' && typeof opts.body==='string'){
+          var body = JSON.parse(opts.body);
+          if(body && ('name' in body)){
+            return window.oaEnsureIdentity(body.name).then(function(id){
+              body.name = id.name; body.team = id.team || '';
+              var o2 = {}; for(var k in opts){ o2[k]=opts[k]; } o2.body = JSON.stringify(body);
+              return orig.call(window, url, o2);
+            });
+          }
+        }
+      }catch(e){}
+      return orig.apply(window, arguments);
+    };
+  }
+})();
+</script>
+
+<!-- ============ MODULE "SIGNALER UN PROBLÈME" (identique à tous les jeux) ============ -->
+<button id="oaReportBtn" type="button" aria-label="Signaler un problème" style="position:fixed;left:12px;bottom:12px;z-index:2147482000;width:38px;height:38px;border-radius:50%;border:1px solid rgba(148,163,184,.35);background:rgba(15,22,38,.55);color:#e5e9f0;font-size:17px;line-height:1;cursor:pointer;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);opacity:.55;transition:opacity .15s;font-family:ui-sans-serif,system-ui,sans-serif" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.55" title="Signaler un problème">⚠</button>
+<div id="oaReport" style="display:none;position:fixed;inset:0;z-index:2147483100;background:rgba(3,8,18,.74);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif">
+  <div style="width:min(420px,94vw);background:#0f1626;color:#f8fafc;border:1px solid rgba(255,255,255,.14);border-radius:18px;padding:22px;box-shadow:0 30px 80px rgba(0,0,0,.55)">
+    <div id="oaReportTitle" style="font-size:18px;font-weight:560;letter-spacing:-.01em;margin-bottom:4px">Signaler un problème</div>
+    <div id="oaReportSub" style="font-size:13px;color:#a7b0c2;line-height:1.4;margin-bottom:14px">Décrivez le souci ; il me sera envoyé par e-mail. Aucune adresse n’est affichée.</div>
+    <div id="oaReportForm">
+      <label id="oaReportGameLbl" style="font-size:12px;color:#a7b0c2;display:block;margin-bottom:5px">Jeu concerné</label>
+      <select id="oaReportGame" style="width:100%;box-sizing:border-box;font:inherit;font-size:14px;font-weight:500;color:#f8fafc;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:11px 12px;outline:none;margin-bottom:12px"></select>
+      <label id="oaReportMsgLbl" style="font-size:12px;color:#a7b0c2;display:block;margin-bottom:5px">Description</label>
+      <textarea id="oaReportMsg" rows="5" maxlength="4000" placeholder="Que s’est-il passé ?" style="width:100%;box-sizing:border-box;font:inherit;font-size:14px;color:#f8fafc;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:11px 12px;outline:none;resize:vertical"></textarea>
+      <div id="oaReportErr" style="display:none;font-size:12px;color:#fb7185;margin-top:8px"></div>
+      <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
+        <button id="oaReportCancel" type="button" style="font:inherit;font-weight:520;color:#a7b0c2;background:none;border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:9px 14px;cursor:pointer">Annuler</button>
+        <button id="oaReportSend" type="button" style="font:inherit;font-weight:560;color:#fff;background:linear-gradient(135deg,#2557d6,#0891b2);border:none;border-radius:999px;padding:9px 16px;cursor:pointer">Envoyer</button>
+      </div>
+    </div>
+    <div id="oaReportDone" style="display:none;text-align:center;padding:10px 0">
+      <div style="font-size:34px;line-height:1">✅</div>
+      <div id="oaReportDoneTxt" style="font-size:15px;font-weight:520;margin-top:8px">Merci, c’est envoyé.</div>
+      <button id="oaReportClose2" type="button" style="margin-top:16px;font:inherit;font-weight:560;color:#fff;background:linear-gradient(135deg,#2557d6,#0891b2);border:none;border-radius:999px;padding:9px 18px;cursor:pointer">Fermer</button>
+    </div>
+  </div>
+</div>
+<script id="oa-report">
+(function(){
+  var GAMES=[['gtv','GTV — Grand Theft Volume'],['plan-please','Plan, Please'],['ok-chimio','OK Chimio'],['arc-racer','Arc Racer'],['beamlet','Beamlet'],['bragg-peak','Bragg Peak'],['fraction-hero','Fraction Hero'],['seed-master','Seed Master'],['mlc-ninja','MLC Ninja'],['tumor-board','Tumor Board'],['radcraft','RadCraft']];
+  function isEn(){ var l=(document.documentElement.getAttribute('lang')||document.documentElement.lang||navigator.language||'fr'); return String(l).slice(0,2).toLowerCase()==='en'; }
+  function API(){ return /\/games\/[^/]+\//.test(location.pathname) ? '../../api' : 'api'; }
+  function curGame(){ var m=location.pathname.match(/\/games\/([a-z0-9-]+)\//i); return m?m[1]:''; }
+  var el=document.getElementById('oaReport');
+  var sel=document.getElementById('oaReportGame'), msg=document.getElementById('oaReportMsg'), err=document.getElementById('oaReportErr');
+  var form=document.getElementById('oaReportForm'), done=document.getElementById('oaReportDone');
+  function labels(){
+    var en=isEn();
+    document.getElementById('oaReportTitle').textContent=en?'Report a problem':'Signaler un problème';
+    document.getElementById('oaReportSub').textContent=en?'Describe the issue; it will be emailed to me. No address is shown.':'Décrivez le souci ; il me sera envoyé par e-mail. Aucune adresse n’est affichée.';
+    document.getElementById('oaReportGameLbl').textContent=en?'Game concerned':'Jeu concerné';
+    document.getElementById('oaReportMsgLbl').textContent=en?'Description':'Description';
+    msg.placeholder=en?'What happened?':'Que s’est-il passé ?';
+    document.getElementById('oaReportCancel').textContent=en?'Cancel':'Annuler';
+    document.getElementById('oaReportSend').textContent=en?'Send':'Envoyer';
+    document.getElementById('oaReportDoneTxt').textContent=en?'Thanks, it’s been sent.':'Merci, c’est envoyé.';
+    document.getElementById('oaReportClose2').textContent=en?'Close':'Fermer';
+    document.getElementById('oaReportBtn').setAttribute('aria-label',en?'Report a problem':'Signaler un problème');
+    document.getElementById('oaReportBtn').title=en?'Report a problem':'Signaler un problème';
+  }
+  function fillSelect(){
+    var en=isEn(), cur=curGame();
+    var html='<option value="">'+(en?'The site / hub':'Le site / le hub')+'</option>';
+    GAMES.forEach(function(g){ html+='<option value="'+g[0]+'">'+g[1]+'</option>'; });
+    html+='<option value="other">'+(en?'Other':'Autre')+'</option>';
+    sel.innerHTML=html; sel.value=cur||'';
+  }
+  window.oaReport=function(){
+    labels(); fillSelect();
+    err.style.display='none'; msg.value=''; form.style.display='block'; done.style.display='none';
+    el.style.display='flex'; setTimeout(function(){ try{msg.focus();}catch(e){} },60);
+  };
+  function close(){ el.style.display='none'; }
+  document.getElementById('oaReportBtn').onclick=window.oaReport;
+  document.getElementById('oaReportCancel').onclick=close;
+  document.getElementById('oaReportClose2').onclick=close;
+  el.addEventListener('click',function(e){ if(e.target===el) close(); });
+  document.getElementById('oaReportSend').onclick=function(){
+    var en=isEn(); var text=(msg.value||'').trim();
+    if(text.length<3){ err.textContent=en?'Please describe the problem.':'Merci de décrire le problème.'; err.style.display='block'; return; }
+    var btn=this; btn.disabled=true; btn.style.opacity=.6;
+    fetch(API()+'/report.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({game:sel.value,message:text,page:location.href})})
+      .then(function(r){return r.ok?r.json():null;}).then(function(d){
+        btn.disabled=false; btn.style.opacity=1;
+        if(d&&d.ok){ form.style.display='none'; done.style.display='block'; }
+        else { err.textContent=en?'Sending failed. Please try again later.':'Envoi impossible. Réessayez plus tard.'; err.style.display='block'; }
+      }).catch(function(){ btn.disabled=false; btn.style.opacity=1; err.textContent=en?'Network error.':'Erreur réseau.'; err.style.display='block'; });
+  };
+})();
+</script>
+</body>
+</html>

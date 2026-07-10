@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Onco Arcade — Gabarit de jeu / Game template</title>
+
+<!-- ================================================================
+     GABARIT DE JEU ONCO ARCADE
+     Copiez ce dossier, renommez-le, et remplacez UNIQUEMENT le bloc
+     "LOGIQUE DU JEU" plus bas. Tout le reste (charte, thème, langue,
+     modale, leaderboard) est déjà branché et identique à tous les jeux.
+     Chemins relatifs à /arcade/games/<jeu>/  ->  ../../assets/...
+     ================================================================= -->
+<link rel="stylesheet" href="../../assets/onco-arcade.css" />
+<style>
+  /* Styles PROPRES à ce jeu uniquement (préfixe .g-) */
+  .g-target {
+    position: absolute; display: grid; place-items: center;
+    width: 60px; height: 60px; border-radius: 50%;
+    border: 1px solid color-mix(in srgb, var(--magenta) 45%, var(--stroke));
+    background: color-mix(in srgb, var(--magenta) 18%, var(--card-strong));
+    color: var(--magenta); font-size: 22px; cursor: pointer;
+    box-shadow: var(--shadow-soft);
+    transform: translate(-50%, -50%) scale(1);
+    transition: transform .08s ease, opacity .25s linear;
+    user-select: none; -webkit-user-select: none;
+  }
+  .g-target:active { transform: translate(-50%, -50%) scale(.9); }
+  .g-hint { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; color: var(--muted); padding: 24px; }
+</style>
+<script id="onco-arcade-query-sync">
+(function(){
+  try{
+    var p=new URLSearchParams(location.search);
+    var theme=(p.get('theme')||'').toLowerCase();
+    if(theme==='dark'||theme==='light'){document.documentElement.setAttribute('data-theme',theme);localStorage.setItem('oa-theme',theme);}
+    var lang=(p.get('lang')||'').toLowerCase();
+    if(lang==='fr'||lang==='en'){document.documentElement.lang=lang;localStorage.setItem('oa-lang',lang);localStorage.setItem('vrt_lang',lang);}
+  }catch(e){}
+})();
+</script>
+</head>
+<body>
+
+<!-- ============ TOPBAR COMMUNE (identique partout) ============ -->
+<header class="shell topbar">
+  <a href="../../index.html" class="brand" aria-label="Onco Arcade">
+    <span class="mark" aria-hidden="true"></span>
+    <span class="brand-text">
+      <span class="brand-title">Onco Arcade</span>
+      <span class="brand-subtitle fr">Nom du jeu · démo</span>
+      <span class="brand-subtitle en">Game name · demo</span>
+    </span>
+  </a>
+  <nav class="nav" aria-label="Navigation">
+    <a class="btn small" href="../../index.html#games"><span class="fr">Tous les jeux</span><span class="en">All games</span></a>
+    <a class="btn small" href="../../index.html#about"><span class="fr">À propos</span><span class="en">About</span></a>
+    <button class="btn small ghost" data-oa-lang-toggle type="button">FR / EN</button>
+    <button class="toggle" data-oa-theme-toggle type="button" aria-label="Thème clair/sombre"><span></span></button>
+  </nav>
+</header>
+
+<main class="shell" style="padding-top:20px;">
+  <section style="padding-top:8px;">
+    <div class="oa-game">
+      <!-- Scène de jeu -->
+      <div>
+        <div class="oa-hud" style="margin-bottom:12px;">
+          <span class="oa-score" id="score">0</span>
+          <span class="oa-chip"><span class="fr">Temps</span><span class="en">Time</span>&nbsp;<b id="time">30</b>s</span>
+          <span class="oa-chip"><span class="fr">Combo</span><span class="en">Combo</span>&nbsp;×<b id="combo">1</b></span>
+          <button class="btn small primary" id="startBtn" style="margin-left:auto;">
+            <span class="fr">Démarrer</span><span class="en">Start</span>
+          </button>
+        </div>
+        <div class="oa-stage" id="stage" aria-label="Zone de jeu">
+          <div class="g-hint" id="hint">
+            <div>
+              <p class="fr" style="margin:0;">Touchez/cliquez la cible avant qu'elle ne disparaisse.<br>Enchaînez pour augmenter le combo.</p>
+              <p class="en" style="margin:0;">Tap/click the target before it fades.<br>Chain hits to raise your combo.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panneau latéral commun -->
+      <aside class="oa-side">
+        <div class="control-card">
+          <h4 class="fr">Comment jouer</h4><h4 class="en">How to play</h4>
+          <p class="fr">Cliquez « Démarrer », puis touchez chaque cible le plus vite possible. Le combo multiplie les points.</p>
+          <p class="en">Click "Start", then hit each target as fast as you can. Combo multiplies points.</p>
+          <div class="pill-row"><span class="pill blue">Démo</span><span class="pill green">Mobile + Desktop</span></div>
+        </div>
+        <div class="control-card">
+          <h4 class="fr">Classement · ce jeu</h4><h4 class="en">Leaderboard · this game</h4>
+          <div class="leaderboard" id="miniBoard" style="margin-top:6px;">
+            <div class="score-row"><span class="rank">—</span><span class="player"><strong class="fr">Chargement…</strong><strong class="en">Loading…</strong></span><span class="points"></span></div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </section>
+</main>
+
+<!-- ============ MODALE DE FIN DE PARTIE (commune) ============ -->
+<div class="oa-overlay" id="over">
+  <div class="oa-modal" role="dialog" aria-modal="true">
+    <h2 class="fr">Partie terminée</h2><h2 class="en">Game over</h2>
+    <div class="oa-big" id="finalScore">0</div>
+    <p class="fr" style="margin:0 0 2px;">points</p><p class="en" style="margin:0 0 2px;">points</p>
+
+    <div class="oa-note">
+      <strong class="fr">À retenir :</strong><strong class="en">Takeaway:</strong>
+      <span class="fr"> remplacez ce texte par la note pédagogique du jeu (le concept clinique illustré).</span>
+      <span class="en"> replace this with the game's learning note (the clinical concept illustrated).</span>
+    </div>
+
+    <div style="margin-top:16px;">
+      <label class="oa-label" for="pseudo"><span class="fr">Votre pseudo</span><span class="en">Your name</span></label>
+      <input class="oa-field" id="pseudo" maxlength="24" placeholder="JEB" autocomplete="off" />
+    </div>
+
+    <div class="oa-actions">
+      <button class="btn primary" id="submitBtn"><span class="fr">Envoyer le score</span><span class="en">Submit score</span></button>
+      <button class="btn" id="replayBtn"><span class="fr">Rejouer</span><span class="en">Replay</span></button>
+    </div>
+    <p id="rankLine" style="margin:12px 0 0; font-size:13px; color:var(--muted);"></p>
+  </div>
+</div>
+
+<!-- ============ SCRIPTS COMMUNS ============ -->
+<script src="../../assets/onco-arcade.js"></script>
+<script src="../../assets/leaderboard.js"></script>
+<script>
+  /* -------- Configuration leaderboard (une seule fois par jeu) -------- */
+  OncoLeaderboard.config({
+    base: "../../api",          // -> /arcade/api en production
+    secret: ""                  // identique à shared_secret dans config.php si activé
+  });
+  const GAME_ID = "beamlet-rush"; // <<< slug du jeu, doit exister dans config.php > games
+
+  /* ================================================================
+     LOGIQUE DU JEU  (la SEULE partie à remplacer par vrai jeu)
+     ================================================================ */
+  const stage = document.getElementById("stage");
+  const hint  = document.getElementById("hint");
+  const elScore = document.getElementById("score");
+  const elTime  = document.getElementById("time");
+  const elCombo = document.getElementById("combo");
+  let score = 0, combo = 1, timeLeft = 30, running = false, tickId, spawnId, current;
+
+  function spawn() {
+    if (current) current.remove();
+    const t = document.createElement("div");
+    t.className = "g-target";
+    t.textContent = "◎";
+    const pad = 44;
+    const x = pad + Math.random() * (stage.clientWidth  - pad * 2);
+    const y = pad + Math.random() * (stage.clientHeight - pad * 2);
+    t.style.left = x + "px"; t.style.top = y + "px";
+    const onHit = (e) => {
+      e.preventDefault();
+      score += 10 * combo; combo = Math.min(combo + 1, 9);
+      elScore.textContent = score; elCombo.textContent = combo;
+      OncoArcade.toast("+" + (10 * (combo - 1 || 1)), "ok", 700);
+      spawn();
+    };
+    t.addEventListener("pointerdown", onHit);
+    stage.appendChild(t);
+    current = t;
+    // fenêtre de disponibilité qui rétrécit avec le score
+    const life = Math.max(650, 1400 - score * 4);
+    clearTimeout(spawnId);
+    spawnId = setTimeout(() => { t.style.opacity = "0"; combo = 1; elCombo.textContent = combo; spawn(); }, life);
+  }
+
+  function start() {
+    if (running) return;
+    running = true; score = 0; combo = 1; timeLeft = 30;
+    elScore.textContent = 0; elCombo.textContent = 1; elTime.textContent = 30;
+    hint.style.display = "none";
+    spawn();
+    tickId = setInterval(() => {
+      timeLeft--; elTime.textContent = timeLeft;
+      if (timeLeft <= 0) end();
+    }, 1000);
+  }
+
+  function end() {
+    running = false;
+    clearInterval(tickId); clearTimeout(spawnId);
+    if (current) current.remove();
+    hint.style.display = "grid";
+    document.getElementById("finalScore").textContent = score;
+    document.getElementById("pseudo").value = OncoLeaderboard.lastName();
+    document.getElementById("rankLine").textContent = "";
+    document.getElementById("over").classList.add("open");
+  }
+  /* ============ FIN LOGIQUE DU JEU ============ */
+
+  /* -------- Câblage commun (à garder tel quel) -------- */
+  document.getElementById("startBtn").addEventListener("click", start);
+  document.getElementById("replayBtn").addEventListener("click", () => {
+    document.getElementById("over").classList.remove("open"); start();
+  });
+
+  document.getElementById("submitBtn").addEventListener("click", async () => {
+    const name = document.getElementById("pseudo").value.trim() || "ANON";
+    OncoLeaderboard.rememberName(name);
+    const btn = document.getElementById("submitBtn");
+    btn.disabled = true;
+    try {
+      const r = await OncoLeaderboard.submit({ game: GAME_ID, name, score });
+      const fr = "Rang " + r.rank + " / " + r.total + " · meilleur : " + r.best;
+      const en = "Rank " + r.rank + " / " + r.total + " · best: " + r.best;
+      document.getElementById("rankLine").textContent =
+        document.documentElement.lang === "en" ? en : fr;
+      OncoArcade.toast(document.documentElement.lang === "en" ? "Score saved" : "Score enregistré", "ok");
+      loadBoard();
+    } catch (e) {
+      OncoArcade.toast(document.documentElement.lang === "en" ? "Network error" : "Erreur réseau", "err");
+    } finally { btn.disabled = false; }
+  });
+
+  async function loadBoard() {
+    const box = document.getElementById("miniBoard");
+    try {
+      const data = await OncoLeaderboard.top({ game: GAME_ID, period: "week", limit: 5 });
+      if (!data.rows.length) {
+        box.innerHTML = '<div class="score-row"><span class="rank">—</span><span class="player"><strong class="fr">Aucun score cette semaine</strong><strong class="en">No score this week</strong></span><span class="points"></span></div>';
+        return;
+      }
+      box.innerHTML = data.rows.map(r =>
+        '<div class="score-row"><span class="rank">' + String(r.rank).padStart(2, "0") +
+        '</span><span class="player"><strong>' + escapeHtml(r.name) +
+        '</strong></span><span class="points">' + r.score.toLocaleString("fr-FR") + '</span></div>'
+      ).join("");
+    } catch (e) {
+      box.innerHTML = '<div class="score-row"><span class="rank">—</span><span class="player"><strong class="fr">Classement indisponible</strong><strong class="en">Leaderboard unavailable</strong></span><span class="points"></span></div>';
+    }
+  }
+  function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+
+  loadBoard();
+</script>
+</body>
+</html>

@@ -1,0 +1,2524 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#071222" />
+  <title>Bragg Peak</title>
+  <style>
+    :root {
+      --bg: #070a12;
+      --bg2: #0d1323;
+      --panel: rgba(15, 23, 42, 0.82);
+      --panel2: rgba(15, 23, 42, 0.96);
+      --line: rgba(255, 255, 255, 0.12);
+      --text: #f8fafc;
+      --muted: #a7b0c2;
+      --cyan: #5de7ff;
+      --cyan2: #27bff2;
+      --pink: #ff5bd6;
+      --violet: #a983ff;
+      --yellow: #ffe773;
+      --green: #58ffb3;
+      --red: #ff6377;
+      --orange: #ffb35c;
+      --shadow: 0 24px 72px rgba(0,0,0,.38);
+      --radius: 18px;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; margin: 0; overflow: hidden; background: var(--bg); color: var(--text); }
+    body {
+      background:
+        radial-gradient(circle at 25% 10%, rgba(93,231,255,.13), transparent 27%),
+        radial-gradient(circle at 80% 8%, rgba(255,91,214,.12), transparent 25%),
+        radial-gradient(circle at 50% 92%, rgba(88,255,179,.08), transparent 24%),
+        linear-gradient(180deg, #0d1323 0%, #070a12 55%, #05070e 100%);
+    }
+
+    .app {
+      position: relative;
+      height: 100dvh;
+      width: 100vw;
+      display: flex;
+      flex-direction: column;
+      padding: calc(10px + var(--safe-top)) 12px calc(10px + var(--safe-bottom));
+      gap: 10px;
+      overflow: hidden;
+    }
+
+    .ambient {
+      pointer-events: none;
+      position: fixed;
+      inset: 0;
+      opacity: .55;
+      background-image:
+        linear-gradient(rgba(93,231,255,.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(93,231,255,.035) 1px, transparent 1px);
+      background-size: 32px 32px;
+      mask-image: radial-gradient(circle at center, black 0 62%, transparent 100%);
+    }
+
+    header {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .logo {
+      width: 44px; height: 44px; border-radius: 15px;
+      background: radial-gradient(circle at 66% 52%, white 0 4px, #fff0 5px),
+                  radial-gradient(circle at 66% 52%, var(--cyan) 0 12px, #fff0 13px),
+                  conic-gradient(from 210deg, var(--cyan), var(--pink), var(--green), var(--cyan));
+      box-shadow: 0 0 28px rgba(93,231,255,.32), inset 0 0 18px rgba(255,255,255,.23);
+      position: relative;
+      flex: 0 0 auto;
+    }
+    .logo:before {
+      content: "";
+      position: absolute; left: 5px; top: 20px; width: 21px; height: 3px;
+      background: linear-gradient(90deg, #fff0, #fff, #fff0);
+      border-radius: 99px; filter: drop-shadow(0 0 6px var(--cyan));
+      transform: rotate(-8deg);
+    }
+    h1 { margin: 0; font-size: clamp(18px, 4.8vw, 32px); letter-spacing: -.04em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .subtitle { margin: 1px 0 0; color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .top-actions { display: flex; gap: 7px; align-items: center; }
+    button, input, select { font: inherit; }
+    .pill, .primary, .secondary, .icon-btn, .mode-card, .level-chip {
+      border: 1px solid rgba(132,217,255,.18);
+      background: rgba(15, 29, 54, .72);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 10px 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.18), inset 0 0 0 1px rgba(255,255,255,.04);
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    .pill:active, .primary:active, .secondary:active, .icon-btn:active, .mode-card:active, .level-chip:active { transform: translateY(1px) scale(.99); }
+    .icon-btn { width: 42px; height: 42px; display: grid; place-items: center; padding: 0; }
+    .primary {
+      border-color: rgba(93,231,255,.42);
+      background: linear-gradient(135deg, rgba(93,231,255,.95), rgba(169,131,255,.88));
+      color: #04101d;
+      font-weight:560;
+      box-shadow: 0 14px 40px rgba(93,231,255,.28), inset 0 0 0 1px rgba(255,255,255,.28);
+    }
+    .secondary { background: rgba(255,255,255,.07); font-weight:560; }
+    .danger { color: #fff; border-color: rgba(255,99,119,.32); background: rgba(255,99,119,.12); }
+    .ghost { background: transparent; border-color: transparent; color: var(--muted); box-shadow: none; }
+
+    main {
+      position: relative;
+      z-index: 1;
+      flex: 1 1 auto;
+      min-height: 0;
+      display: grid;
+      grid-template-rows: auto minmax(250px, 1fr) auto;
+      gap: 10px;
+    }
+
+    .hud {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: stretch;
+    }
+
+    .level-card, .score-card, .panel, .control-card, .modal-card {
+      background: var(--panel);
+      border: 1px solid rgba(131,217,255,.16);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow), inset 0 0 0 1px rgba(255,255,255,.035);
+      backdrop-filter: blur(18px);
+    }
+    .level-card { padding: 12px 14px; min-width: 0; }
+    .level-kicker { color: var(--cyan); font-size: 11px; font-weight:560; letter-spacing: .12em; text-transform: uppercase; }
+    .level-title-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .level-name { font-size: clamp(16px, 4.2vw, 22px); font-weight:560; letter-spacing: -.035em; margin-top: 3px; }
+    .level-desc { color: var(--muted); font-size: 12px; line-height: 1.25; margin-top: 2px; max-width: 850px; }
+    .score-card { padding: 12px 14px; min-width: 126px; display: grid; place-items: center; text-align: center; }
+    .score-label { color: var(--muted); font-size: 11px; font-weight:560; text-transform: uppercase; letter-spacing: .1em; }
+    .score-value { font-size: clamp(28px, 7vw, 40px); font-weight:560; line-height: .95; letter-spacing: -.06em; text-shadow: 0 0 20px rgba(93,231,255,.35); }
+    .score-mini { color: var(--muted); font-size: 11px; margin-top: 2px; }
+
+    .canvas-wrap {
+      min-height: 0;
+      position: relative;
+      border-radius: 26px;
+      overflow: hidden;
+      border: 1px solid rgba(93,231,255,.22);
+      background: linear-gradient(180deg, rgba(8,21,38,.95), rgba(5,11,22,.98));
+      box-shadow: 0 28px 80px rgba(0,0,0,.42), inset 0 0 0 1px rgba(255,255,255,.04);
+    }
+    canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+    .canvas-help {
+      display: none;
+      position: absolute; left: 12px; right: 12px; bottom: 12px;
+      align-items: center; justify-content: space-between; gap: 8px;
+      pointer-events: none;
+    }
+    .hint-bubble {
+      pointer-events: auto;
+      max-width: min(620px, 100%);
+      background: rgba(5, 12, 24, .78);
+      border: 1px solid rgba(93,231,255,.2);
+      border-radius: 18px;
+      padding: 10px 12px;
+      color: var(--text);
+      box-shadow: 0 12px 34px rgba(0,0,0,.24);
+      backdrop-filter: blur(14px);
+      font-size: 12px;
+      line-height: 1.25;
+    }
+    .hint-bubble b { color: var(--cyan); }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1.2fr .9fr;
+      gap: 10px;
+      min-height: 0;
+    }
+    .panel { padding: 10px; min-width: 0; }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+    .metric { background: rgba(255,255,255,.055); border: 1px solid rgba(255,255,255,.06); border-radius: 17px; padding: 8px; min-width: 0; }
+    .metric-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: var(--muted); font-size: 10px; font-weight:560; text-transform: uppercase; letter-spacing: .06em; }
+    .metric-value { font-size: 16px; font-weight:560; letter-spacing: -.04em; margin-top: 4px; }
+    .bar { height: 6px; border-radius: 999px; background: rgba(255,255,255,.10); overflow: hidden; margin-top: 7px; }
+    .bar span { display: block; height: 100%; width: 0%; border-radius: inherit; background: linear-gradient(90deg, var(--cyan), var(--green)); box-shadow: 0 0 12px rgba(93,231,255,.35); transition: width .18s ease; }
+    .bar.warn span { background: linear-gradient(90deg, var(--yellow), var(--orange)); }
+    .bar.bad span { background: linear-gradient(90deg, var(--orange), var(--red)); }
+
+    .toolbox { display: grid; grid-template-columns: auto auto 1fr auto; gap: 8px; align-items: center; margin-top: 9px; }
+    .spot-list { display: flex; gap: 6px; overflow: auto; scrollbar-width: none; padding: 2px; }
+    .spot-list::-webkit-scrollbar { display: none; }
+    .spot-dot {
+      min-width: 38px; height: 38px; border-radius: 14px;
+      display: grid; place-items: center;
+      border: 1px solid rgba(255,255,255,.11);
+      background: rgba(255,255,255,.07);
+      color: var(--text); font-weight:560;
+      cursor: pointer;
+    }
+    .spot-dot.active { border-color: rgba(93,231,255,.65); color: #06111e; background: linear-gradient(135deg, var(--cyan), var(--green)); box-shadow: 0 0 24px rgba(93,231,255,.25); }
+
+    .sliders { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 10px; margin-top: 8px; }
+    .slider-row {
+      background: rgba(255,255,255,.045);
+      border: 1px solid rgba(255,255,255,.055);
+      border-radius: 17px;
+      padding: 8px 10px;
+      min-width: 0;
+    }
+    .slider-head { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; color: var(--muted); font-size: 11px; font-weight:560; }
+    .slider-head output { color: var(--text); font-variant-numeric: tabular-nums; }
+    input[type="range"] { width: 100%; accent-color: var(--cyan); margin: 8px 0 2px; }
+
+    .actions-card { display: grid; grid-template-rows: auto 1fr auto; gap: 8px; }
+    .mode-line { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .tag {
+      color: var(--muted); font-weight:560; font-size: 11px;
+      border: 1px solid rgba(255,255,255,.09); background: rgba(255,255,255,.045);
+      padding: 7px 9px; border-radius: 999px;
+    }
+    .tag strong { color: var(--cyan); }
+    .constraints { display: grid; gap: 7px; overflow: auto; min-height: 0; padding-right: 2px; }
+    .constraint {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      background: rgba(255,255,255,.045); border: 1px solid rgba(255,255,255,.055);
+      border-radius: 15px; padding: 8px 9px; font-size: 12px;
+    }
+    .constraint span:first-child { color: var(--muted); }
+    .constraint.ok b { color: var(--green); }
+    .constraint.warn b { color: var(--yellow); }
+    .constraint.bad b { color: var(--red); }
+    .bottom-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+    .screen, .modal {
+      position: fixed; inset: 0; z-index: 10;
+      display: none;
+      padding: calc(18px + var(--safe-top)) 14px calc(18px + var(--safe-bottom));
+      background: rgba(3, 8, 18, .72);
+      overflow-y: auto; -webkit-overflow-scrolling: touch;
+    }
+    .screen.show, .modal.show { display: flex; flex-direction: column; align-items: center; }
+    .screen.show > *, .modal.show > * { margin-top: auto; margin-bottom: auto; }
+    .menu-card {
+      width: min(960px, 100%);
+      max-height: 100%; overflow: auto;
+      background: linear-gradient(180deg, rgba(15, 30, 56, .92), rgba(7, 18, 34, .96));
+      border: 1px solid rgba(93,231,255,.22);
+      border-radius: 32px;
+      box-shadow: 0 40px 120px rgba(0,0,0,.58), inset 0 0 0 1px rgba(255,255,255,.04);
+      padding: clamp(18px, 4vw, 34px);
+      position: relative;
+      overflow: hidden;
+    }
+    .menu-card:before {
+      content: ""; position: absolute; inset: -30%; pointer-events: none; opacity: .52;
+      background: radial-gradient(circle at 15% 15%, rgba(93,231,255,.16), transparent 23%), radial-gradient(circle at 90% 5%, rgba(255,91,214,.13), transparent 22%);
+    }
+    .menu-content { position: relative; z-index: 1; }
+    .hero { display: grid; grid-template-columns: 1fr .9fr; gap: 26px; align-items: center; }
+    .hero h2 { font-size: clamp(34px, 9vw, 74px); line-height: .88; margin: 0; letter-spacing: -.08em; }
+    .hero h2 span { color: var(--cyan); text-shadow: 0 0 38px rgba(93,231,255,.33); }
+    .hero p { color: var(--muted); line-height: 1.5; font-size: 15px; margin: 16px 0 0; max-width: 620px; }
+    .hero-visual { min-height: 270px; border-radius: 28px; background: radial-gradient(circle at 72% 48%, rgba(93,231,255,.23), transparent 24%), linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.025)); border: 1px solid rgba(255,255,255,.08); position: relative; overflow: hidden; }
+    .hero-visual svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .pulse { animation: pulse 2.4s ease-in-out infinite; transform-origin: center; }
+    @keyframes pulse { 0%,100%{opacity:.65; transform:scale(.98)} 50%{opacity:1; transform:scale(1.04)} }
+    .mode-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 20px; }
+    .mode-card { text-align: left; border-radius: 22px; padding: 14px; min-height: 112px; background: rgba(255,255,255,.055); }
+    .mode-card.active { border-color: rgba(93,231,255,.56); background: linear-gradient(180deg, rgba(93,231,255,.16), rgba(255,255,255,.05)); box-shadow: 0 0 32px rgba(93,231,255,.15); }
+    .mode-card b { display: block; font-size: 15px; letter-spacing: -.02em; }
+    .mode-card small { color: var(--muted); display: block; margin-top: 8px; line-height: 1.25; }
+    .menu-form { display: grid; grid-template-columns: 1fr auto auto auto; gap: 10px; margin-top: 18px; align-items: center; }
+    .name-input, .select-input {
+      width: 100%; border-radius: 18px; border: 1px solid rgba(93,231,255,.18);
+      background: rgba(5, 12, 24, .6); color: var(--text); padding: 13px 14px; outline: none;
+    }
+    .level-strip { display: flex; gap: 6px; overflow: auto; scrollbar-width: none; padding: 6px 1px 0; }
+    .level-strip::-webkit-scrollbar { display: none; }
+    .level-chip { min-width: 38px; height: 38px; padding: 0; display: grid; place-items: center; border-radius: 14px; color: var(--muted); font-weight:560; }
+    .level-chip.unlocked { color: var(--text); }
+    .level-chip.active { color: #06111e; border-color: rgba(93,231,255,.7); background: linear-gradient(135deg, var(--cyan), var(--green)); }
+    .level-chip:disabled { opacity: .35; cursor: not-allowed; }
+
+    .modal-card { width: min(860px, 100%); max-height: 100%; overflow: auto; padding: 18px; }
+    .modal-head { display: flex; align-items: start; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+    .modal-head h2 { margin: 0; font-size: 24px; letter-spacing: -.05em; }
+    .modal-head p { margin: 5px 0 0; color: var(--muted); font-size: 13px; line-height: 1.35; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+    .leader-controls { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; overflow: hidden; border-radius: 16px; }
+    th, td { text-align: left; padding: 9px 8px; border-bottom: 1px solid rgba(255,255,255,.06); }
+    th { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .08em; }
+    tr:last-child td { border-bottom: none; }
+    .badge-list { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+    .badge { border-radius: 999px; padding: 7px 9px; background: rgba(93,231,255,.11); border: 1px solid rgba(93,231,255,.2); color: var(--cyan); font-size: 12px; font-weight:560; }
+    .complete-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 14px; }
+    .complete-stat { background: rgba(255,255,255,.055); border: 1px solid rgba(255,255,255,.07); padding: 12px; border-radius: 18px; }
+    .complete-stat small { color: var(--muted); font-weight:560; text-transform: uppercase; letter-spacing: .07em; font-size: 10px; }
+    .complete-stat b { display: block; font-size: 22px; margin-top: 4px; letter-spacing: -.05em; }
+
+    .toast {
+      position: fixed; left: 50%; bottom: calc(14px + var(--safe-bottom)); transform: translateX(-50%) translateY(24px);
+      background: rgba(5,12,24,.94); color: var(--text); border: 1px solid rgba(93,231,255,.24);
+      border-radius: 14px; padding: 12px 16px; z-index: 20; opacity: 0; pointer-events: none;
+      box-shadow: 0 18px 50px rgba(0,0,0,.4); transition: .2s ease;
+      font-size: 13.5px; line-height: 1.4; text-align: center;
+      white-space: normal; word-break: break-word;
+      width: max-content; max-width: min(380px, calc(100vw - 28px));
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    @media (max-width: 840px) {
+      .app { gap: 8px; padding-left: 8px; padding-right: 8px; }
+      .subtitle { display: none; }
+      .hud { grid-template-columns: 1fr 104px; gap: 8px; }
+      .level-card { padding: 10px; }
+      .level-desc { display: none; }
+      .score-card { padding: 9px; min-width: 98px; }
+      main { grid-template-rows: auto minmax(240px, 1fr) auto; gap: 8px; }
+      .controls { grid-template-columns: 1fr; }
+      .actions-card { display: none; }
+      .metrics { grid-template-columns: repeat(2, 1fr); }
+      .sliders { grid-template-columns: 1fr 1fr; gap: 7px; }
+      .slider-row { padding: 7px 8px; border-radius: 14px; }
+      .toolbox { grid-template-columns: auto auto 1fr; }
+      #evaluateBtn { grid-column: 1 / -1; }
+      .hero { grid-template-columns: 1fr; }
+      .hero-visual { min-height: 190px; }
+      .mode-grid { grid-template-columns: repeat(2, 1fr); }
+      .menu-form { grid-template-columns: 1fr 1fr; }
+      .menu-form .name-input { grid-column: 1 / -1; }
+      .leader-controls { grid-template-columns: 1fr; }
+      .complete-grid { grid-template-columns: repeat(2, 1fr); }
+      .canvas-help { bottom: 8px; left: 8px; right: 8px; }
+      .hint-bubble { font-size: 11px; padding: 8px 10px; }
+    }
+
+    @media (max-height: 720px) and (max-width: 840px) {
+      .metrics { display: none; }
+      .sliders { grid-template-columns: repeat(4, 1fr); }
+      .slider-head span { max-width: 82px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    }
+    /* ---- Identité Onco Arcade (charte) ---- */
+    .oa-eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:560;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+    .oa-eyebrow i{width:7px;height:7px;border-radius:999px;background:#34d399;box-shadow:0 0 0 5px rgba(52,211,153,.13);}
+    h1.oa-title, .menu-content .hero h2.oa-title{background:linear-gradient(120deg,var(--text),#7aa2ff 42%,#f472b6);-webkit-background-clip:text;background-clip:text;color:transparent;}
+    a.pill.oa-link{display:inline-flex;align-items:center;text-decoration:none;color:var(--text);}
+    .aboutCard{padding:16px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.05);margin-bottom:12px;}
+    .aboutCard:last-of-type{margin-bottom:0;}
+    .aboutCard h4{margin:0 0 8px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--orange);}
+    .aboutCard p{margin:0;color:var(--text);line-height:1.55;font-size:14px;}
+    .aboutSig{display:flex;align-items:center;gap:12px;margin-top:14px;}
+    .aboutSig .mk{width:34px;height:34px;border-radius:11px;flex:0 0 auto;background:conic-gradient(from 180deg,#5de7ff,#a983ff,#ff5bd6,#ffe773,#58ffb3,#5de7ff);}
+    .aboutSig b{display:block;font-size:15px;}.aboutSig span{display:block;font-size:12px;color:var(--muted);}
+    /* ---- Mode clair (charte) — l'aire de jeu (canvas) reste sombre ---- */
+    html[data-theme="light"]{
+      --bg:#f7f8fb; --bg2:#ffffff;
+      --panel:rgba(255,255,255,.86); --panel2:rgba(17,24,39,.05);
+      --line:rgba(17,24,39,.12); --text:#111827; --muted:#667085;
+      --shadow:0 16px 42px rgba(15,23,42,.08);
+    }
+    html[data-theme="light"] body{
+      background:
+        radial-gradient(circle at 25% 10%, rgba(37,87,214,.08), transparent 27%),
+        radial-gradient(circle at 80% 8%, rgba(192,38,120,.06), transparent 25%),
+        linear-gradient(180deg,#ffffff 0%,#f7f8fb 55%,#eef1f7 100%);
+    }
+    html[data-theme="light"] .pill,
+    html[data-theme="light"] .secondary,
+    html[data-theme="light"] .icon-btn,
+    html[data-theme="light"] .mode-card,
+    html[data-theme="light"] .level-chip{background:rgba(17,24,39,.05);border-color:rgba(17,24,39,.12);
+      box-shadow:0 8px 24px rgba(15,23,42,.06);}
+    html[data-theme="light"] .ghost{background:transparent;border-color:transparent;box-shadow:none;}
+    html[data-theme="light"] .level-card,
+    html[data-theme="light"] .score-card,
+    html[data-theme="light"] .panel,
+    html[data-theme="light"] .control-card,
+    html[data-theme="light"] .modal-card{border-color:var(--line);box-shadow:var(--shadow);}
+    html[data-theme="light"] .metric,
+    html[data-theme="light"] .complete-stat,
+    html[data-theme="light"] .aboutCard{background:rgba(17,24,39,.04);border-color:var(--line);}
+    html[data-theme="light"] .menu-card{background:linear-gradient(180deg,#ffffff,#f4f6fb);border-color:var(--line);}
+    html[data-theme="light"] .hero-visual{border-color:var(--line);
+      background:radial-gradient(circle at 72% 48%, rgba(37,87,214,.12), transparent 24%),linear-gradient(180deg, rgba(17,24,39,.04), rgba(17,24,39,.02));}
+    html[data-theme="light"] .name-input,
+    html[data-theme="light"] .select-input{background:rgba(17,24,39,.04);border-color:var(--line);}
+    html[data-theme="light"] .oa-eyebrow i{box-shadow:0 0 0 5px rgba(4,120,87,.13);}
+  
+
+/* Onco Arcade patch: Bragg Peak layout fix — no overlap, fixed dosimetry ratio, real scrolling */
+html, body{
+  min-height:100%;
+  height:auto;
+  overflow-x:hidden;
+  overflow-y:auto;
+  overscroll-behavior-y:contain;
+}
+body{min-height:100dvh;}
+.app{
+  width:min(1240px, 100vw);
+  min-height:100dvh;
+  height:auto;
+  margin:0 auto;
+  overflow:visible;
+  padding:calc(10px + var(--safe-top)) clamp(8px,2vw,18px) calc(22px + var(--safe-bottom));
+}
+main{
+  flex:0 0 auto;
+  min-height:0;
+  display:grid;
+  grid-template-rows:auto auto auto;
+  gap:12px;
+  overflow:visible;
+}
+.hud,.controls,.canvas-wrap{position:relative;z-index:1;}
+.canvas-wrap{
+  width:min(900px, 100%);
+  height:auto !important;
+  min-height:0;
+  aspect-ratio:900/660;
+  max-height:none !important;
+  margin:0 auto;
+  justify-self:center;
+  align-self:start;
+  flex:none;
+}
+#gameCanvas{width:100%;height:100%;display:block;}
+.controls{
+  align-items:stretch;
+  margin-top:0;
+}
+.panel{overflow:visible;}
+.actions-card{min-height:0;}
+.constraints{max-height:260px;}
+.modal{
+  position:fixed;
+  inset:0;
+  overflow-x:hidden;
+  overflow-y:auto;
+  align-items:flex-start !important;
+  justify-content:center;
+  padding:calc(22px + var(--safe-top)) 14px calc(28px + var(--safe-bottom));
+  -webkit-overflow-scrolling:touch;
+}
+.modal.show{display:flex;}
+.modal-card{
+  width:min(760px, 100%);
+  max-height:none !important;
+  overflow:visible !important;
+  margin:0 auto;
+  padding:22px;
+  border-radius:22px;
+}
+#completeModal .modal-card{background:var(--panel);color:var(--text);}
+.complete-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+.complete-stat{min-width:0;}
+.complete-stat small{display:block;white-space:normal;line-height:1.25;}
+.complete-stat b{font-size:clamp(18px,4vw,24px);line-height:1.15;word-break:break-word;}
+.badge-list{line-height:1.4;}
+@media(max-width:840px){
+  main{grid-template-rows:auto auto auto;}
+  .canvas-wrap{width:min(900px, 100%); max-height:none !important;}
+  .controls{grid-template-columns:1fr;}
+  .panel{min-height:auto;}
+}
+@media(max-width:700px){
+  .modal{padding:12px 10px calc(18px + var(--safe-bottom));}
+  .modal-card{margin:0;width:100%;border-radius:18px;padding:16px;}
+  .complete-grid{grid-template-columns:1fr 1fr;}
+  .modal-actions{position:sticky;bottom:0;background:linear-gradient(180deg,transparent,var(--panel) 18%);padding-top:12px;}
+}
+@media(max-width:520px){
+  .complete-grid{grid-template-columns:1fr;}
+  .top-actions{gap:5px;}
+  .pill{padding:8px 9px;}
+}
+.modal{padding:12px 10px;}.modal-card{margin:0;width:100%;border-radius:18px;}.complete-grid{grid-template-columns:1fr 1fr;}.modal-actions{position:sticky;bottom:0;background:linear-gradient(180deg,transparent,var(--panel) 18%);padding-top:12px;}}
+
+
+
+/* Mobile start screen fix: make the launch button reachable on small screens */
+@media (max-width: 840px) {
+  .screen {
+    align-items: flex-start !important;
+    justify-content: center !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    padding: calc(10px + var(--safe-top)) 10px calc(26px + var(--safe-bottom)) !important;
+  }
+  .screen.show { display: flex !important; }
+  #menuScreen .menu-card {
+    width: 100% !important;
+    max-height: none !important;
+    min-height: auto !important;
+    overflow: visible !important;
+    border-radius: 20px !important;
+    padding: 16px !important;
+    margin: 0 auto 24px !important;
+  }
+  #menuScreen .menu-card::before { opacity: .28; }
+  #menuScreen .hero {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+    align-items: start !important;
+  }
+  #menuScreen .hero h2 {
+    font-size: clamp(34px, 13vw, 54px) !important;
+    line-height: .9 !important;
+  }
+  #menuScreen .hero p {
+    max-width: none !important;
+    margin-top: 10px !important;
+    font-size: 13px !important;
+    line-height: 1.42 !important;
+  }
+  #menuScreen .hero-visual {
+    min-height: 132px !important;
+    height: 132px !important;
+    border-radius: 18px !important;
+  }
+  #menuScreen .mode-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    margin-top: 12px !important;
+  }
+  #menuScreen .mode-card {
+    min-height: 82px !important;
+    border-radius: 16px !important;
+    padding: 10px !important;
+  }
+  #menuScreen .mode-card b { font-size: 13px !important; }
+  #menuScreen .mode-card small { font-size: 11px !important; }
+  #menuScreen .menu-form {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    margin-top: 12px !important;
+    padding-bottom: 8px !important;
+  }
+  #menuScreen .name-input,
+  #menuScreen #startBtn,
+  #menuScreen #openTutorialBtn,
+  #menuScreen #openLeaderBtn {
+    width: 100% !important;
+    min-height: 44px !important;
+    border-radius: 14px !important;
+  }
+}
+
+@media (max-width: 420px) {
+  #menuScreen .hero-visual { min-height: 104px !important; height: 104px !important; }
+  #menuScreen .mode-card { min-height: 72px !important; }
+  #menuScreen .mode-card small { display: none; }
+}
+</style>
+<script id="onco-arcade-query-sync">
+(function(){
+  try{
+    var p=new URLSearchParams(location.search);
+    var theme=(p.get('theme')||'').toLowerCase();
+    if(theme==='dark'||theme==='light'){document.documentElement.setAttribute('data-theme',theme);localStorage.setItem('oa-theme',theme);}
+    var lang=(p.get('lang')||'').toLowerCase();
+    if(lang==='fr'||lang==='en'){document.documentElement.lang=lang;localStorage.setItem('oa-lang',lang);localStorage.setItem('vrt_lang',lang);}
+  }catch(e){}
+})();
+</script>
+
+<style id="oa-bragg-scroll-final">
+
+/* Onco Arcade fix 2026-07: Bragg Peak scroll + non-overlapping dosimetry */
+html, body{
+  height:auto !important;
+  min-height:100% !important;
+  overflow-x:hidden !important;
+  overflow-y:auto !important;
+  overscroll-behavior-y:auto !important;
+  -webkit-overflow-scrolling:touch;
+}
+.app{
+  height:auto !important;
+  min-height:100svh !important;
+  overflow:visible !important;
+  display:flex !important;
+}
+main{
+  flex:0 0 auto !important;
+  min-height:0 !important;
+  height:auto !important;
+  overflow:visible !important;
+  display:grid !important;
+  grid-template-rows:auto auto auto !important;
+}
+.hud,.controls{position:relative !important; z-index:2 !important;}
+.canvas-wrap{
+  position:relative !important;
+  z-index:1 !important;
+  width:min(900px,100%) !important;
+  aspect-ratio:900 / 660 !important;
+  height:auto !important;
+  min-height:0 !important;
+  max-height:none !important;
+  margin:0 auto !important;
+  flex:none !important;
+  overflow:hidden !important;
+}
+#gameCanvas{width:100% !important; height:100% !important; display:block !important;}
+.panel,.control-card,.actions-card{position:relative !important; z-index:2 !important;}
+.constraints{max-height:220px !important; overflow:auto !important;}
+.screen,.modal{
+  align-items:flex-start !important;
+  justify-content:center !important;
+  overflow-x:hidden !important;
+  overflow-y:auto !important;
+  -webkit-overflow-scrolling:touch !important;
+  padding:calc(14px + var(--safe-top)) 12px calc(24px + var(--safe-bottom)) !important;
+}
+.screen.show,.modal.show{display:flex !important;}
+.menu-card,.modal-card{
+  max-height:none !important;
+  overflow:visible !important;
+  margin:0 auto !important;
+}
+.modal-card{width:min(860px,100%) !important;}
+#completeModal .modal-card{padding-bottom:calc(24px + var(--safe-bottom)) !important;}
+@media (max-width:840px){
+  .app{padding:calc(8px + var(--safe-top)) 8px calc(18px + var(--safe-bottom)) !important; gap:8px !important;}
+  header{flex-wrap:wrap !important; gap:8px !important;}
+  .top-actions{flex-wrap:wrap !important; justify-content:flex-end !important;}
+  main{grid-template-rows:auto auto auto !important; gap:8px !important;}
+  .hud{grid-template-columns:1fr !important;}
+  .score-card{display:none !important;}
+  .canvas-wrap{width:100% !important; aspect-ratio:900/660 !important; border-radius:18px !important;}
+  .controls{grid-template-columns:1fr !important; display:grid !important;}
+  .actions-card{display:grid !important;}
+  .metrics{grid-template-columns:repeat(2,minmax(0,1fr)) !important; display:grid !important;}
+  .sliders{grid-template-columns:1fr 1fr !important;}
+  .menu-card{border-radius:20px !important; padding:16px !important;}
+  .hero{grid-template-columns:1fr !important; gap:12px !important;}
+  .hero-visual{min-height:128px !important;}
+  .mode-grid{grid-template-columns:1fr 1fr !important; gap:8px !important; margin-top:12px !important;}
+  .mode-card{min-height:auto !important; padding:11px !important; border-radius:16px !important;}
+  .menu-form{grid-template-columns:1fr !important; gap:8px !important;}
+  #menuScreen #startBtn{width:100% !important; min-height:46px !important;}
+  .complete-grid{grid-template-columns:1fr 1fr !important;}
+}
+@media (max-width:480px){
+  .sliders{grid-template-columns:1fr !important;}
+  .metrics{grid-template-columns:1fr 1fr !important;}
+  .mode-grid{grid-template-columns:1fr !important;}
+  .complete-grid{grid-template-columns:1fr !important;}
+}
+
+</style>
+
+<style id="oa-bragg-mobile-launch-scroll-hardfix">
+
+/* Hard mobile fix: fixed menu overlay scrolls independently, so the launch button is always reachable */
+@media (max-width: 840px), (pointer: coarse) {
+  html, body {
+    height: auto !important;
+    min-height: 100% !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  body { touch-action: auto !important; }
+  .app {
+    height: auto !important;
+    min-height: 100svh !important;
+    overflow: visible !important;
+  }
+  #menuScreen.screen {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100vw !important;
+    height: 100svh !important;
+    min-height: 100svh !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    padding: calc(12px + var(--safe-top)) 10px calc(34px + var(--safe-bottom)) !important;
+  }
+  #menuScreen.screen.show { display: block !important; }
+  #menuScreen .menu-card {
+    width: min(640px, 100%) !important;
+    max-height: none !important;
+    min-height: auto !important;
+    overflow: visible !important;
+    margin: 0 auto 28px !important;
+    padding: 14px !important;
+    border-radius: 20px !important;
+  }
+  #menuScreen .menu-content { display: block !important; }
+  #menuScreen .hero {
+    display: block !important;
+    grid-template-columns: 1fr !important;
+  }
+  #menuScreen .hero h2 {
+    font-size: clamp(30px, 12vw, 48px) !important;
+    line-height: .9 !important;
+  }
+  #menuScreen .hero p {
+    max-width: none !important;
+    margin-top: 8px !important;
+    font-size: 13px !important;
+    line-height: 1.38 !important;
+  }
+  #menuScreen .hero-visual {
+    height: 96px !important;
+    min-height: 96px !important;
+    margin-top: 10px !important;
+    border-radius: 16px !important;
+  }
+  #menuScreen .mode-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    margin-top: 12px !important;
+  }
+  #menuScreen .mode-card {
+    min-height: auto !important;
+    padding: 10px !important;
+    border-radius: 14px !important;
+  }
+  #menuScreen .mode-card small { margin-top: 4px !important; }
+  #menuScreen .menu-form {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    margin-top: 12px !important;
+  }
+  #menuScreen .name-input,
+  #menuScreen #startBtn,
+  #menuScreen #openTutorialBtn,
+  #menuScreen #openLeaderBtn {
+    width: 100% !important;
+    min-height: 46px !important;
+  }
+}
+
+</style>
+<style id="oa-charte-conformance">
+/* Conformité charte : pas de capitales forcées, poids légers, police système sur le chrome du menu */
+.oa-eyebrow{ text-transform:none !important; letter-spacing:.01em !important; font-weight:500 !important; font-size:13px !important; }
+.oa-title{ font-weight:500 !important; }
+</style>
+<style id="oa-mobile-final">
+/* Correctif mobile définitif : le menu et les modales scrollent (patron bloc + safe-area),
+   et neutralise les règles de scroll concurrentes ajoutées précédemment. */
+@media (max-width: 860px){
+  .screen, .modal{
+    position: fixed !important; inset: 0 !important;
+    overflow-y: auto !important; -webkit-overflow-scrolling: touch !important;
+    backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+    padding: calc(16px + env(safe-area-inset-top)) 12px calc(30px + env(safe-area-inset-bottom)) !important;
+    box-sizing: border-box !important;
+    align-items: initial !important; justify-content: initial !important;
+  }
+  .screen.show, .modal.show, #menuScreen.show, #menuScreen.screen.show{ display: block !important; }
+  .menu-content, .menu-card, .modal-card{
+    max-height: none !important; height: auto !important; min-height: 0 !important;
+    overflow: visible !important; margin: 0 auto !important;
+  }
+}
+</style>
+<style id="oa-vh-fill">
+/* Plein ecran mobile : le fond remplit tout le viewport, y compris sous la Dynamic Island */
+html{ background:var(--bg, #070a12) !important; min-height:100dvh; }
+html[data-theme="light"]{ background:var(--bg, #f7f8fb) !important; }
+</style>
+<style id="oa-modal-fix">
+  /* Modales (tutoriel, classement, complétion) : carte centrée, largeur lisible, défilable */
+  .modal.show{ display:block !important; }
+  .modal.show > .modal-card{
+    margin:24px auto !important;
+    width:min(600px, calc(100% - 12px)) !important;
+    max-height:none !important; overflow:visible !important;
+  }
+  @media (max-width:600px){
+    .modal.show > .modal-card{ width:calc(100% - 8px) !important; margin:12px auto !important; }
+  }
+</style>
+<style id="oa-light-fix">
+  /* Toast : fond sombre dans les deux thèmes -> texte clair fixe (sinon illisible en clair) */
+  .toast{ color:#eef2f9 !important; border-color:rgba(255,255,255,.16) !important; }
+  /* Modales : carte opaque et contrastée par thème (tutoriel, rejet, etc.) */
+  .modal.show > .modal-card{ background:#0f1626 !important; color:#f8fafc !important; }
+  .modal.show > .modal-card .modal-head p{ color:#c2ccdb !important; }
+  html[data-theme="light"] .modal.show > .modal-card{ background:#ffffff !important; color:#111827 !important; box-shadow:0 24px 70px rgba(15,23,42,.18) !important; }
+  html[data-theme="light"] .modal.show > .modal-card .modal-head p{ color:#5c6472 !important; }
+  html[data-theme="light"] .modal.show > .modal-card .modal-head h2{ color:#0f172a !important; }
+  /* Badges (numéros du tutoriel) lisibles en clair */
+  html[data-theme="light"] .badge{ color:#0e7490 !important; background:rgba(14,116,144,.10) !important; border-color:rgba(14,116,144,.28) !important; }
+</style>
+<style id="oa-charter-weights">b,strong{font-weight:560}</style>
+<style id="oa-hide-inner-pseudo">/* pseudo demande une seule fois par l'overlay commun : saisie interne masquee */ #playerName{display:none!important}</style>
+</head>
+<body>
+  <div class="ambient"></div>
+  <div class="app" id="app">
+    <header>
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <div class="oa-eyebrow"><i></i><span id="oaEyebrow" data-i18n="oaEyebrow">Onco Arcade · radiothérapie</span></div>
+          <h1 class="oa-title">Bragg Peak</h1>
+          <div class="subtitle" data-i18n="subtitle">Proton therapy precision roguelite</div>
+        </div>
+      </div>
+      <div class="top-actions">
+        <a class="pill oa-link" id="allGames" href="../../index.html" data-i18n="allGames">Tous les jeux</a>
+        <button class="pill" id="aboutBtn" type="button" data-i18n="about">À propos</button>
+        <button class="pill" id="langBtn" type="button">FR / EN</button>
+        <button class="icon-btn" id="themeBtn" type="button" aria-label="Thème clair / sombre">☾</button>
+        <button class="icon-btn" id="muteBtn" type="button" aria-label="Sound">♪</button>
+        <button class="icon-btn" id="menuBtn" type="button" aria-label="Menu">☰</button>
+      </div>
+    </header>
+
+    <main aria-live="polite">
+      <section class="hud">
+        <div class="level-card">
+          <div class="level-kicker" id="levelKicker">LEVEL 1 · LEARN</div>
+          <div class="level-title-row">
+            <div class="level-name" id="levelName">Bragg peak simple</div>
+            <div class="tag"><span data-i18n="spots">Spots</span> <strong id="spotCount">1</strong></div>
+          </div>
+          <div class="level-desc" id="levelDesc">Place a pristine Bragg peak inside the halo target.</div>
+        </div>
+        <div class="score-card">
+          <div class="score-label" data-i18n="score">Score</div>
+          <div class="score-value" id="scoreValue">0</div>
+          <div class="score-mini" id="timeValue">00:00</div>
+        </div>
+      </section>
+
+      <section class="canvas-wrap">
+        <canvas id="gameCanvas" width="900" height="660"></canvas>
+        <div class="canvas-help">
+          <div class="hint-bubble" id="hintBubble"></div>
+        </div>
+      </section>
+
+      <section class="controls">
+        <div class="panel">
+          <div class="metrics">
+            <div class="metric">
+              <div class="metric-top"><span data-i18n="coverage">Coverage</span><span id="coverageText">0%</span></div>
+              <div class="metric-value" id="coverageValue">—</div>
+              <div class="bar" id="coverageBar"><span></span></div>
+            </div>
+            <div class="metric">
+              <div class="metric-top"><span data-i18n="robustness">Robustness</span><span id="robustText">0%</span></div>
+              <div class="metric-value" id="robustValue">—</div>
+              <div class="bar" id="robustBar"><span></span></div>
+            </div>
+            <div class="metric">
+              <div class="metric-top"><span data-i18n="oarSafe">OAR safe</span><span id="oarText">0%</span></div>
+              <div class="metric-value" id="oarValue">—</div>
+              <div class="bar" id="oarBar"><span></span></div>
+            </div>
+            <div class="metric">
+              <div class="metric-top"><span data-i18n="integralDose">Integral</span><span id="integralText">0%</span></div>
+              <div class="metric-value" id="integralValue">—</div>
+              <div class="bar" id="integralBar"><span></span></div>
+            </div>
+          </div>
+
+          <div class="toolbox">
+            <button class="secondary" id="addSpotBtn" type="button" data-i18n="addSpot">+ Spot</button>
+            <button class="secondary danger" id="removeSpotBtn" type="button" data-i18n="remove">Remove</button>
+            <div class="spot-list" id="spotList" aria-label="Spot list"></div>
+            <button class="primary" id="evaluateBtn" type="button" data-i18n="validatePlan">Validate plan</button>
+          </div>
+
+          <div class="sliders">
+            <label class="slider-row">
+              <div class="slider-head"><span data-i18n="energy">Energy / range</span><output id="energyOut">0</output></div>
+              <input id="energySlider" type="range" min="60" max="830" value="360" />
+            </label>
+            <label class="slider-row">
+              <div class="slider-head"><span data-i18n="lateral">Lateral</span><output id="lateralOut">0</output></div>
+              <input id="lateralSlider" type="range" min="55" max="455" value="250" />
+            </label>
+            <label class="slider-row">
+              <div class="slider-head"><span data-i18n="weight">Weight</span><output id="weightOut">1.00</output></div>
+              <input id="weightSlider" type="range" min="20" max="180" value="100" />
+            </label>
+            <label class="slider-row">
+              <div class="slider-head"><span data-i18n="modulation">Modulation</span><output id="modulationOut">20</output></div>
+              <input id="modSlider" type="range" min="4" max="95" value="18" />
+            </label>
+            <label class="slider-row">
+              <div class="slider-head"><span data-i18n="rangeShifter">Range shifter</span><output id="rangeOut">0</output></div>
+              <input id="rangeSlider" type="range" min="-80" max="80" value="0" />
+            </label>
+            <label class="slider-row">
+              <div class="slider-head"><span data-i18n="uncertainty">Range uncertainty</span><output id="uncertOut">5</output></div>
+              <input id="uncertSlider" type="range" min="0" max="60" value="5" />
+            </label>
+            <label class="slider-row">
+              <div class="slider-head"><span data-i18n="proxMargin">Prox. margin</span><output id="proxOut">0</output></div>
+              <input id="proxSlider" type="range" min="0" max="45" value="0" />
+            </label>
+            <label class="slider-row">
+              <div class="slider-head"><span data-i18n="distMargin">Dist. margin</span><output id="distOut">0</output></div>
+              <input id="distSlider" type="range" min="0" max="45" value="0" />
+            </label>
+          </div>
+        </div>
+
+        <aside class="panel actions-card">
+          <div class="mode-line">
+            <span class="tag"><span data-i18n="mode">Mode</span> <strong id="modeTag">Learn</strong></span>
+            <span class="tag"><span data-i18n="unlocked">Unlocked</span> <strong id="unlockTag">1/15</strong></span>
+          </div>
+          <div class="constraints" id="constraints"></div>
+          <div class="bottom-actions">
+            <button class="secondary" id="prevLevelBtn" type="button" data-i18n="previous">Previous</button>
+            <button class="secondary" id="nextLevelBtn" type="button" data-i18n="next">Next</button>
+            <button class="secondary" id="leaderBtn" type="button" data-i18n="leaderboard">Leaderboard</button>
+            <button class="secondary" id="tutorialBtn" type="button" data-i18n="tutorial">Tutorial</button>
+          </div>
+        </aside>
+      </section>
+    </main>
+  </div>
+
+  <section class="screen show" id="menuScreen" role="dialog" aria-modal="true">
+    <div class="menu-card">
+      <div class="menu-content">
+        <div class="oa-eyebrow"><i></i><span data-i18n="oaEyebrow">Onco Arcade · radiothérapie</span></div>
+        <div class="hero">
+          <div>
+            <h2 class="oa-title"><span>Bragg</span><br/>Peak</h2>
+            <p data-i18n="menuIntro">A precise, tactile proton therapy puzzle: sculpt a SOBP, spare expressive OARs, and make range uncertainty behave.</p>
+          </div>
+          <div class="hero-visual" aria-hidden="true">
+            <svg viewBox="0 0 520 320" preserveAspectRatio="none">
+              <defs>
+                <filter id="glow"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+                <linearGradient id="curve" x1="0" x2="1"><stop stop-color="#5de7ff"/><stop offset=".72" stop-color="#ff5bd6"/><stop offset="1" stop-color="#58ffb3"/></linearGradient>
+              </defs>
+              <rect width="520" height="320" fill="rgba(0,0,0,0)"/>
+              <g opacity=".24" stroke="#5de7ff" stroke-width="1">
+                <path d="M0 64 H520 M0 128 H520 M0 192 H520 M0 256 H520 M86 0 V320 M172 0 V320 M258 0 V320 M344 0 V320 M430 0 V320"/>
+              </g>
+              <ellipse class="pulse" cx="355" cy="150" rx="58" ry="45" fill="rgba(88,255,179,.10)" stroke="#58ffb3" stroke-width="4" filter="url(#glow)"/>
+              <ellipse cx="430" cy="112" rx="34" ry="24" fill="rgba(255,99,119,.18)" stroke="#ff6377" stroke-width="3"/>
+              <path d="M18 220 C95 215, 150 205, 215 198 C248 195, 280 185, 305 142 C329 101, 348 84, 370 145 C389 197, 430 216, 502 220" fill="none" stroke="url(#curve)" stroke-width="8" stroke-linecap="round" filter="url(#glow)"/>
+              <g fill="#5de7ff" filter="url(#glow)">
+                <circle cx="64" cy="160" r="4"/><circle cx="118" cy="152" r="3"/><circle cx="176" cy="143" r="4"/><circle cx="232" cy="137" r="3"/><circle cx="290" cy="124" r="4"/>
+              </g>
+            </svg>
+          </div>
+        </div>
+        <div class="mode-grid" id="modeGrid"></div>
+        <div class="menu-form">
+          <input class="name-input" id="playerName" maxlength="18" autocomplete="nickname" placeholder="Pseudo" />
+          <button class="primary" id="startBtn" type="button" data-i18n="startGame">Start</button>
+          <button class="secondary" id="openTutorialBtn" type="button" data-i18n="tutorial">Tutorial</button>
+          <button class="secondary" id="openLeaderBtn" type="button" data-i18n="leaderboard">Leaderboard</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="modal" id="tutorialModal" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div>
+          <h2 id="tutorialTitle">Tutorial</h2>
+          <p id="tutorialBody">Drag the peak into the target.</p>
+        </div>
+        <button class="icon-btn" id="closeTutorialBtn" type="button">×</button>
+      </div>
+      <div class="badge-list" id="tutorialDots"></div>
+      <div class="modal-actions">
+        <button class="secondary" id="tutorialPrevBtn" type="button" data-i18n="previous">Previous</button>
+        <button class="primary" id="tutorialNextBtn" type="button" data-i18n="next">Next</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="modal" id="leaderModal" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div>
+          <h2 data-i18n="leaderboard">Leaderboard</h2>
+          <p data-i18n="leaderIntro">Global, level and mode rankings. Supabase is used when configured; otherwise the game stores scores locally.</p>
+        </div>
+        <button class="icon-btn" id="closeLeaderBtn" type="button">×</button>
+      </div>
+      <div class="leader-controls">
+        <select class="select-input" id="leaderScope"></select>
+        <select class="select-input" id="leaderLevel"></select>
+        <select class="select-input" id="leaderMode"></select>
+      </div>
+      <div id="leaderTable"></div>
+    </div>
+  </section>
+
+  <section class="modal" id="completeModal" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div>
+          <h2 id="completeTitle">Plan validated</h2>
+          <p id="completeBody">Nice spread-out Bragg peak.</p>
+        </div>
+        <button class="icon-btn" id="closeCompleteBtn" type="button">×</button>
+      </div>
+      <div class="complete-grid" id="completeStats"></div>
+      <div class="badge-list" id="completeBadges"></div>
+      <div class="modal-actions">
+        <button class="secondary" id="retryBtn" type="button" data-i18n="retry">Retry</button>
+        <button class="primary" id="completeNextBtn" type="button" data-i18n="nextLevel">Next level</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="modal" id="aboutModal" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div>
+          <div class="oa-eyebrow"><i></i><span id="aboutEyebrow" data-i18n="oaEyebrow">Onco Arcade · radiothérapie</span></div>
+          <h2 class="oa-title" id="aboutTitle" data-i18n="aboutTitle">À propos</h2>
+        </div>
+        <button class="icon-btn" id="closeAboutBtn" type="button">×</button>
+      </div>
+      <div class="aboutCard">
+        <p id="aboutLede" data-i18n="aboutLede">—</p>
+        <div class="aboutSig">
+          <span class="mk" aria-hidden="true"></span>
+          <div><b>Pr Jean-Emmanuel Bibault</b><span id="aboutRole" data-i18n="aboutRole">—</span></div>
+        </div>
+      </div>
+      <div class="aboutCard">
+        <h4 id="aboutDiscTitle" data-i18n="aboutDiscTitle">Mention importante</h4>
+        <p id="aboutDisc" data-i18n="aboutDisc">—</p>
+      </div>
+      <div class="modal-actions">
+        <button class="primary" id="aboutOkBtn" type="button" data-i18n="aboutOk">OK</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+  (() => {
+    "use strict";
+
+    /*
+      Bragg Peak — single-file HTML/CSS/JS game.
+
+      Leaderboard : API Onco Arcade (OVH — PHP + MySQL), partagée par tous les jeux.
+      Slug de jeu : "bragg-peak-master". Les extras (niveau, mode, couverture,
+      robustesse, badges) sont encodés dans le champ meta. Repli localStorage
+      automatique si l'API est injoignable. API_ROOT = "" pour rester 100% local.
+    */
+    const API_ROOT = "../../api";        // API Onco Arcade (OVH — PHP + MySQL) ; "" = 100% local
+    const GAME_SLUG = "bragg-peak";
+
+    const STORE = {
+      scores: "bpm_scores_v1",
+      progress: "bpm_progress_v1",
+      lang: "bpm_lang_v1",
+      player: "bpm_player_v1",
+      muted: "bpm_muted_v1"
+    };
+
+    const W = 900;
+    const H = 660;
+    const FIELD_H = 500;
+    const CURVE_TOP = 520;
+    const CURVE_H = 120;
+    const MAX_SPOTS_ABSOLUTE = 8;
+
+    const i18n = {
+      fr: {
+        subtitle: "Puzzle protonthérapie · SOBP · robustesse",
+        oaEyebrow: "Onco Arcade · radiothérapie", allGames: "Tous les jeux", about: "À propos", aboutTitle: "À propos", aboutOk: "OK",
+        aboutLede: "Bragg Peak est un mini-jeu de la collection Onco Arcade : sculpte un SOBP, épargne les organes à risque et dompte l’incertitude balistique du proton. Imaginé, conçu et développé par :",
+        aboutRole: "Professeur de radiothérapie · créateur d’Onco Arcade",
+        aboutDiscTitle: "Mention importante",
+        aboutDisc: "Jeu pédagogique et expérimental. Ce n’est pas un dispositif médical : il ne remplace pas une formation clinique et ne doit jamais servir à orienter une prise en charge réelle.",
+        menuIntro: "Un puzzle tactile de protonthérapie : sculptez une SOBP, épargnez des OAR expressifs et domptez l’incertitude de range.",
+        startGame: "Jouer",
+        tutorial: "Tutoriel",
+        leaderboard: "Leaderboard",
+        leaderIntro: "Classements global, par niveau et par mode. Le classement Onco Arcade (OVH) est utilisé quand il est en ligne ; sinon le jeu sauvegarde localement.",
+        score: "Score",
+        spots: "Spots",
+        coverage: "Couverture",
+        robustness: "Robustesse",
+        oarSafe: "OAR safe",
+        integralDose: "Dose intégrale",
+        addSpot: "+ Spot",
+        remove: "Retirer",
+        validatePlan: "Valider plan",
+        energy: "Énergie / portée",
+        lateral: "Latéral",
+        weight: "Poids",
+        modulation: "Modulation",
+        rangeShifter: "Range shifter",
+        uncertainty: "Incertitude range",
+        proxMargin: "Marge prox.",
+        distMargin: "Marge dist.",
+        mode: "Mode",
+        unlocked: "Débloqué",
+        previous: "Précédent",
+        next: "Suivant",
+        retry: "Rejouer",
+        nextLevel: "Niveau suivant",
+        global: "Global",
+        byLevel: "Par niveau",
+        byMode: "Par mode",
+        allLevels: "Tous les niveaux",
+        allModes: "Tous les modes",
+        noScores: "Aucun score pour l’instant. À vous d’ouvrir le bal.",
+        player: "Joueur",
+        level: "Niveau",
+        date: "Date",
+        badges: "Badges",
+        planValidated: "Plan validé",
+        planRejected: "Plan fragile",
+        planValidatedBody: "Belle SOBP. Les protons ont chanté juste.",
+        planRejectedBody: "La cible ou les OAR ne sont pas encore satisfaits. Ajustez énergie, spots ou robustesse.",
+        soundOn: "Son activé",
+        soundOff: "Son coupé",
+        langChanged: "Langue : français",
+        dragHint: "Glissez un pic lumineux pour modifier l’énergie et le latéral. La courbe de dose se recalcule en temps réel.",
+        learnHint: "Objectif : faire passer la courbe dans le halo vert, sans faire grimacer les OAR.",
+        expertHint: "Mode expert : vérifiez le plan avec les scénarios ± incertitude de range et les perturbations anatomiques.",
+        timedHint: "Contre-la-montre : chaque seconde compte, mais les OAR comptent davantage.",
+        spotLimit: "Nombre maximal de spots atteint pour ce niveau.",
+        oneSpotMin: "Il faut garder au moins un spot.",
+        savedLocal: "Score sauvegardé localement.",
+        savedCloud: "Score sauvegardé dans le leaderboard.",
+        unlockedToast: "Niveau {level} débloqué.",
+        copied: "Prêt à jouer.",
+        constraintCoverage: "D95 cible",
+        constraintRobust: "Robustesse min.",
+        constraintOAR: "OAR max",
+        constraintIntegral: "Dose intégrale",
+        constraintSpots: "Spots utilisés",
+        pass: "OK",
+        fail: "À corriger",
+        mode_learn: "Apprentissage",
+        mode_challenge: "Challenge",
+        mode_timed: "Contre-la-montre",
+        mode_expert: "Expert robuste",
+        mode_learn_desc: "Guidé, indulgent, idéal pour ressentir le pic de Bragg.",
+        mode_challenge_desc: "Scoring complet, niveaux débloqués progressivement.",
+        mode_timed_desc: "Planifiez vite sans sacrifier les contraintes.",
+        mode_expert_desc: "Incertitudes, marges et perturbations pèsent lourd.",
+        badge_bragg_sniper: "Bragg Sniper",
+        badge_sobp_artist: "SOBP Artist",
+        badge_range_master: "Range Master",
+        badge_oar_saver: "OAR Saver",
+        badge_clean_plan: "Clean Plan",
+        tut1Title: "1. Le pic de Bragg",
+        tut1Body: "Chaque spot a une énergie : plus elle est élevée, plus le pic se déplace en profondeur. Glissez le point néon pour viser la cible.",
+        tut2Title: "2. Construire une SOBP",
+        tut2Body: "Ajoutez plusieurs spots de profondeurs voisines pour élargir le plateau de dose et couvrir toute la cible.",
+        tut3Title: "3. Épargner les OAR",
+        tut3Body: "Les organes à risque sourient quand leur dose reste sous la limite, et grimacent quand vous dépassez.",
+        tut4Title: "4. Robustesse",
+        tut4Body: "L’incertitude de range teste des scénarios plus courts et plus longs. Un bon plan reste bon dans les deux sens.",
+        tut5Title: "5. Perturbations",
+        tut5Body: "Air, métal, sinus et mouvement respiratoire déplacent ou dégradent la portée. Anticipez-les avec marges, modulation et spots.",
+        tut6Title: "6. Scoring",
+        tut6Body: "Le score combine couverture, robustesse, OAR, dose intégrale, efficacité en spots et temps. Les badges récompensent les plans élégants.",
+        lvl1Name: "Pic de Bragg simple",
+        lvl1Desc: "Placez un pic unique dans une cible superficielle. Respirez : c’est presque de la musique.",
+        lvl2Name: "Cible profonde",
+        lvl2Desc: "Montez l’énergie pour atteindre une cible plus profonde sans arroser tout le trajet.",
+        lvl3Name: "OAR distal",
+        lvl3Desc: "L’organe à risque attend juste après la cible : attention à la queue distale.",
+        lvl4Name: "OAR proximal",
+        lvl4Desc: "Un OAR en entrée force à limiter dose intégrale et modulation excessive.",
+        lvl5Name: "Base du crâne",
+        lvl5Desc: "Géométrie serrée, tronc cérébral expressif, marge distale millimétrique.",
+        lvl6Name: "Chordome",
+        lvl6Desc: "Cible allongée près du tronc cérébral. Une SOBP artistique est nécessaire.",
+        lvl7Name: "Médulloblastome",
+        lvl7Desc: "Couverture homogène et épargne cochléaire : chaque spot compte.",
+        lvl8Name: "Tumeur pédiatrique",
+        lvl8Desc: "La dose intégrale est sévèrement pénalisée. Faites propre, doux, robuste.",
+        lvl9Name: "Cavité aérienne",
+        lvl9Desc: "L’air crée une sur-portée. Le pic va plus loin que prévu si vous l’oubliez.",
+        lvl10Name: "Implant métallique",
+        lvl10Desc: "Le métal atténue, diffuse et rend la courbe moins docile.",
+        lvl11Name: "Sinus",
+        lvl11Desc: "Les interfaces sinusiennes demandent range shifter et incertitude maîtrisée.",
+        lvl12Name: "Mouvement respiratoire",
+        lvl12Desc: "La cible bouge. Construisez une solution respiratoire robuste.",
+        lvl13Name: "Poumon",
+        lvl13Desc: "Faible densité, OAR distal et mouvement : protonthérapie en terrain joueur.",
+        lvl14Name: "Réirradiation",
+        lvl14Desc: "Les OAR ont déjà donné. Dose intégrale basse, précision maximale.",
+        lvl15Name: "Incertitude de range expert",
+        lvl15Desc: "Le boss final : air, métal, OAR distal et incertitude sévère.",
+        oar_cord: "Moelle",
+        oar_brainstem: "Tronc",
+        oar_eye: "Œil",
+        oar_cochlea: "Cochlée",
+        oar_lung: "Poumon",
+        oar_heart: "Cœur",
+        oar_bowel: "Intestin",
+        oar_kidney: "Rein",
+        oar_spinal: "Canal",
+        hazard_air: "Air",
+        hazard_metal: "Métal",
+        hazard_sinus: "Sinus",
+        hazard_motion: "Mouvement",
+        hazard_anatomy: "Variation",
+        hazard_scar: "Dose antérieure"
+      },
+      en: {
+        subtitle: "Proton therapy puzzle · SOBP · robustness",
+        oaEyebrow: "Onco Arcade · radiation oncology", allGames: "All games", about: "About", aboutTitle: "About", aboutOk: "OK",
+        aboutLede: "Bragg Peak is a mini-game from the Onco Arcade collection: sculpt a SOBP, spare the organs at risk and tame proton range uncertainty. Imagined, designed and built by:",
+        aboutRole: "Professor of radiation oncology · creator of Onco Arcade",
+        aboutDiscTitle: "Important note",
+        aboutDisc: "Educational, experimental game. It is not a medical device: it does not replace clinical training and must never be used to guide real patient care.",
+        menuIntro: "A tactile proton therapy puzzle: sculpt a SOBP, spare expressive OARs, and make range uncertainty behave.",
+        startGame: "Play",
+        tutorial: "Tutorial",
+        leaderboard: "Leaderboard",
+        leaderIntro: "Global, level and mode rankings. The Onco Arcade leaderboard (OVH) is used when online; otherwise scores are stored locally.",
+        score: "Score",
+        spots: "Spots",
+        coverage: "Coverage",
+        robustness: "Robustness",
+        oarSafe: "OAR safe",
+        integralDose: "Integral",
+        addSpot: "+ Spot",
+        remove: "Remove",
+        validatePlan: "Validate plan",
+        energy: "Energy / range",
+        lateral: "Lateral",
+        weight: "Weight",
+        modulation: "Modulation",
+        rangeShifter: "Range shifter",
+        uncertainty: "Range uncertainty",
+        proxMargin: "Prox. margin",
+        distMargin: "Dist. margin",
+        mode: "Mode",
+        unlocked: "Unlocked",
+        previous: "Previous",
+        next: "Next",
+        retry: "Retry",
+        nextLevel: "Next level",
+        global: "Global",
+        byLevel: "By level",
+        byMode: "By mode",
+        allLevels: "All levels",
+        allModes: "All modes",
+        noScores: "No scores yet. Be the first proton hero.",
+        player: "Player",
+        level: "Level",
+        date: "Date",
+        badges: "Badges",
+        planValidated: "Plan validated",
+        planRejected: "Fragile plan",
+        planValidatedBody: "Beautiful SOBP. The protons sang in tune.",
+        planRejectedBody: "The target or OARs are not satisfied yet. Adjust energy, spots or robustness.",
+        soundOn: "Sound on",
+        soundOff: "Sound muted",
+        langChanged: "Language: English",
+        dragHint: "Drag a glowing peak to change energy and lateral position. The dose curve updates in real time.",
+        learnHint: "Goal: make the curve pass through the green halo without upsetting the OARs.",
+        expertHint: "Expert mode: verify the plan with ± range uncertainty and anatomical perturbations.",
+        timedHint: "Time attack: every second matters, but OARs matter more.",
+        spotLimit: "Maximum spots reached for this level.",
+        oneSpotMin: "You must keep at least one spot.",
+        savedLocal: "Score saved locally.",
+        savedCloud: "Score saved to leaderboard.",
+        unlockedToast: "Level {level} unlocked.",
+        copied: "Ready to play.",
+        constraintCoverage: "Target D95",
+        constraintRobust: "Min robustness",
+        constraintOAR: "OAR max",
+        constraintIntegral: "Integral dose",
+        constraintSpots: "Spots used",
+        pass: "OK",
+        fail: "Fix",
+        mode_learn: "Learning",
+        mode_challenge: "Challenge",
+        mode_timed: "Time attack",
+        mode_expert: "Robust expert",
+        mode_learn_desc: "Guided and forgiving. Feel the Bragg peak first.",
+        mode_challenge_desc: "Full scoring with progressive level unlocks.",
+        mode_timed_desc: "Plan quickly without sacrificing constraints.",
+        mode_expert_desc: "Uncertainty, margins and perturbations matter a lot.",
+        badge_bragg_sniper: "Bragg Sniper",
+        badge_sobp_artist: "SOBP Artist",
+        badge_range_master: "Range Master",
+        badge_oar_saver: "OAR Saver",
+        badge_clean_plan: "Clean Plan",
+        tut1Title: "1. The Bragg peak",
+        tut1Body: "Each spot has an energy: higher energy pushes the peak deeper. Drag the neon point to aim at the target.",
+        tut2Title: "2. Build a SOBP",
+        tut2Body: "Add several nearby-depth spots to widen the dose plateau and cover the whole target.",
+        tut3Title: "3. Spare OARs",
+        tut3Body: "Organs at risk smile when their dose stays below the limit, and grimace when you exceed it.",
+        tut4Title: "4. Robustness",
+        tut4Body: "Range uncertainty tests shorter and longer scenarios. A good plan stays good in both directions.",
+        tut5Title: "5. Perturbations",
+        tut5Body: "Air, metal, sinuses and breathing motion shift or degrade range. Anticipate them with margins, modulation and spots.",
+        tut6Title: "6. Scoring",
+        tut6Body: "Score combines coverage, robustness, OARs, integral dose, spot efficiency and time. Badges reward elegant plans.",
+        lvl1Name: "Simple Bragg peak",
+        lvl1Desc: "Place one pristine peak inside a superficial target. Breathe: it is almost musical.",
+        lvl2Name: "Deep target",
+        lvl2Desc: "Increase energy to reach a deeper target without bathing the whole path.",
+        lvl3Name: "Distal OAR",
+        lvl3Desc: "An organ at risk waits just beyond the target: beware the distal edge.",
+        lvl4Name: "Proximal OAR",
+        lvl4Desc: "An entrance OAR forces you to limit integral dose and excessive modulation.",
+        lvl5Name: "Skull base",
+        lvl5Desc: "Tight geometry, expressive brainstem, millimetric distal margin.",
+        lvl6Name: "Chordoma",
+        lvl6Desc: "Long target near the brainstem. An artistic SOBP is required.",
+        lvl7Name: "Medulloblastoma",
+        lvl7Desc: "Homogeneous coverage and cochlear sparing: every spot matters.",
+        lvl8Name: "Pediatric tumor",
+        lvl8Desc: "Integral dose is severely penalized. Make it clean, gentle, robust.",
+        lvl9Name: "Air cavity",
+        lvl9Desc: "Air causes overshoot. The peak travels farther than expected if you forget it.",
+        lvl10Name: "Metal implant",
+        lvl10Desc: "Metal attenuates, scatters and makes the curve less obedient.",
+        lvl11Name: "Sinus",
+        lvl11Desc: "Sinus interfaces require a controlled range shifter and uncertainty.",
+        lvl12Name: "Respiratory motion",
+        lvl12Desc: "The target moves. Build a breathing-robust solution.",
+        lvl13Name: "Lung",
+        lvl13Desc: "Low density, distal OAR and motion: playful proton territory.",
+        lvl14Name: "Reirradiation",
+        lvl14Desc: "The OARs have already paid. Low integral dose, maximum precision.",
+        lvl15Name: "Expert range uncertainty",
+        lvl15Desc: "The final boss: air, metal, distal OAR and severe uncertainty.",
+        oar_cord: "Cord",
+        oar_brainstem: "Brainstem",
+        oar_eye: "Eye",
+        oar_cochlea: "Cochlea",
+        oar_lung: "Lung",
+        oar_heart: "Heart",
+        oar_bowel: "Bowel",
+        oar_kidney: "Kidney",
+        oar_spinal: "Canal",
+        hazard_air: "Air",
+        hazard_metal: "Metal",
+        hazard_sinus: "Sinus",
+        hazard_motion: "Motion",
+        hazard_anatomy: "Variation",
+        hazard_scar: "Prior dose"
+      }
+    };
+
+    const modes = ["learn", "challenge", "timed", "expert"];
+    const tutorials = [
+      ["tut1Title", "tut1Body"], ["tut2Title", "tut2Body"], ["tut3Title", "tut3Body"],
+      ["tut4Title", "tut4Body"], ["tut5Title", "tut5Body"], ["tut6Title", "tut6Body"]
+    ];
+
+    const levels = [
+      {id: 1, nameKey: "lvl1Name", descKey: "lvl1Desc", maxSpots: 3, target: {x: 335, y: 250, rx: 52, ry: 48}, oars: [], hazards: [], minCoverage: 0.86, minRobust: 0.65, maxIntegral: 0.24, baseUncertainty: 4, defaultSpots: [{energy: 303, y: 250, weight: 1.3, mod: 24}, {energy: 367, y: 250, weight: 1.3, mod: 24}]},
+      {id: 2, nameKey: "lvl2Name", descKey: "lvl2Desc", maxSpots: 4, target: {x: 600, y: 252, rx: 56, ry: 52}, oars: [{type: "cord", x: 740, y: 250, rx: 25, ry: 70, limit: 0.46}], hazards: [], minCoverage: 0.86, minRobust: 0.66, maxIntegral: 0.26, baseUncertainty: 5, defaultSpots: [{energy: 565, y: 252, weight: 1.15, mod: 12}, {energy: 600, y: 252, weight: 1.15, mod: 12}, {energy: 635, y: 252, weight: 1.15, mod: 12}]},
+      {id: 3, nameKey: "lvl3Name", descKey: "lvl3Desc", maxSpots: 4, target: {x: 520, y: 250, rx: 65, ry: 54}, oars: [{type: "brainstem", x: 630, y: 252, rx: 36, ry: 74, limit: 0.71}], hazards: [], minCoverage: 0.88, minRobust: 0.68, maxIntegral: 0.25, baseUncertainty: 6, defaultSpots: [{energy: 480, y: 250, weight: 1.3, mod: 12}, {energy: 507, y: 250, weight: 1.3, mod: 12}, {energy: 533, y: 250, weight: 1.3, mod: 12}, {energy: 560, y: 250, weight: 1.3, mod: 12}]},
+      {id: 4, nameKey: "lvl4Name", descKey: "lvl4Desc", maxSpots: 4, target: {x: 520, y: 260, rx: 62, ry: 56}, oars: [{type: "eye", x: 300, y: 207, rx: 42, ry: 32, limit: 0.3}, {type: "cochlea", x: 360, y: 325, rx: 28, ry: 25, limit: 0.34}], hazards: [], minCoverage: 0.88, minRobust: 0.68, maxIntegral: 0.22, baseUncertainty: 7, defaultSpots: [{energy: 482, y: 260, weight: 0.62, mod: 48}, {energy: 520, y: 260, weight: 0.62, mod: 48}, {energy: 558, y: 260, weight: 0.62, mod: 48}]},
+      {id: 5, nameKey: "lvl5Name", descKey: "lvl5Desc", maxSpots: 5, target: {x: 590, y: 226, rx: 54, ry: 46}, oars: [{type: "brainstem", x: 664, y: 270, rx: 45, ry: 82, limit: 1.31}, {type: "eye", x: 485, y: 160, rx: 35, ry: 25, limit: 0.35}], hazards: [{type: "sinus", x: 430, y: 185, rx: 55, ry: 32}], minCoverage: 0.89, minRobust: 0.7, maxIntegral: 0.23, baseUncertainty: 8, defaultSpots: [{energy: 546, y: 226, weight: 0.62, mod: 54}, {energy: 634, y: 226, weight: 0.62, mod: 54}]},
+      {id: 6, nameKey: "lvl6Name", descKey: "lvl6Desc", maxSpots: 6, target: {x: 610, y: 260, rx: 92, ry: 42}, oars: [{type: "brainstem", x: 725, y: 258, rx: 35, ry: 78, limit: 0.84}, {type: "cord", x: 455, y: 337, rx: 34, ry: 58, limit: 0.42}], hazards: [], minCoverage: 0.9, minRobust: 0.71, maxIntegral: 0.26, baseUncertainty: 8, defaultSpots: [{energy: 544, y: 226, weight: 0.72, mod: 18}, {energy: 544, y: 294, weight: 0.72, mod: 18}, {energy: 610, y: 226, weight: 0.72, mod: 18}, {energy: 610, y: 294, weight: 0.72, mod: 18}, {energy: 676, y: 226, weight: 0.72, mod: 18}, {energy: 676, y: 294, weight: 0.72, mod: 18}]},
+      {id: 7, nameKey: "lvl7Name", descKey: "lvl7Desc", maxSpots: 6, target: {x: 525, y: 242, rx: 86, ry: 72}, oars: [{type: "cochlea", x: 415, y: 143, rx: 28, ry: 26, limit: 0.28}, {type: "cochlea", x: 655, y: 146, rx: 28, ry: 26, limit: 0.28}, {type: "brainstem", x: 630, y: 330, rx: 44, ry: 55, limit: 0.71}], hazards: [], minCoverage: 0.91, minRobust: 0.72, maxIntegral: 0.25, baseUncertainty: 9, defaultSpots: [{energy: 472, y: 242, weight: 1.15, mod: 36}, {energy: 507, y: 242, weight: 1.15, mod: 36}, {energy: 543, y: 242, weight: 1.15, mod: 36}, {energy: 578, y: 242, weight: 1.15, mod: 36}]},
+      {id: 8, nameKey: "lvl8Name", descKey: "lvl8Desc", maxSpots: 5, target: {x: 455, y: 252, rx: 58, ry: 54}, oars: [{type: "kidney", x: 330, y: 334, rx: 46, ry: 35, limit: 0.3}, {type: "bowel", x: 560, y: 340, rx: 56, ry: 34, limit: 0.34}], hazards: [{type: "anatomy", x: 510, y: 210, rx: 70, ry: 38}], minCoverage: 0.9, minRobust: 0.73, maxIntegral: 0.18, baseUncertainty: 9, defaultSpots: [{energy: 413, y: 252, weight: 1.15, mod: 12}, {energy: 455, y: 252, weight: 1.15, mod: 12}, {energy: 497, y: 252, weight: 1.15, mod: 12}]},
+      {id: 9, nameKey: "lvl9Name", descKey: "lvl9Desc", maxSpots: 6, target: {x: 575, y: 247, rx: 70, ry: 52}, oars: [{type: "brainstem", x: 690, y: 252, rx: 36, ry: 76, limit: 1.41}], hazards: [{type: "air", x: 475, y: 245, rx: 48, ry: 38}], minCoverage: 0.89, minRobust: 0.72, maxIntegral: 0.25, baseUncertainty: 12, defaultSpots: [{energy: 518, y: 205, weight: 0.62, mod: 54}, {energy: 518, y: 289, weight: 0.62, mod: 54}, {energy: 632, y: 205, weight: 0.62, mod: 54}, {energy: 632, y: 289, weight: 0.62, mod: 54}]},
+      {id: 10, nameKey: "lvl10Name", descKey: "lvl10Desc", maxSpots: 6, target: {x: 610, y: 260, rx: 72, ry: 58}, oars: [{type: "cord", x: 730, y: 264, rx: 33, ry: 80, limit: 0.62}, {type: "eye", x: 405, y: 175, rx: 34, ry: 24, limit: 0.3}], hazards: [{type: "metal", x: 455, y: 253, rx: 32, ry: 58}], minCoverage: 0.89, minRobust: 0.73, maxIntegral: 0.27, baseUncertainty: 13, defaultSpots: [{energy: 565, y: 225, weight: 1.15, mod: 12}, {energy: 565, y: 295, weight: 1.15, mod: 12}, {energy: 610, y: 225, weight: 1.15, mod: 12}, {energy: 610, y: 295, weight: 1.15, mod: 12}, {energy: 655, y: 225, weight: 1.15, mod: 12}, {energy: 655, y: 295, weight: 1.15, mod: 12}]},
+      {id: 11, nameKey: "lvl11Name", descKey: "lvl11Desc", maxSpots: 6, target: {x: 555, y: 210, rx: 68, ry: 48}, oars: [{type: "eye", x: 430, y: 150, rx: 42, ry: 27, limit: 0.49}, {type: "brainstem", x: 655, y: 268, rx: 42, ry: 72, limit: 1.93}], hazards: [{type: "sinus", x: 478, y: 198, rx: 72, ry: 34}, {type: "air", x: 392, y: 212, rx: 38, ry: 24}], minCoverage: 0.89, minRobust: 0.74, maxIntegral: 0.24, baseUncertainty: 14, defaultSpots: [{energy: 499, y: 210, weight: 1, mod: 54}, {energy: 611, y: 210, weight: 1, mod: 54}]},
+      {id: 12, nameKey: "lvl12Name", descKey: "lvl12Desc", maxSpots: 6, target: {x: 570, y: 278, rx: 74, ry: 48}, oars: [{type: "heart", x: 705, y: 300, rx: 56, ry: 48, limit: 1.05}, {type: "lung", x: 420, y: 245, rx: 60, ry: 82, limit: 0.85}], hazards: [{type: "motion", x: 570, y: 278, rx: 110, ry: 66, amp: 26}], minCoverage: 0.88, minRobust: 0.75, maxIntegral: 0.24, baseUncertainty: 11, motionAmp: 28, defaultSpots: [{energy: 524, y: 240, weight: 0.72, mod: 30}, {energy: 524, y: 316, weight: 0.72, mod: 30}, {energy: 570, y: 240, weight: 0.72, mod: 30}, {energy: 570, y: 316, weight: 0.72, mod: 30}, {energy: 616, y: 240, weight: 0.72, mod: 30}, {energy: 616, y: 316, weight: 0.72, mod: 30}]},
+      {id: 13, nameKey: "lvl13Name", descKey: "lvl13Desc", maxSpots: 7, target: {x: 640, y: 245, rx: 72, ry: 56}, oars: [{type: "heart", x: 740, y: 338, rx: 56, ry: 46, limit: 1.49}, {type: "lung", x: 450, y: 246, rx: 70, ry: 100, limit: 0.46}, {type: "spinal", x: 765, y: 214, rx: 30, ry: 66, limit: 1.51}], hazards: [{type: "air", x: 520, y: 245, rx: 90, ry: 86}, {type: "motion", x: 640, y: 245, rx: 100, ry: 70, amp: 22}], minCoverage: 0.89, minRobust: 0.74, maxIntegral: 0.23, baseUncertainty: 15, motionAmp: 22, defaultSpots: [{energy: 581, y: 200, weight: 0.72, mod: 54}, {energy: 581, y: 290, weight: 0.72, mod: 54}, {energy: 699, y: 200, weight: 0.72, mod: 54}, {energy: 699, y: 290, weight: 0.72, mod: 54}]},
+      {id: 14, nameKey: "lvl14Name", descKey: "lvl14Desc", maxSpots: 5, target: {x: 510, y: 255, rx: 58, ry: 50}, oars: [{type: "bowel", x: 610, y: 292, rx: 52, ry: 38, limit: 1.05}, {type: "kidney", x: 390, y: 330, rx: 44, ry: 34, limit: 0.46}, {type: "cord", x: 660, y: 210, rx: 28, ry: 68, limit: 0.28}], hazards: [{type: "scar", x: 575, y: 252, rx: 145, ry: 110}], minCoverage: 0.88, minRobust: 0.78, maxIntegral: 0.17, baseUncertainty: 14, defaultSpots: [{energy: 474, y: 255, weight: 0.72, mod: 54}, {energy: 546, y: 255, weight: 0.72, mod: 54}]},
+      {id: 15, nameKey: "lvl15Name", descKey: "lvl15Desc", maxSpots: 8, target: {x: 610, y: 246, rx: 80, ry: 62}, oars: [{type: "brainstem", x: 720, y: 252, rx: 38, ry: 84, limit: 1.57}, {type: "eye", x: 455, y: 153, rx: 38, ry: 25, limit: 0.48}, {type: "cord", x: 520, y: 365, rx: 35, ry: 62, limit: 1.44}], hazards: [{type: "air", x: 500, y: 235, rx: 55, ry: 38}, {type: "metal", x: 555, y: 292, rx: 28, ry: 48}, {type: "sinus", x: 430, y: 186, rx: 75, ry: 35}, {type: "motion", x: 610, y: 246, rx: 110, ry: 76, amp: 18}], minCoverage: 0.91, minRobust: 0.82, maxIntegral: 0.22, baseUncertainty: 24, motionAmp: 18, defaultSpots: [{energy: 544, y: 209, weight: 0.72, mod: 54}, {energy: 544, y: 283, weight: 0.72, mod: 54}, {energy: 676, y: 209, weight: 0.72, mod: 54}, {energy: 676, y: 283, weight: 0.72, mod: 54}]}
+    ];
+
+    const el = {
+      app: document.getElementById("app"),
+      canvas: document.getElementById("gameCanvas"),
+      menu: document.getElementById("menuScreen"),
+      modeGrid: document.getElementById("modeGrid"),
+      playerName: document.getElementById("playerName"),
+      startBtn: document.getElementById("startBtn"),
+      langBtn: document.getElementById("langBtn"),
+      muteBtn: document.getElementById("muteBtn"),
+      menuBtn: document.getElementById("menuBtn"),
+      themeBtn: document.getElementById("themeBtn"),
+      aboutBtn: document.getElementById("aboutBtn"),
+      aboutModal: document.getElementById("aboutModal"),
+      closeAboutBtn: document.getElementById("closeAboutBtn"),
+      aboutOkBtn: document.getElementById("aboutOkBtn"),
+      levelKicker: document.getElementById("levelKicker"),
+      levelName: document.getElementById("levelName"),
+      levelDesc: document.getElementById("levelDesc"),
+      scoreValue: document.getElementById("scoreValue"),
+      timeValue: document.getElementById("timeValue"),
+      spotCount: document.getElementById("spotCount"),
+      hintBubble: document.getElementById("hintBubble"),
+      spotList: document.getElementById("spotList"),
+      addSpotBtn: document.getElementById("addSpotBtn"),
+      removeSpotBtn: document.getElementById("removeSpotBtn"),
+      evaluateBtn: document.getElementById("evaluateBtn"),
+      energySlider: document.getElementById("energySlider"),
+      lateralSlider: document.getElementById("lateralSlider"),
+      weightSlider: document.getElementById("weightSlider"),
+      modSlider: document.getElementById("modSlider"),
+      rangeSlider: document.getElementById("rangeSlider"),
+      uncertSlider: document.getElementById("uncertSlider"),
+      proxSlider: document.getElementById("proxSlider"),
+      distSlider: document.getElementById("distSlider"),
+      energyOut: document.getElementById("energyOut"),
+      lateralOut: document.getElementById("lateralOut"),
+      weightOut: document.getElementById("weightOut"),
+      modulationOut: document.getElementById("modulationOut"),
+      rangeOut: document.getElementById("rangeOut"),
+      uncertOut: document.getElementById("uncertOut"),
+      proxOut: document.getElementById("proxOut"),
+      distOut: document.getElementById("distOut"),
+      modeTag: document.getElementById("modeTag"),
+      unlockTag: document.getElementById("unlockTag"),
+      constraints: document.getElementById("constraints"),
+      prevLevelBtn: document.getElementById("prevLevelBtn"),
+      nextLevelBtn: document.getElementById("nextLevelBtn"),
+      leaderBtn: document.getElementById("leaderBtn"),
+      tutorialBtn: document.getElementById("tutorialBtn"),
+      tutorialModal: document.getElementById("tutorialModal"),
+      tutorialTitle: document.getElementById("tutorialTitle"),
+      tutorialBody: document.getElementById("tutorialBody"),
+      tutorialDots: document.getElementById("tutorialDots"),
+      tutorialPrevBtn: document.getElementById("tutorialPrevBtn"),
+      tutorialNextBtn: document.getElementById("tutorialNextBtn"),
+      closeTutorialBtn: document.getElementById("closeTutorialBtn"),
+      openTutorialBtn: document.getElementById("openTutorialBtn"),
+      leaderModal: document.getElementById("leaderModal"),
+      closeLeaderBtn: document.getElementById("closeLeaderBtn"),
+      openLeaderBtn: document.getElementById("openLeaderBtn"),
+      leaderScope: document.getElementById("leaderScope"),
+      leaderLevel: document.getElementById("leaderLevel"),
+      leaderMode: document.getElementById("leaderMode"),
+      leaderTable: document.getElementById("leaderTable"),
+      completeModal: document.getElementById("completeModal"),
+      completeTitle: document.getElementById("completeTitle"),
+      completeBody: document.getElementById("completeBody"),
+      completeStats: document.getElementById("completeStats"),
+      completeBadges: document.getElementById("completeBadges"),
+      completeNextBtn: document.getElementById("completeNextBtn"),
+      closeCompleteBtn: document.getElementById("closeCompleteBtn"),
+      retryBtn: document.getElementById("retryBtn"),
+      toast: document.getElementById("toast")
+    };
+
+    const ctx = el.canvas.getContext("2d", { alpha: false });
+
+    const state = {
+      lang: (function(){var u=(new URLSearchParams(location.search).get("lang")||"").toLowerCase();if(u==="fr"||u==="en"){try{localStorage.setItem(STORE.lang,u)}catch(e){}return u;}return localStorage.getItem(STORE.lang) || "fr";})(),
+      player: localStorage.getItem(STORE.player) || "Dr Proton",
+      mode: "learn",
+      levelIndex: 0,
+      unlocked: loadProgress(),
+      spots: [],
+      selectedSpot: 0,
+      rangeShift: 0,
+      uncertainty: 5,
+      proxMargin: 0,
+      distMargin: 0,
+      startTime: performance.now(),
+      elapsed: 0,
+      metrics: null,
+      lastMetricAt: 0,
+      particles: [],
+      dragging: false,
+      muted: localStorage.getItem(STORE.muted) === "1",
+      tutorialStep: 0,
+      lastToneAt: 0,
+      completedRun: null
+    };
+
+    function t(key, vars = {}) {
+      let out = (i18n[state.lang] && i18n[state.lang][key]) || i18n.en[key] || key;
+      for (const [k, v] of Object.entries(vars)) out = out.replaceAll(`{${k}}`, String(v));
+      return out;
+    }
+
+    function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
+    function pct(n) { return `${Math.round(clamp(n, 0, 1) * 100)}%`; }
+    function fmt(n, d = 0) { return Number(n).toFixed(d); }
+    function level() { return levels[state.levelIndex]; }
+    function modeKey() { return `mode_${state.mode}`; }
+
+    function loadProgress() {
+      try {
+        const data = JSON.parse(localStorage.getItem(STORE.progress) || "{}");
+        return { learn: data.learn || 1, challenge: data.challenge || 1, timed: data.timed || 1, expert: data.expert || 1 };
+      } catch { return { learn: 1, challenge: 1, timed: 1, expert: 1 }; }
+    }
+
+    function saveProgress() {
+      localStorage.setItem(STORE.progress, JSON.stringify(state.unlocked));
+    }
+
+    function applyLang() {
+      document.documentElement.lang = state.lang;
+      document.querySelectorAll("[data-i18n]").forEach(node => { node.textContent = t(node.dataset.i18n); });
+      el.playerName.placeholder = state.lang === "fr" ? "Pseudo" : "Nickname";
+      renderModes();
+      renderLeaderControls();
+      updateLevelUI();
+      renderTutorial();
+    }
+
+    function renderModes() {
+      el.modeGrid.innerHTML = "";
+      modes.forEach(mode => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = `mode-card ${state.mode === mode ? "active" : ""}`;
+        btn.innerHTML = `<b>${t(`mode_${mode}`)}</b><small>${t(`mode_${mode}_desc`)}</small>`;
+        btn.addEventListener("click", () => { state.mode = mode; renderModes(); updateLevelUI(); });
+        el.modeGrid.appendChild(btn);
+      });
+    }
+
+    function renderLeaderControls() {
+      el.leaderScope.innerHTML = `<option value="global">${t("global")}</option><option value="level">${t("byLevel")}</option><option value="mode">${t("byMode")}</option>`;
+      el.leaderLevel.innerHTML = `<option value="all">${t("allLevels")}</option>` + levels.map(l => `<option value="${l.id}">${l.id}. ${t(l.nameKey)}</option>`).join("");
+      el.leaderMode.innerHTML = `<option value="all">${t("allModes")}</option>` + modes.map(m => `<option value="${m}">${t(`mode_${m}`)}</option>`).join("");
+      el.leaderScope.value = el.leaderScope.value || "global";
+    }
+
+    function resetLevel(index = state.levelIndex) {
+      state.levelIndex = clamp(index, 0, levels.length - 1);
+      const lvl = level();
+      state.spots = lvl.defaultSpots.map(s => ({ ...s }));
+      state.selectedSpot = 0;
+      state.rangeShift = 0;
+      state.uncertainty = state.mode === "expert" ? Math.max(lvl.baseUncertainty, 18) : lvl.baseUncertainty;
+      state.proxMargin = state.mode === "expert" ? 8 : 0;
+      state.distMargin = state.mode === "expert" ? 8 : 0;
+      state.startTime = performance.now();
+      state.elapsed = 0;
+      state.metrics = null;
+      state.lastMetricAt = 0;
+      state.particles = [];
+      syncSliders();
+      renderSpotList();
+      updateLevelUI();
+      pulseTone(440, 0.025, "sine");
+    }
+
+    function startGame() {
+      state.player = (el.playerName.value || state.player || "Dr Proton").trim().slice(0, 18);
+      localStorage.setItem(STORE.player, state.player);
+      state.levelIndex = clamp(Math.min(state.unlocked[state.mode] || 1, levels.length) - 1, 0, levels.length - 1);
+      el.menu.classList.remove("show");
+      resetLevel(state.levelIndex);
+      toast(t("copied"));
+    }
+
+    function updateLevelUI() {
+      const lvl = level();
+      el.levelKicker.textContent = `${t("level").toUpperCase()} ${lvl.id} · ${t(modeKey()).toUpperCase()}`;
+      el.levelName.textContent = t(lvl.nameKey);
+      el.levelDesc.textContent = t(lvl.descKey);
+      el.modeTag.textContent = t(modeKey());
+      el.unlockTag.textContent = `${state.unlocked[state.mode] || 1}/${levels.length}`;
+      el.spotCount.textContent = `${state.spots.length}/${lvl.maxSpots}`;
+      const nextUnlocked = state.levelIndex + 2 <= (state.unlocked[state.mode] || 1);
+      el.nextLevelBtn.disabled = state.levelIndex >= levels.length - 1 || !nextUnlocked;
+      el.prevLevelBtn.disabled = state.levelIndex === 0;
+      const hintKey = state.mode === "expert" ? "expertHint" : state.mode === "timed" ? "timedHint" : state.mode === "learn" ? "learnHint" : "dragHint";
+      el.levelDesc.textContent = `${t(lvl.descKey)} — ${t(hintKey)}`;
+      el.hintBubble.innerHTML = `<b>${t(lvl.nameKey)}</b> — ${t(hintKey)}`;
+    }
+
+    function renderSpotList() {
+      el.spotList.innerHTML = "";
+      state.spots.forEach((spot, i) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = `spot-dot ${i === state.selectedSpot ? "active" : ""}`;
+        b.textContent = i + 1;
+        b.addEventListener("click", () => { state.selectedSpot = i; syncSliders(); renderSpotList(); });
+        el.spotList.appendChild(b);
+      });
+      el.spotCount.textContent = `${state.spots.length}/${level().maxSpots}`;
+    }
+
+    function syncSliders() {
+      const s = state.spots[state.selectedSpot] || state.spots[0];
+      if (!s) return;
+      el.energySlider.value = Math.round(s.energy);
+      el.lateralSlider.value = Math.round(s.y);
+      el.weightSlider.value = Math.round(s.weight * 100);
+      el.modSlider.value = Math.round(s.mod);
+      el.rangeSlider.value = Math.round(state.rangeShift);
+      el.uncertSlider.value = Math.round(state.uncertainty);
+      el.proxSlider.value = Math.round(state.proxMargin);
+      el.distSlider.value = Math.round(state.distMargin);
+      updateSliderOutputs();
+    }
+
+    function updateSliderOutputs() {
+      const s = state.spots[state.selectedSpot] || state.spots[0];
+      if (!s) return;
+      el.energyOut.textContent = `${Math.round(s.energy)}`;
+      el.lateralOut.textContent = `${Math.round(s.y)}`;
+      el.weightOut.textContent = `${s.weight.toFixed(2)}`;
+      el.modulationOut.textContent = `${Math.round(s.mod)}`;
+      el.rangeOut.textContent = `${Math.round(state.rangeShift)}`;
+      el.uncertOut.textContent = `${Math.round(state.uncertainty)}`;
+      el.proxOut.textContent = `${Math.round(state.proxMargin)}`;
+      el.distOut.textContent = `${Math.round(state.distMargin)}`;
+    }
+
+    function setSelectedFromSliders() {
+      const s = state.spots[state.selectedSpot];
+      if (!s) return;
+      s.energy = Number(el.energySlider.value);
+      s.y = Number(el.lateralSlider.value);
+      s.weight = Number(el.weightSlider.value) / 100;
+      s.mod = Number(el.modSlider.value);
+      state.rangeShift = Number(el.rangeSlider.value);
+      state.uncertainty = Number(el.uncertSlider.value);
+      state.proxMargin = Number(el.proxSlider.value);
+      state.distMargin = Number(el.distSlider.value);
+      state.lastMetricAt = 0;
+      updateSliderOutputs();
+      makeAdjustmentFeedback();
+    }
+
+    function addSpot() {
+      const lvl = level();
+      if (state.spots.length >= Math.min(MAX_SPOTS_ABSOLUTE, lvl.maxSpots)) return toast(t("spotLimit"));
+      const base = state.spots[state.selectedSpot] || { energy: lvl.target.x, y: lvl.target.y, weight: .7, mod: 30 };
+      state.spots.push({ energy: clamp(base.energy + 28, 60, 830), y: clamp(base.y + 10, 55, 455), weight: Math.max(.45, base.weight * .72), mod: base.mod });
+      state.selectedSpot = state.spots.length - 1;
+      syncSliders(); renderSpotList(); updateLevelUI();
+      vibrate(18); pulseTone(620, .035, "triangle");
+    }
+
+    function removeSpot() {
+      if (state.spots.length <= 1) return toast(t("oneSpotMin"));
+      state.spots.splice(state.selectedSpot, 1);
+      state.selectedSpot = clamp(state.selectedSpot, 0, state.spots.length - 1);
+      syncSliders(); renderSpotList(); updateLevelUI();
+      vibrate(12); pulseTone(240, .035, "sine");
+    }
+
+    function spotColor(i, alpha = 1) {
+      const colors = ["93,231,255", "255,91,214", "88,255,179", "255,231,115", "169,131,255", "255,179,92", "90,160,255", "255,99,119"];
+      return `rgba(${colors[i % colors.length]},${alpha})`;
+    }
+
+    function ellipseContains(p, e, expand = 0) {
+      const rx = e.rx + expand;
+      const ry = e.ry + expand;
+      return ((p.x - e.x) ** 2) / (rx ** 2) + ((p.y - e.y) ** 2) / (ry ** 2) <= 1;
+    }
+
+    function pathIntersectsHazard(spot, hazard) {
+      const dy = Math.abs(spot.y - hazard.y);
+      return dy < hazard.ry + 42 && spot.energy > hazard.x - hazard.rx;
+    }
+
+    function hazardEffectForSpot(spot, x, lvl) {
+      let shift = 0, amp = 1, scatter = 0;
+      for (const h of lvl.hazards) {
+        if (!pathIntersectsHazard(spot, h)) continue;
+        if (h.type === "air") { shift += 24; if (x > h.x) amp *= 1.04; }
+        if (h.type === "sinus") { shift += 14; scatter += 4; }
+        if (h.type === "metal") { if (x > h.x - h.rx) amp *= .74; scatter += 13; shift -= 8; }
+        if (h.type === "anatomy") { shift += 8 * Math.sin((spot.y + h.x) * .021); scatter += 3; }
+      }
+      return { shift, amp, scatter };
+    }
+
+    function doseAt(x, y, spots = state.spots, rangeShift = state.rangeShift, scenarioShift = 0, lateralShift = 0, lvl = level()) {
+      let dose = 0;
+      for (let i = 0; i < spots.length; i++) {
+        const s = spots[i];
+        const eff = hazardEffectForSpot(s, x, lvl);
+        const peak = clamp(s.energy + rangeShift + scenarioShift + eff.shift, 30, 875);
+        const sigmaX = 10 + s.mod * .52 + eff.scatter;
+        const sigmaY = 26 + s.mod * .34 + eff.scatter * .35;
+        const yy = s.y + lateralShift;
+        const lateral = Math.exp(-((y - yy) ** 2) / (2 * sigmaY ** 2));
+        const entrance = x < peak ? 0.11 * s.weight * (0.35 + 0.65 * x / Math.max(peak, 1)) : 0.022 * s.weight * Math.exp(-(x - peak) / 32);
+        const bragg = 1.18 * s.weight * Math.exp(-((x - peak) ** 2) / (2 * sigmaX ** 2));
+        const shoulder = .22 * s.weight * Math.exp(-((Math.max(0, Math.abs(x - peak) - sigmaX * .55)) ** 2) / (2 * (s.mod * .75 + 28) ** 2));
+        dose += eff.amp * lateral * (entrance + bragg + shoulder);
+      }
+      return dose;
+    }
+
+    function sampleMetrics(rangeScenario = 0, lateralScenario = 0) {
+      const lvl = level();
+      const target = lvl.target;
+      const stepX = 18, stepY = 16;
+      let targetDoses = [];
+      let bodyDose = 0, bodyN = 0;
+      const oarStats = lvl.oars.map(o => ({ oar: o, max: 0, mean: 0, n: 0 }));
+
+      for (let y = 52; y <= FIELD_H - 34; y += stepY) {
+        for (let x = 40; x <= W - 35; x += stepX) {
+          const d = doseAt(x, y, state.spots, state.rangeShift, rangeScenario, lateralScenario, lvl);
+          const inBody = true;
+          if (inBody) { bodyDose += d; bodyN++; }
+          if (ellipseContains({ x, y }, target, 0)) targetDoses.push(d);
+          for (let i = 0; i < lvl.oars.length; i++) {
+            if (ellipseContains({ x, y }, lvl.oars[i], 0)) {
+              oarStats[i].max = Math.max(oarStats[i].max, d);
+              oarStats[i].mean += d; oarStats[i].n++;
+            }
+          }
+        }
+      }
+      targetDoses.sort((a, b) => a - b);
+      const n = Math.max(targetDoses.length, 1);
+      const d95 = targetDoses[Math.floor(n * .05)] || 0;
+      const mean = targetDoses.reduce((a, b) => a + b, 0) / n;
+      const coverage = targetDoses.filter(d => d >= .78).length / n;
+      const hot = targetDoses.filter(d => d > 1.70).length / n;
+      const homogeneity = clamp(1 - Math.abs(mean - 1.06) / .7 - hot * .4, 0, 1);
+      oarStats.forEach(s => { if (s.n) s.mean /= s.n; });
+      return { d95, mean, coverage, hot, homogeneity, oarStats, integral: bodyDose / Math.max(bodyN, 1) };
+    }
+
+    function computeMetrics() {
+      const lvl = level();
+      const base = sampleMetrics(0, displayMotionShift() * .15);
+      const scenarios = [base];
+      const u = state.uncertainty;
+      const motion = lvl.motionAmp || 0;
+      const scenarioPairs = [[-u, 0], [u, 0]];
+      if (motion) scenarioPairs.push([0, -motion], [0, motion]);
+      if (state.mode === "expert") scenarioPairs.push([-u, -motion * .65], [u, motion * .65]);
+      for (const [rs, ls] of scenarioPairs) scenarios.push(sampleMetrics(rs, ls));
+
+      const worstCoverage = Math.min(...scenarios.map(s => s.coverage));
+      const worstD95 = Math.min(...scenarios.map(s => s.d95));
+      const coverage = clamp(base.coverage * .72 + clamp(base.d95 / .88, 0, 1) * .28, 0, 1);
+      let robust = clamp(worstCoverage * .65 + clamp(worstD95 / .76, 0, 1) * .35, 0, 1);
+      robust = clamp(robust + Math.min(state.proxMargin + state.distMargin, 50) / 600 - Math.max(0, u - 20) / 240, 0, 1);
+
+      const oarRows = lvl.oars.map((o, i) => {
+        const maxAcross = Math.max(...scenarios.map(s => s.oarStats[i]?.max || 0));
+        const ratio = maxAcross / Math.max(o.limit, .01);
+        return { oar: o, max: maxAcross, ratio, ok: ratio <= 1 };
+      });
+      const oarSafe = oarRows.length ? clamp(oarRows.reduce((acc, r) => acc + clamp(1.15 - r.ratio, 0, 1), 0) / oarRows.length, 0, 1) : 1;
+      const integralNorm = clamp(base.integral / .34, 0, 1);
+      const integralGood = clamp(1 - base.integral / Math.max(lvl.maxIntegral, .01), 0, 1);
+      const spotEfficiency = clamp(1 - Math.max(0, state.spots.length - Math.ceil(lvl.maxSpots * .55)) * .055, .70, 1);
+      const timeLimit = 120;
+      const timeRemaining = state.mode === "timed" ? clamp(1 - state.elapsed / timeLimit, 0, 1) : 1;
+      const modeWeights = state.mode === "expert" ? { c: 330, r: 280, o: 250, i: 105, s: 35, time: 0 } : state.mode === "timed" ? { c: 330, r: 210, o: 235, i: 100, s: 35, time: 90 } : { c: 355, r: 220, o: 250, i: 115, s: 60, time: 0 };
+      let raw = coverage * modeWeights.c + robust * modeWeights.r + oarSafe * modeWeights.o + integralGood * modeWeights.i + spotEfficiency * modeWeights.s + timeRemaining * modeWeights.time;
+      raw *= base.homogeneity * .92 + .08;
+      if (state.mode === "learn") raw *= 1.03;
+      const oarOk = oarRows.every(r => r.ok);
+      const pass = coverage >= lvl.minCoverage && robust >= lvl.minRobust && oarOk && base.integral <= lvl.maxIntegral * 1.35;
+      const badges = makeBadges({ coverage, robust, oarSafe, integralGood, base, spotEfficiency });
+      return { ...base, coverage, robust, oarRows, oarSafe, integralNorm, integralGood, spotEfficiency, timeRemaining, score: Math.round(clamp(raw, 0, 1000)), pass, badges };
+    }
+
+    function makeBadges(m) {
+      const out = [];
+      if (m.coverage > .90 && m.oarSafe > .86 && state.spots.length <= 2) out.push("bragg_sniper");
+      if (m.coverage > .92 && m.base.homogeneity > .78 && state.spots.length >= 4) out.push("sobp_artist");
+      if (m.robust > .84 && state.uncertainty >= 14) out.push("range_master");
+      if (m.oarSafe > .92 && level().oars.length) out.push("oar_saver");
+      if (m.coverage > .90 && m.robust > .78 && m.oarSafe > .85 && m.integralGood > .55) out.push("clean_plan");
+      return out;
+    }
+
+    function updateMetricsUI() {
+      const m = state.metrics;
+      if (!m) return;
+      const metricMap = [
+        ["coverage", m.coverage, pct(m.d95 / .9), "coverage"],
+        ["robust", m.robust, pct(m.robust), "robust"],
+        ["oar", m.oarSafe, pct(m.oarSafe), "oar"],
+        ["integral", m.integralGood, pct(m.integralGood), "integral"]
+      ];
+      for (const [id, value, label] of metricMap) {
+        document.getElementById(`${id}Text`).textContent = pct(value);
+        document.getElementById(`${id}Value`).textContent = label;
+        const bar = document.getElementById(`${id}Bar`);
+        bar.querySelector("span").style.width = pct(value);
+        bar.className = `bar ${value < .45 ? "bad" : value < .72 ? "warn" : ""}`;
+      }
+      el.scoreValue.textContent = String(m.score);
+      el.timeValue.textContent = formatTime(state.mode === "timed" ? Math.max(0, 120 - state.elapsed) : state.elapsed);
+      renderConstraints();
+    }
+
+    function renderConstraints() {
+      const m = state.metrics;
+      if (!m) return;
+      const lvl = level();
+      const rows = [
+        [t("constraintCoverage"), `${pct(m.coverage)} ≥ ${pct(lvl.minCoverage)}`, m.coverage >= lvl.minCoverage],
+        [t("constraintRobust"), `${pct(m.robust)} ≥ ${pct(lvl.minRobust)}`, m.robust >= lvl.minRobust],
+        [t("constraintIntegral"), `${pct(m.integralGood)} / ${fmt(m.integral, 2)}`, m.integral <= lvl.maxIntegral * 1.35],
+        [t("constraintSpots"), `${state.spots.length}/${lvl.maxSpots}`, state.spots.length <= lvl.maxSpots]
+      ];
+      for (const r of m.oarRows) rows.push([t(`oar_${r.oar.type}`), `${fmt(r.max, 2)} ≤ ${fmt(r.oar.limit, 2)}`, r.ok]);
+      el.constraints.innerHTML = rows.map(([label, value, ok]) => `<div class="constraint ${ok ? "ok" : "bad"}"><span>${label}</span><b>${value} · ${ok ? t("pass") : t("fail")}</b></div>`).join("");
+    }
+
+    function formatTime(seconds) {
+      const s = Math.max(0, Math.floor(seconds));
+      return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+    }
+
+    function resizeCanvasCSS() {
+      // Canvas resolution is fixed for stable physics; CSS scales responsively.
+    }
+
+    function clearCanvas() {
+      const g = ctx.createLinearGradient(0, 0, 0, H);
+      g.addColorStop(0, "#09172b"); g.addColorStop(.72, "#061022"); g.addColorStop(1, "#050914");
+      ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    }
+
+    function drawGrid() {
+      ctx.save();
+      ctx.strokeStyle = "rgba(93,231,255,.055)"; ctx.lineWidth = 1;
+      for (let x = 0; x <= W; x += 45) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, FIELD_H); ctx.stroke(); }
+      for (let y = 0; y <= FIELD_H; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+      ctx.restore();
+    }
+
+    function drawBody() {
+      ctx.save();
+      const body = new Path2D();
+      body.ellipse(470, 255, 390, 205, 0, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(160,205,255,.035)";
+      ctx.fill(body);
+      ctx.strokeStyle = "rgba(150,215,255,.18)"; ctx.lineWidth = 2;
+      ctx.stroke(body);
+      ctx.restore();
+    }
+
+    function drawDoseMap() {
+      const lvl = level();
+      const size = 13;
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      for (let y = 38; y < FIELD_H - 22; y += size) {
+        for (let x = 35; x < W - 25; x += size) {
+          const d = doseAt(x, y, state.spots, state.rangeShift, 0, displayMotionShift() * .25, lvl);
+          if (d < .04) continue;
+          const a = clamp(d / 1.65, 0, .72);
+          const hue = d > 1.4 ? 330 : d > .85 ? 170 : 192;
+          ctx.fillStyle = `hsla(${hue}, 100%, ${d > 1.4 ? 65 : 58}%, ${a * .48})`;
+          ctx.fillRect(x - size / 2, y - size / 2, size + 1, size + 1);
+        }
+      }
+      ctx.restore();
+    }
+
+    function drawTarget() {
+      const target = level().target;
+      const shiftY = displayMotionShift();
+      ctx.save();
+      ctx.translate(0, shiftY * .25);
+      ctx.shadowBlur = 26; ctx.shadowColor = "rgba(88,255,179,.55)";
+      ctx.fillStyle = "rgba(88,255,179,.08)";
+      ctx.strokeStyle = "rgba(88,255,179,.95)";
+      ctx.lineWidth = 3;
+      ctx.setLineDash([10, 8]);
+      ctx.beginPath(); ctx.ellipse(target.x, target.y, target.rx, target.ry, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = "rgba(232,255,246,.92)"; ctx.font = "900 12px Inter, sans-serif"; ctx.textAlign = "center";
+      ctx.fillText("PTV", target.x, target.y + 4);
+      ctx.restore();
+    }
+
+    function drawHazards() {
+      const lvl = level();
+      ctx.save();
+      for (const h of lvl.hazards) {
+        let color = "rgba(255,231,115,.8)", fill = "rgba(255,231,115,.08)", dash = [8, 6];
+        if (h.type === "air" || h.type === "sinus") { color = "rgba(93,231,255,.75)"; fill = "rgba(93,231,255,.08)"; }
+        if (h.type === "metal") { color = "rgba(220,225,240,.85)"; fill = "rgba(220,225,240,.10)"; dash = [4, 4]; }
+        if (h.type === "motion") { color = "rgba(255,91,214,.70)"; fill = "rgba(255,91,214,.055)"; dash = [14, 8]; }
+        if (h.type === "scar") { color = "rgba(255,99,119,.76)"; fill = "rgba(255,99,119,.07)"; dash = [6, 8]; }
+        ctx.strokeStyle = color; ctx.fillStyle = fill; ctx.lineWidth = 2; ctx.setLineDash(dash);
+        ctx.beginPath(); ctx.ellipse(h.x, h.y, h.rx, h.ry, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.setLineDash([]); ctx.fillStyle = color; ctx.font = "800 11px Inter, sans-serif"; ctx.textAlign = "center";
+        ctx.fillText(t(`hazard_${h.type}`), h.x, h.y + h.ry + 16);
+        if (h.type === "motion") {
+          const dy = displayMotionShift();
+          ctx.strokeStyle = "rgba(255,91,214,.35)"; ctx.beginPath(); ctx.moveTo(h.x - h.rx - 12, h.y + dy * .25); ctx.lineTo(h.x + h.rx + 12, h.y + dy * .25); ctx.stroke();
+        }
+      }
+      ctx.restore();
+    }
+
+    function displayMotionShift() {
+      const amp = level().motionAmp || 0;
+      if (!amp) return 0;
+      return Math.sin(performance.now() * .0032) * amp;
+    }
+
+    function drawOARs() {
+      const lvl = level();
+      const m = state.metrics;
+      ctx.save();
+      for (let i = 0; i < lvl.oars.length; i++) {
+        const o = lvl.oars[i];
+        const row = m?.oarRows?.[i];
+        const ratio = row ? row.ratio : 0;
+        const ok = ratio <= .85;
+        const warn = ratio > .85 && ratio <= 1;
+        const stroke = ok ? "rgba(93,231,255,.95)" : warn ? "rgba(255,231,115,.95)" : "rgba(255,99,119,.95)";
+        const fill = ok ? "rgba(93,231,255,.10)" : warn ? "rgba(255,231,115,.12)" : "rgba(255,99,119,.14)";
+        ctx.shadowBlur = ok ? 14 : 24; ctx.shadowColor = stroke;
+        ctx.fillStyle = fill; ctx.strokeStyle = stroke; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.ellipse(o.x, o.y, o.rx, o.ry, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.shadowBlur = 0;
+        drawFace(o.x, o.y, Math.min(o.rx, o.ry), ratio);
+        ctx.fillStyle = "rgba(235,248,255,.88)"; ctx.font = "800 11px Inter, sans-serif"; ctx.textAlign = "center";
+        ctx.fillText(t(`oar_${o.type}`), o.x, o.y + o.ry + 16);
+      }
+      ctx.restore();
+    }
+
+    function drawFace(x, y, r, ratio) {
+      ctx.save();
+      ctx.fillStyle = "rgba(235,248,255,.88)";
+      ctx.beginPath(); ctx.arc(x - r * .32, y - r * .15, 3.2, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(x + r * .32, y - r * .15, 3.2, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = "rgba(235,248,255,.88)"; ctx.lineWidth = 2; ctx.lineCap = "round";
+      ctx.beginPath();
+      if (ratio <= .85) ctx.arc(x, y + r * .02, r * .32, 0, Math.PI);
+      else if (ratio <= 1) { ctx.moveTo(x - r * .28, y + r * .28); ctx.lineTo(x + r * .28, y + r * .28); }
+      else ctx.arc(x, y + r * .42, r * .30, Math.PI, Math.PI * 2);
+      ctx.stroke(); ctx.restore();
+    }
+
+    function drawBeamsAndSpots() {
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      for (let i = 0; i < state.spots.length; i++) {
+        const s = state.spots[i];
+        const peakX = clamp(s.energy + state.rangeShift + hazardEffectForSpot(s, s.energy, level()).shift, 30, 875);
+        const color = spotColor(i, 1);
+        ctx.strokeStyle = spotColor(i, i === state.selectedSpot ? .75 : .35);
+        ctx.lineWidth = i === state.selectedSpot ? 3.2 : 2;
+        ctx.shadowBlur = i === state.selectedSpot ? 20 : 10;
+        ctx.shadowColor = color;
+        ctx.beginPath();
+        ctx.moveTo(28, s.y);
+        ctx.bezierCurveTo(peakX * .35, s.y - 8, peakX * .68, s.y + 8, peakX, s.y);
+        ctx.stroke();
+        ctx.fillStyle = spotColor(i, i === state.selectedSpot ? 1 : .72);
+        ctx.beginPath(); ctx.arc(peakX, s.y, i === state.selectedSpot ? 12 : 9, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = "rgba(255,255,255,.86)"; ctx.lineWidth = 1.5; ctx.shadowBlur = 0;
+        ctx.beginPath(); ctx.arc(peakX, s.y, i === state.selectedSpot ? 16 : 12, 0, Math.PI * 2); ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function drawParticles(dt) {
+      if (Math.random() < .35 && state.spots.length) {
+        const i = Math.floor(Math.random() * state.spots.length);
+        const s = state.spots[i];
+        state.particles.push({ i, x: 24, y: s.y + (Math.random() - .5) * 22, v: 260 + Math.random() * 210, life: 1 });
+      }
+      ctx.save(); ctx.globalCompositeOperation = "lighter";
+      for (const p of state.particles) {
+        const s = state.spots[p.i] || state.spots[0];
+        const peak = s ? clamp(s.energy + state.rangeShift, 30, 875) : 600;
+        p.x += p.v * dt;
+        p.y += Math.sin(p.x * .022 + p.i) * .35;
+        p.life = clamp((peak - p.x) / Math.max(peak, 1), 0, 1);
+        ctx.fillStyle = spotColor(p.i, .16 + .65 * p.life);
+        ctx.beginPath(); ctx.arc(p.x, p.y, 2.2 + 2.2 * (1 - p.life), 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.restore();
+      state.particles = state.particles.filter(p => p.x < W && p.life > 0);
+    }
+
+    function drawCurve() {
+      const lvl = level();
+      const yMid = lvl.target.y + displayMotionShift() * .25;
+      ctx.save();
+      ctx.fillStyle = "rgba(0,0,0,.24)"; ctx.fillRect(0, FIELD_H, W, H - FIELD_H);
+      ctx.strokeStyle = "rgba(93,231,255,.16)"; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(0, CURVE_TOP); ctx.lineTo(W, CURVE_TOP); ctx.stroke();
+      ctx.fillStyle = "rgba(88,255,179,.08)";
+      ctx.fillRect(lvl.target.x - lvl.target.rx - state.proxMargin, CURVE_TOP, lvl.target.rx * 2 + state.proxMargin + state.distMargin, CURVE_H);
+      ctx.strokeStyle = "rgba(88,255,179,.35)"; ctx.setLineDash([8, 7]);
+      ctx.strokeRect(lvl.target.x - lvl.target.rx - state.proxMargin, CURVE_TOP + 6, lvl.target.rx * 2 + state.proxMargin + state.distMargin, CURVE_H - 12);
+      ctx.setLineDash([]);
+      for (const o of lvl.oars) {
+        ctx.fillStyle = "rgba(255,99,119,.06)";
+        ctx.fillRect(o.x - o.rx, CURVE_TOP, o.rx * 2, CURVE_H);
+      }
+      ctx.strokeStyle = "rgba(255,255,255,.22)"; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(0, CURVE_TOP + CURVE_H - 78); ctx.lineTo(W, CURVE_TOP + CURVE_H - 78); ctx.stroke();
+      const grad = ctx.createLinearGradient(0, 0, W, 0);
+      grad.addColorStop(0, "#5de7ff"); grad.addColorStop(.68, "#ff5bd6"); grad.addColorStop(1, "#58ffb3");
+      ctx.strokeStyle = grad; ctx.lineWidth = 4; ctx.shadowBlur = 18; ctx.shadowColor = "rgba(93,231,255,.55)";
+      ctx.beginPath();
+      for (let x = 0; x <= W; x += 5) {
+        const d = doseAt(x, yMid, state.spots, state.rangeShift, 0, 0, lvl);
+        const yy = CURVE_TOP + CURVE_H - clamp(d / 1.85, 0, 1) * (CURVE_H - 18) - 8;
+        if (x === 0) ctx.moveTo(x, yy); else ctx.lineTo(x, yy);
+      }
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = "rgba(235,248,255,.78)"; ctx.font = "800 11px Inter, sans-serif"; ctx.textAlign = "left";
+      ctx.fillText("SOBP / dose-depth", 16, FIELD_H + 24);
+      ctx.textAlign = "right"; ctx.fillText(t("coverage"), W - 18, FIELD_H + 24);
+      ctx.restore();
+    }
+
+    function draw() {
+      clearCanvas(); drawGrid(); drawBody(); drawHazards(); drawDoseMap(); drawTarget(); drawOARs(); drawBeamsAndSpots(); drawCurve();
+    }
+
+    let lastFrame = performance.now();
+    function loop(now = performance.now()) {
+      const dt = Math.min(.04, (now - lastFrame) / 1000); lastFrame = now;
+      if (!el.menu.classList.contains("show")) {
+        state.elapsed = (now - state.startTime) / 1000;
+        if (now - state.lastMetricAt > 95) { state.metrics = computeMetrics(); state.lastMetricAt = now; updateMetricsUI(); }
+      }
+      draw(); drawParticles(dt);
+      requestAnimationFrame(loop);
+    }
+
+    function canvasPoint(evt) {
+      const rect = el.canvas.getBoundingClientRect();
+      const e = evt.touches?.[0] || evt.changedTouches?.[0] || evt;
+      return { x: (e.clientX - rect.left) * W / rect.width, y: (e.clientY - rect.top) * H / rect.height };
+    }
+
+    function findSpotAt(p) {
+      let best = -1, bestD = Infinity;
+      state.spots.forEach((s, i) => {
+        const peak = clamp(s.energy + state.rangeShift + hazardEffectForSpot(s, s.energy, level()).shift, 30, 875);
+        const d = Math.hypot(p.x - peak, p.y - s.y);
+        if (d < bestD && d < 42) { best = i; bestD = d; }
+      });
+      return best;
+    }
+
+    function pointerDown(evt) {
+      const p = canvasPoint(evt);
+      if (p.y > FIELD_H) return;
+      const idx = findSpotAt(p);
+      if (idx >= 0) state.selectedSpot = idx;
+      else {
+        const nearest = nearestSpotByY(p.y);
+        state.selectedSpot = nearest;
+      }
+      state.dragging = true;
+      updateSpotFromPoint(p);
+      renderSpotList(); syncSliders();
+    }
+
+    function pointerMove(evt) {
+      if (!state.dragging) return;
+      evt.preventDefault();
+      updateSpotFromPoint(canvasPoint(evt));
+    }
+
+    function pointerUp() { state.dragging = false; }
+
+    function nearestSpotByY(y) {
+      let best = 0, bd = Infinity;
+      state.spots.forEach((s, i) => { const d = Math.abs(s.y - y); if (d < bd) { bd = d; best = i; } });
+      return best;
+    }
+
+    function updateSpotFromPoint(p) {
+      const s = state.spots[state.selectedSpot];
+      if (!s) return;
+      s.energy = clamp(p.x - state.rangeShift, 60, 830);
+      s.y = clamp(p.y, 55, 455);
+      state.lastMetricAt = 0;
+      syncSliders(); makeAdjustmentFeedback();
+    }
+
+    function makeAdjustmentFeedback() {
+      const now = performance.now();
+      if (now - state.lastToneAt > 80) {
+        const s = state.spots[state.selectedSpot];
+        pulseTone(220 + (s.energy / 830) * 440, .018, "sine", .018);
+        state.lastToneAt = now;
+      }
+      if (navigator.vibrate && state.dragging && Math.random() < .04) navigator.vibrate(4);
+    }
+
+    let audioCtx = null;
+    function pulseTone(freq = 440, dur = .04, type = "sine", gainValue = .035) {
+      if (state.muted) return;
+      try {
+        audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type; osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(gainValue, audioCtx.currentTime + .006);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
+        osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + dur + .01);
+      } catch { /* audio not available */ }
+    }
+    function vibrate(ms) { if (navigator.vibrate) navigator.vibrate(ms); }
+
+    function evaluatePlan() {
+      state.metrics = computeMetrics(); updateMetricsUI();
+      const m = state.metrics;
+      if (!m.pass) {
+        toast(t("planRejected") + " — " + t("planRejectedBody")); pulseTone(170, .09, "sawtooth", .025); vibrate([18, 28, 18]);
+        return;
+      }
+      const record = {
+        player: state.player,
+        score: m.score,
+        level: level().id,
+        mode: state.mode,
+        coverage: Number(m.coverage.toFixed(4)),
+        robustness: Number(m.robust.toFixed(4)),
+        integral_dose: Number(m.integral.toFixed(4)),
+        spots: state.spots.length,
+        badges: m.badges,
+        date: new Date().toISOString()
+      };
+      state.completedRun = record;
+      saveScore(record).then(savedCloud => toast(t(savedCloud ? "savedCloud" : "savedLocal")));
+      unlockNext();
+      showComplete(record, m);
+      pulseTone(784, .09, "triangle", .045); setTimeout(() => pulseTone(987, .11, "triangle", .04), 85); vibrate([20, 30, 20]);
+    }
+
+    function unlockNext() {
+      const next = Math.min(level().id + 1, levels.length);
+      if ((state.unlocked[state.mode] || 1) < next) {
+        state.unlocked[state.mode] = next; saveProgress(); updateLevelUI();
+        toast(t("unlockedToast", { level: next }));
+      }
+    }
+
+    function showComplete(record, m) {
+      el.completeTitle.textContent = t("planValidated");
+      el.completeBody.textContent = t("planValidatedBody");
+      el.completeStats.innerHTML = [
+        [t("score"), record.score],
+        [t("coverage"), pct(record.coverage)],
+        [t("robustness"), pct(record.robustness)],
+        [t("integralDose"), fmt(record.integral_dose, 2)]
+      ].map(([a, b]) => `<div class="complete-stat"><small>${a}</small><b>${b}</b></div>`).join("");
+      el.completeBadges.innerHTML = record.badges.length ? record.badges.map(b => `<span class="badge">${t(`badge_${b}`)}</span>`).join("") : `<span class="badge">${t("pass")}</span>`;
+      el.completeNextBtn.disabled = state.levelIndex >= levels.length - 1;
+      el.completeModal.classList.add("show");
+    }
+
+    function localScores() {
+      try { return JSON.parse(localStorage.getItem(STORE.scores) || "[]"); } catch { return []; }
+    }
+    function setLocalScores(scores) { localStorage.setItem(STORE.scores, JSON.stringify(scores.slice(0, 400))); }
+
+    async function saveScore(record) {
+      const scores = localScores(); scores.push(record); scores.sort((a, b) => b.score - a.score); setLocalScores(scores);
+      if (!API_ROOT) return false;
+      try {
+        const meta = [record.level, record.mode, Math.round((record.coverage || 0) * 100), Math.round((record.robustness || 0) * 100), (record.badges || []).join("~")].join("|").slice(0, 255);
+        const res = await fetch(`${API_ROOT}/submit.php`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ game: GAME_SLUG, name: record.player, score: record.score, ts: Date.now(), meta })
+        });
+        const data = res.ok ? await res.json() : null;
+        return !!(data && data.ok);
+      } catch { return false; }
+    }
+
+    async function getScores() {
+      let cloud = [];
+      if (API_ROOT) {
+        try {
+          const url = `${API_ROOT}/top.php?game=${GAME_SLUG}&period=all&limit=100`;
+          const res = await fetch(url, { cache: "no-store" });
+          const data = res.ok ? await res.json() : null;
+          if (data && data.ok && Array.isArray(data.rows)) {
+            cloud = data.rows.map(r => {
+              const m = String(r.meta || "").split("|");
+              return {
+                player: r.name, score: r.score,
+                level: m[0] ? Number(m[0]) : "",
+                mode: m[1] || "challenge",
+                coverage: (Number(m[2]) || 0) / 100,
+                robustness: (Number(m[3]) || 0) / 100,
+                badges: m[4] ? m[4].split("~").filter(Boolean) : [],
+                date: Date.now()
+              };
+            });
+          }
+        } catch { cloud = []; }
+      }
+      const combined = [...cloud, ...localScores()];
+      combined.sort((a, b) => (b.score || 0) - (a.score || 0));
+      return combined.slice(0, 100);
+    }
+
+    async function renderLeaderboard() {
+      const scope = el.leaderScope.value || "global";
+      const levelFilter = el.leaderLevel.value || "all";
+      const modeFilter = el.leaderMode.value || "all";
+      let scores = await getScores();
+      if (scope === "level" && levelFilter !== "all") scores = scores.filter(s => Number(s.level) === Number(levelFilter));
+      if (scope === "mode" && modeFilter !== "all") scores = scores.filter(s => s.mode === modeFilter);
+      if (scope === "global") {
+        if (levelFilter !== "all") scores = scores.filter(s => Number(s.level) === Number(levelFilter));
+        if (modeFilter !== "all") scores = scores.filter(s => s.mode === modeFilter);
+      }
+      if (!scores.length) { el.leaderTable.innerHTML = `<div class="constraint"><span>${t("noScores")}</span><b>—</b></div>`; return; }
+      el.leaderTable.innerHTML = `<table><thead><tr><th>#</th><th>${t("player")}</th><th>${t("score")}</th><th>${t("level")}</th><th>${t("mode")}</th><th>${t("coverage")}</th><th>${t("robustness")}</th><th>${t("badges")}</th><th>${t("date")}</th></tr></thead><tbody>${scores.slice(0, 30).map((s, i) => `<tr><td>${i + 1}</td><td>${escapeHtml(s.player || "—")}</td><td><b>${s.score || 0}</b></td><td>${s.level || "—"}</td><td>${t(`mode_${s.mode || "challenge"}`)}</td><td>${pct(s.coverage || 0)}</td><td>${pct(s.robustness || 0)}</td><td>${(s.badges || []).slice(0, 2).map(b => t(`badge_${b}`)).join(", ")}</td><td>${new Date(s.date || Date.now()).toLocaleDateString(state.lang === "fr" ? "fr-FR" : "en-US")}</td></tr>`).join("")}</tbody></table>`;
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>'"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[c]));
+    }
+
+    function openLeaderboard() { renderLeaderControls(); el.leaderModal.classList.add("show"); renderLeaderboard(); }
+
+    function renderTutorial() {
+      const [titleKey, bodyKey] = tutorials[state.tutorialStep];
+      el.tutorialTitle.textContent = t(titleKey);
+      el.tutorialBody.textContent = t(bodyKey);
+      el.tutorialDots.innerHTML = tutorials.map((_, i) => `<span class="badge" style="opacity:${i === state.tutorialStep ? 1 : .45}">${i + 1}</span>`).join("");
+      el.tutorialPrevBtn.disabled = state.tutorialStep === 0;
+      el.tutorialNextBtn.textContent = state.tutorialStep === tutorials.length - 1 ? t("startGame") : t("next");
+    }
+
+    function openTutorial() { renderTutorial(); el.tutorialModal.classList.add("show"); }
+
+    function toast(msg) {
+      el.toast.textContent = msg;
+      el.toast.classList.add("show");
+      clearTimeout(toast._t);
+      toast._t = setTimeout(() => el.toast.classList.remove("show"), 1800);
+    }
+
+    function bindEvents() {
+      el.playerName.value = state.player;
+      el.startBtn.addEventListener("click", startGame);
+      el.menuBtn.addEventListener("click", () => el.menu.classList.add("show"));
+      el.langBtn.addEventListener("click", () => { state.lang = state.lang === "fr" ? "en" : "fr"; localStorage.setItem(STORE.lang, state.lang); applyLang(); toast(t("langChanged")); });
+      el.aboutBtn.addEventListener("click", () => el.aboutModal.classList.add("show"));
+      el.closeAboutBtn.addEventListener("click", () => el.aboutModal.classList.remove("show"));
+      el.aboutOkBtn.addEventListener("click", () => el.aboutModal.classList.remove("show"));
+      el.aboutModal.addEventListener("click", e => { if (e.target === el.aboutModal) el.aboutModal.classList.remove("show"); });
+      el.themeBtn.addEventListener("click", () => applyTheme(document.documentElement.dataset.theme==="light" ? "dark" : "light"));
+      el.muteBtn.addEventListener("click", () => { state.muted = !state.muted; localStorage.setItem(STORE.muted, state.muted ? "1" : "0"); el.muteBtn.textContent = state.muted ? "×" : "♪"; toast(t(state.muted ? "soundOff" : "soundOn")); });
+      el.addSpotBtn.addEventListener("click", addSpot);
+      el.removeSpotBtn.addEventListener("click", removeSpot);
+      el.evaluateBtn.addEventListener("click", evaluatePlan);
+      [el.energySlider, el.lateralSlider, el.weightSlider, el.modSlider, el.rangeSlider, el.uncertSlider, el.proxSlider, el.distSlider].forEach(sl => sl.addEventListener("input", setSelectedFromSliders));
+      el.canvas.addEventListener("pointerdown", pointerDown);
+      el.canvas.addEventListener("pointermove", pointerMove, { passive: false });
+      window.addEventListener("pointerup", pointerUp);
+      el.prevLevelBtn.addEventListener("click", () => resetLevel(state.levelIndex - 1));
+      el.nextLevelBtn.addEventListener("click", () => { if (state.levelIndex + 1 < (state.unlocked[state.mode] || 1)) resetLevel(state.levelIndex + 1); });
+      el.tutorialBtn.addEventListener("click", openTutorial);
+      el.openTutorialBtn.addEventListener("click", openTutorial);
+      el.closeTutorialBtn.addEventListener("click", () => el.tutorialModal.classList.remove("show"));
+      el.tutorialPrevBtn.addEventListener("click", () => { state.tutorialStep = clamp(state.tutorialStep - 1, 0, tutorials.length - 1); renderTutorial(); });
+      el.tutorialNextBtn.addEventListener("click", () => { if (state.tutorialStep >= tutorials.length - 1) { el.tutorialModal.classList.remove("show"); startGame(); } else { state.tutorialStep++; renderTutorial(); } });
+      el.leaderBtn.addEventListener("click", openLeaderboard);
+      el.openLeaderBtn.addEventListener("click", openLeaderboard);
+      el.closeLeaderBtn.addEventListener("click", () => el.leaderModal.classList.remove("show"));
+      [el.leaderScope, el.leaderLevel, el.leaderMode].forEach(s => s.addEventListener("change", renderLeaderboard));
+      el.closeCompleteBtn.addEventListener("click", () => el.completeModal.classList.remove("show"));
+      el.retryBtn.addEventListener("click", () => { el.completeModal.classList.remove("show"); resetLevel(state.levelIndex); });
+      el.completeNextBtn.addEventListener("click", () => { el.completeModal.classList.remove("show"); if (state.levelIndex < levels.length - 1) resetLevel(state.levelIndex + 1); });
+      window.addEventListener("resize", resizeCanvasCSS);
+    }
+
+    function applyTheme(mode){
+      document.documentElement.dataset.theme = mode;
+      try{ localStorage.setItem("oa-theme", mode); }catch(e){}
+      if(el.themeBtn) el.themeBtn.textContent = mode==="light" ? "☀" : "☾";
+    }
+    function init() {
+      applyTheme((function(){try{return localStorage.getItem("oa-theme")}catch(e){return null}})() || "dark");
+      el.muteBtn.textContent = state.muted ? "×" : "♪";
+      bindEvents();
+      applyLang();
+      resetLevel(0);
+      renderSpotList();
+      resizeCanvasCSS();
+      requestAnimationFrame(loop);
+    }
+
+    init();
+  })();
+  </script>
+<div id="oaNameAsk" style="display:none;position:fixed;inset:0;z-index:2147483000;background:rgba(3,8,18,.74);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif">
+  <div style="width:min(360px,94vw);background:#0f1626;color:#f8fafc;border:1px solid rgba(255,255,255,.14);border-radius:18px;padding:22px;box-shadow:0 30px 80px rgba(0,0,0,.55)">
+    <div id="oaNameAskTitle" style="font-size:18px;font-weight:560;letter-spacing:-.01em;margin-bottom:4px">Ton pseudo</div>
+    <div id="oaNameAskSub" style="font-size:13px;color:#a7b0c2;line-height:1.4;margin-bottom:14px">Pour enregistrer ton score au classement.</div>
+    <input id="oaNameAskInput" maxlength="18" placeholder="Dr …" autocomplete="off" spellcheck="false" style="width:100%;box-sizing:border-box;font:inherit;font-size:15px;font-weight:520;color:#f8fafc;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:12px 14px;outline:none">
+    <div id="oaTeamLabel" style="font-size:12px;color:#a7b0c2;margin:12px 0 5px">Équipe (optionnel)</div>
+    <div id="oaTeamWrap" style="position:relative">
+    <input id="oaNameAskTeam" maxlength="24" placeholder="Ton équipe…" autocomplete="off" spellcheck="false" style="width:100%;box-sizing:border-box;font:inherit;font-size:15px;font-weight:520;color:#f8fafc;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:12px 14px;outline:none">
+    <div id="oaTeamMenu" style="position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:6;background:#0f1626;border:1px solid rgba(255,255,255,.16);border-radius:12px;box-shadow:0 22px 55px rgba(0,0,0,.55);max-height:172px;overflow:auto;display:none"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
+      <button id="oaNameAskSkip" type="button" style="font:inherit;font-weight:520;color:#a7b0c2;background:none;border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:9px 14px;cursor:pointer">Passer</button>
+      <button id="oaNameAskOk" type="button" style="font:inherit;font-weight:560;color:#fff;background:linear-gradient(135deg,#2557d6,#0891b2);border:none;border-radius:999px;padding:9px 16px;cursor:pointer">Enregistrer</button>
+    </div>
+  </div>
+</div>
+<script id="oa-namegate">
+(function(){
+  var DEFAULTS = ['','—','-','dr','dr …','dr...','anonyme','anonymous','ninja','joueur','player','name','nom','pseudo'];
+  function isDefault(n){ return DEFAULTS.indexOf((n||'').trim().toLowerCase()) >= 0; }
+  function isEn(){ var l=(document.documentElement.getAttribute('lang')||document.documentElement.lang||navigator.language||'fr'); return String(l).slice(0,2).toLowerCase()==='en'; }
+  function lget(k){ try{ return localStorage.getItem(k)||''; }catch(e){ return ''; } }
+  function lset(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+
+  var teamsLoaded=false;
+  function loadTeams(){
+    if(teamsLoaded) return; teamsLoaded=true;
+    try{
+      fetch('../../api/teams.php',{cache:'no-store'}).then(function(r){return r.ok?r.json():null;}).then(function(d){
+        if(d&&d.ok&&Array.isArray(d.teams)){ window.__oaTeams=d.teams.map(function(t){return String(t);}); }
+      }).catch(function(){});
+    }catch(e){}
+  }
+
+  function oaRenderTeamMenu(){
+    var tinp=document.getElementById('oaNameAskTeam'), menu=document.getElementById('oaTeamMenu');
+    if(!tinp||!menu) return;
+    var q=(tinp.value||'').toLowerCase();
+    var list=(window.__oaTeams||[]).filter(function(t){return t && t.toLowerCase().indexOf(q)>=0;}).slice(0,8);
+    if(!list.length){ menu.style.display='none'; menu.innerHTML=''; return; }
+    menu.innerHTML=list.map(function(t){return '<div style="padding:11px 14px;font-size:14px;color:#f8fafc;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.07)">'+String(t).replace(/</g,'&lt;')+'</div>';}).join('');
+    Array.prototype.forEach.call(menu.children,function(el){
+      el.onmousedown=function(e){ e.preventDefault(); tinp.value=el.textContent; menu.style.display='none'; };
+      el.ontouchstart=function(e){ e.preventDefault(); tinp.value=el.textContent; menu.style.display='none'; };
+    });
+    menu.style.display='block';
+  }
+  function oaWireTeam(){
+    var tinp=document.getElementById('oaNameAskTeam'), menu=document.getElementById('oaTeamMenu');
+    if(!tinp||tinp._oaWired) return; tinp._oaWired=true;
+    tinp.addEventListener('focus', oaRenderTeamMenu);
+    tinp.addEventListener('input', oaRenderTeamMenu);
+    tinp.addEventListener('blur', function(){ setTimeout(function(){ if(menu) menu.style.display='none'; }, 180); });
+  }
+
+  // Renvoie une Promise<{name, team}>. Demande une seule fois (pseudo + équipe), puis réutilise.
+  window.oaEnsureIdentity = function(bodyName){
+    return new Promise(function(resolve){
+      var sName=lget('oa-name').trim(), sTeam=lget('oa-team').trim(), asked=lget('oa-id2')==='1';
+      var haveName = (bodyName && !isDefault(bodyName)) ? String(bodyName).trim() : sName;
+      if(asked && haveName){ resolve({name:haveName, team:sTeam}); return; }
+      var el=document.getElementById('oaNameAsk');
+      if(!el){ resolve({name:haveName||(isEn()?'Anonymous':'Anonyme'), team:sTeam}); return; }
+      loadTeams(); oaWireTeam();
+      var inp=document.getElementById('oaNameAskInput'), tinp=document.getElementById('oaNameAskTeam');
+      var ok=document.getElementById('oaNameAskOk'), skip=document.getElementById('oaNameAskSkip');
+      var en=isEn();
+      document.getElementById('oaNameAskTitle').textContent = en?'Your name':'Ton pseudo';
+      document.getElementById('oaNameAskSub').textContent   = en?'To save your score on the leaderboard.':'Pour enregistrer ton score au classement.';
+      document.getElementById('oaTeamLabel').textContent    = en?'Team (optional)':'Équipe (optionnel)';
+      tinp.placeholder = en?'Your team…':'Ton équipe…';
+      ok.textContent = en?'Save':'Enregistrer'; skip.textContent = en?'Skip':'Passer';
+      inp.value=haveName||''; tinp.value=sTeam||'';
+      el.style.display='flex'; setTimeout(function(){ try{(inp.value?tinp:inp).focus();}catch(e){} },60);
+      function done(nm,tm,persist){
+        el.style.display='none'; ok.onclick=null; skip.onclick=null; inp.onkeydown=null; tinp.onkeydown=null;
+        if(persist){ lset('oa-name',nm); lset('oa-team',tm); lset('oa-identity','1'); lset('oa-id2','1'); }
+        resolve({name:nm, team:tm});
+      }
+      ok.onclick=function(){ done(inp.value.trim()||(en?'Anonymous':'Anonyme'), tinp.value.trim(), true); };
+      skip.onclick=function(){ done(haveName||(en?'Anonymous':'Anonyme'), sTeam||'', false); };
+      inp.onkeydown=function(e){ if(e.key==='Enter'){ e.preventDefault(); tinp.focus(); } };
+      tinp.onkeydown=function(e){ if(e.key==='Enter'){ e.preventDefault(); ok.onclick(); } };
+    });
+  };
+  // Compat : oaAskName -> renvoie juste le pseudo
+  window.oaAskName = function(cur){ return window.oaEnsureIdentity(cur).then(function(id){ return id.name; }); };
+  /* oa-pregame-ask : demander pseudo+equipe a l'arrivee si pas encore renseigne */
+  setTimeout(function(){ try{ if(lget('oa-id2')!=='1') window.oaEnsureIdentity(''); }catch(e){} }, 500);
+
+  // Interception : tout POST vers submit.php -> injecte pseudo + équipe (demande si première fois)
+  if(window.fetch && !window.__oaNameGate){
+    window.__oaNameGate = true;
+    var orig = window.fetch;
+    window.fetch = function(url, opts){
+      try{
+        var u = (typeof url==='string') ? url : (url && url.url) || '';
+        if(u.indexOf('submit.php')>=0 && opts && opts.method && String(opts.method).toUpperCase()==='POST' && typeof opts.body==='string'){
+          var body = JSON.parse(opts.body);
+          if(body && ('name' in body)){
+            return window.oaEnsureIdentity(body.name).then(function(id){
+              body.name = id.name; body.team = id.team || '';
+              var o2 = {}; for(var k in opts){ o2[k]=opts[k]; } o2.body = JSON.stringify(body);
+              return orig.call(window, url, o2);
+            });
+          }
+        }
+      }catch(e){}
+      return orig.apply(window, arguments);
+    };
+  }
+})();
+</script>
+<button id="oaReportBtn" type="button" aria-label="Signaler un problème" style="position:fixed;left:12px;bottom:12px;z-index:2147482000;width:38px;height:38px;border-radius:50%;border:1px solid rgba(148,163,184,.35);background:rgba(15,22,38,.55);color:#e5e9f0;font-size:17px;line-height:1;cursor:pointer;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);opacity:.55;transition:opacity .15s;font-family:ui-sans-serif,system-ui,sans-serif" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.55" title="Signaler un problème">⚠</button>
+<div id="oaReport" style="display:none;position:fixed;inset:0;z-index:2147483100;background:rgba(3,8,18,.74);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif">
+  <div style="width:min(420px,94vw);background:#0f1626;color:#f8fafc;border:1px solid rgba(255,255,255,.14);border-radius:18px;padding:22px;box-shadow:0 30px 80px rgba(0,0,0,.55)">
+    <div id="oaReportTitle" style="font-size:18px;font-weight:560;letter-spacing:-.01em;margin-bottom:4px">Signaler un problème</div>
+    <div id="oaReportSub" style="font-size:13px;color:#a7b0c2;line-height:1.4;margin-bottom:14px">Décrivez le souci ; il me sera envoyé par e-mail. Aucune adresse n’est affichée.</div>
+    <div id="oaReportForm">
+      <label id="oaReportGameLbl" style="font-size:12px;color:#a7b0c2;display:block;margin-bottom:5px">Jeu concerné</label>
+      <select id="oaReportGame" style="width:100%;box-sizing:border-box;font:inherit;font-size:14px;font-weight:500;color:#f8fafc;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:11px 12px;outline:none;margin-bottom:12px"></select>
+      <label id="oaReportMsgLbl" style="font-size:12px;color:#a7b0c2;display:block;margin-bottom:5px">Description</label>
+      <textarea id="oaReportMsg" rows="5" maxlength="4000" placeholder="Que s’est-il passé ?" style="width:100%;box-sizing:border-box;font:inherit;font-size:14px;color:#f8fafc;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:11px 12px;outline:none;resize:vertical"></textarea>
+      <div id="oaReportErr" style="display:none;font-size:12px;color:#fb7185;margin-top:8px"></div>
+      <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
+        <button id="oaReportCancel" type="button" style="font:inherit;font-weight:520;color:#a7b0c2;background:none;border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:9px 14px;cursor:pointer">Annuler</button>
+        <button id="oaReportSend" type="button" style="font:inherit;font-weight:560;color:#fff;background:linear-gradient(135deg,#2557d6,#0891b2);border:none;border-radius:999px;padding:9px 16px;cursor:pointer">Envoyer</button>
+      </div>
+    </div>
+    <div id="oaReportDone" style="display:none;text-align:center;padding:10px 0">
+      <div style="font-size:34px;line-height:1">✅</div>
+      <div id="oaReportDoneTxt" style="font-size:15px;font-weight:520;margin-top:8px">Merci, c’est envoyé.</div>
+      <button id="oaReportClose2" type="button" style="margin-top:16px;font:inherit;font-weight:560;color:#fff;background:linear-gradient(135deg,#2557d6,#0891b2);border:none;border-radius:999px;padding:9px 18px;cursor:pointer">Fermer</button>
+    </div>
+  </div>
+</div>
+<script id="oa-report">
+(function(){
+  var GAMES=[['plan-please','Plan, Please'],['ok-chimio','OK Chimio'],['arc-racer','Arc Racer'],['beamlet','Beamlet'],['bragg-peak','Bragg Peak'],['fraction-hero','Fraction Hero'],['seed-master','Seed Master'],['mlc-ninja','MLC Ninja'],['tumor-board','Tumor Board'],['radcraft','RadCraft']];
+  function isEn(){ var l=(document.documentElement.getAttribute('lang')||document.documentElement.lang||navigator.language||'fr'); return String(l).slice(0,2).toLowerCase()==='en'; }
+  function API(){ return /\/games\/[^/]+\//.test(location.pathname) ? '../../api' : 'api'; }
+  function curGame(){ var m=location.pathname.match(/\/games\/([a-z0-9-]+)\//i); return m?m[1]:''; }
+  var el=document.getElementById('oaReport');
+  var sel=document.getElementById('oaReportGame'), msg=document.getElementById('oaReportMsg'), err=document.getElementById('oaReportErr');
+  var form=document.getElementById('oaReportForm'), done=document.getElementById('oaReportDone');
+  function labels(){
+    var en=isEn();
+    document.getElementById('oaReportTitle').textContent=en?'Report a problem':'Signaler un problème';
+    document.getElementById('oaReportSub').textContent=en?'Describe the issue; it will be emailed to me. No address is shown.':'Décrivez le souci ; il me sera envoyé par e-mail. Aucune adresse n’est affichée.';
+    document.getElementById('oaReportGameLbl').textContent=en?'Game concerned':'Jeu concerné';
+    document.getElementById('oaReportMsgLbl').textContent=en?'Description':'Description';
+    msg.placeholder=en?'What happened?':'Que s’est-il passé ?';
+    document.getElementById('oaReportCancel').textContent=en?'Cancel':'Annuler';
+    document.getElementById('oaReportSend').textContent=en?'Send':'Envoyer';
+    document.getElementById('oaReportDoneTxt').textContent=en?'Thanks, it’s been sent.':'Merci, c’est envoyé.';
+    document.getElementById('oaReportClose2').textContent=en?'Close':'Fermer';
+    document.getElementById('oaReportBtn').setAttribute('aria-label',en?'Report a problem':'Signaler un problème');
+    document.getElementById('oaReportBtn').title=en?'Report a problem':'Signaler un problème';
+  }
+  function fillSelect(){
+    var en=isEn(), cur=curGame();
+    var html='<option value="">'+(en?'The site / hub':'Le site / le hub')+'</option>';
+    GAMES.forEach(function(g){ html+='<option value="'+g[0]+'">'+g[1]+'</option>'; });
+    html+='<option value="other">'+(en?'Other':'Autre')+'</option>';
+    sel.innerHTML=html; sel.value=cur||'';
+  }
+  window.oaReport=function(){
+    labels(); fillSelect();
+    err.style.display='none'; msg.value=''; form.style.display='block'; done.style.display='none';
+    el.style.display='flex'; setTimeout(function(){ try{msg.focus();}catch(e){} },60);
+  };
+  function close(){ el.style.display='none'; }
+  document.getElementById('oaReportBtn').onclick=window.oaReport;
+  document.getElementById('oaReportCancel').onclick=close;
+  document.getElementById('oaReportClose2').onclick=close;
+  el.addEventListener('click',function(e){ if(e.target===el) close(); });
+  document.getElementById('oaReportSend').onclick=function(){
+    var en=isEn(); var text=(msg.value||'').trim();
+    if(text.length<3){ err.textContent=en?'Please describe the problem.':'Merci de décrire le problème.'; err.style.display='block'; return; }
+    var btn=this; btn.disabled=true; btn.style.opacity=.6;
+    fetch(API()+'/report.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({game:sel.value,message:text,page:location.href})})
+      .then(function(r){return r.ok?r.json():null;}).then(function(d){
+        btn.disabled=false; btn.style.opacity=1;
+        if(d&&d.ok){ form.style.display='none'; done.style.display='block'; }
+        else { err.textContent=en?'Sending failed. Please try again later.':'Envoi impossible. Réessayez plus tard.'; err.style.display='block'; }
+      }).catch(function(){ btn.disabled=false; btn.style.opacity=1; err.textContent=en?'Network error.':'Erreur réseau.'; err.style.display='block'; });
+  };
+})();
+</script>
+</body>
+</html>

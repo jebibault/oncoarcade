@@ -1,0 +1,1576 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#f7f8fb" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#070a12" media="(prefers-color-scheme: dark)" />
+  <title>Onco Arcade</title>
+<!-- Favicons / PWA -->
+<link rel="icon" href="/assets/icons/favicon.ico" sizes="any">
+<link rel="icon" href="/assets/icons/favicon.svg" type="image/svg+xml">
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/icons/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32x32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/assets/icons/apple-touch-icon.png">
+<link rel="manifest" href="/assets/icons/site.webmanifest">
+<meta name="apple-mobile-web-app-title" content="Onco Arcade">
+<meta name="application-name" content="Onco Arcade">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<!-- Aperçu de partage (Open Graph / Twitter / iMessage / WhatsApp) -->
+<link rel="canonical" href="https://oncoarcade.com/">
+<meta name="description" content="Onze mini-jeux sur l'oncologie et la radiothérapie. On y apprend en jouant.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Onco Arcade">
+<meta property="og:title" content="Onco Arcade">
+<meta property="og:description" content="Onze mini-jeux sur l'oncologie et la radiothérapie. On y apprend en jouant.">
+<meta property="og:url" content="https://oncoarcade.com/">
+<meta property="og:image" content="https://oncoarcade.com/assets/og-image.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Onco Arcade — collection de mini-jeux cliniques sur l'oncologie et la radiothérapie">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:locale:alternate" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Onco Arcade">
+<meta name="twitter:description" content="Onze mini-jeux sur l'oncologie et la radiothérapie. On y apprend en jouant.">
+<meta name="twitter:image" content="https://oncoarcade.com/assets/og-image.png">
+<meta name="twitter:image:alt" content="Onco Arcade">
+  <style>
+    :root {
+      --bg: #f7f8fb;
+      --bg-2: #ffffff;
+      --text: #111827;
+      --muted: #667085;
+      --soft: #98a2b3;
+      --card: rgba(255, 255, 255, .82);
+      --card-strong: rgba(255, 255, 255, .97);
+      --stroke: rgba(17, 24, 39, .11);
+      --stroke-strong: rgba(17, 24, 39, .18);
+      --shadow: 0 16px 42px rgba(15, 23, 42, .08);
+      --shadow-soft: 0 8px 24px rgba(15, 23, 42, .06);
+      --primary: #2557d6;
+      --cyan: #0891b2;
+      --magenta: #c02678;
+      --violet: #6d28d9;
+      --green: #047857;
+      --amber: #b45309;
+      --red: #c2414b;
+      --chip: rgba(37, 87, 214, .08);
+      --mist: rgba(37, 87, 214, .055);
+      --radius: 12px;
+      --radius-sm: 8px;
+      --glass-blur: blur(18px);
+      --focus: 0 0 0 4px rgba(37, 87, 214, .16);
+    }
+
+    html[data-theme="dark"] {
+      --bg: #070a12;
+      --bg-2: #0d1323;
+      --text: #f8fafc;
+      --muted: #a7b0c2;
+      --soft: #7d8798;
+      --card: rgba(15, 23, 42, .74);
+      --card-strong: rgba(15, 23, 42, .96);
+      --stroke: rgba(255, 255, 255, .12);
+      --stroke-strong: rgba(255, 255, 255, .2);
+      --shadow: 0 24px 72px rgba(0, 0, 0, .38);
+      --shadow-soft: 0 14px 36px rgba(0, 0, 0, .24);
+      --primary: #7aa2ff;
+      --cyan: #22d3ee;
+      --magenta: #f472b6;
+      --violet: #a78bfa;
+      --green: #34d399;
+      --amber: #f6bd60;
+      --red: #fb7185;
+      --chip: rgba(122, 162, 255, .14);
+      --mist: rgba(122, 162, 255, .08);
+      --focus: 0 0 0 4px rgba(122, 162, 255, .18);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; background: var(--bg); }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background: var(--bg);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.45;
+      overflow-x: hidden;
+    }
+
+    body::before { display: none; }
+
+    body::after { display: none; }
+
+    a, a:visited, a:hover, a:focus, a:active { color: inherit; text-decoration: none; }
+    button, input { font: inherit; }
+    button { -webkit-tap-highlight-color: transparent; }
+    ::selection { background: rgba(37, 87, 214, .18); }
+
+    .shell { width: min(1160px, calc(100% - 36px)); margin: 0 auto; }
+    main section, .panel { scroll-margin-top: 86px; }
+
+    .topbar {
+      position: sticky;
+      top: 14px;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      margin-top: 14px;
+      padding: 9px 10px;
+      border: 1px solid var(--stroke);
+      border-radius: var(--radius);
+      background: color-mix(in srgb, var(--card-strong) 82%, transparent);
+      backdrop-filter: var(--glass-blur);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .brand { display: inline-flex; align-items: center; gap: 10px; min-width: 0; }
+    .mark {
+      width: 36px;
+      height: 36px;
+      position: relative;
+      flex: 0 0 auto;
+      border-radius: 9px;
+      border: 1px solid color-mix(in srgb, var(--primary) 28%, var(--stroke));
+      background:
+        radial-gradient(circle at 48% 50%, var(--magenta) 0 3px, transparent 4px),
+        conic-gradient(from 110deg, transparent 0 22deg, var(--primary) 22deg 126deg, transparent 126deg 194deg, var(--cyan) 194deg 320deg, transparent 320deg 360deg),
+        linear-gradient(135deg, rgba(37,87,214,.12), rgba(8,145,178,.08));
+      box-shadow: inset 0 0 0 7px color-mix(in srgb, var(--bg-2) 72%, transparent);
+    }
+    .mark::before, .mark::after {
+      content: "";
+      position: absolute;
+      left: 8px;
+      right: 8px;
+      top: 17px;
+      height: 1px;
+      background: color-mix(in srgb, var(--text) 32%, transparent);
+    }
+    .mark::after { transform: rotate(90deg); }
+
+    .brand-text { display: grid; gap: 0; line-height: 1.08; }
+    .brand-title { font-weight: 560; letter-spacing: -.02em; white-space: nowrap; }
+    .brand-subtitle { color: var(--muted); font-size: 12px; white-space: nowrap; }
+
+    .nav { display: flex; align-items: center; gap: 8px; }
+    .nav a, .nav button { flex: 0 0 auto; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 38px;
+      padding: 9px 13px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--stroke);
+      color: var(--text);
+      background: color-mix(in srgb, var(--card-strong) 82%, transparent);
+      box-shadow: none;
+      cursor: pointer;
+      font-weight: 450;
+      transition: transform .16s ease, border-color .16s ease, background .16s ease, box-shadow .16s ease, color .16s ease;
+    }
+    .btn:hover { transform: translateY(-1px); border-color: var(--stroke-strong); box-shadow: var(--shadow-soft); }
+    .btn:active { transform: translateY(0); box-shadow: none; }
+    .btn:focus-visible { outline: 0; box-shadow: var(--focus); }
+    .btn.primary {
+      color: #fff;
+      border-color: color-mix(in srgb, var(--primary) 62%, black);
+      background: linear-gradient(135deg, var(--primary), color-mix(in srgb, var(--primary) 68%, var(--cyan)));
+      box-shadow: 0 12px 26px rgba(37, 87, 214, .18);
+    }
+    .btn.ghost { background: transparent; }
+    .btn.small { min-height: 32px; padding: 7px 10px; font-size: 13px; }
+
+    .toggle {
+      position: relative;
+      width: 68px;
+      min-height: 34px;
+      border-radius: 999px;
+      padding: 3px;
+      border: 1px solid var(--stroke);
+      background: color-mix(in srgb, var(--card-strong) 82%, transparent);
+      cursor: pointer;
+    }
+    .toggle span {
+      position: absolute;
+      inset: 3px auto 3px 3px;
+      width: 28px;
+      border-radius: 999px;
+      background: var(--text);
+      transition: transform .18s ease, background .18s ease;
+    }
+    .toggle::before, .toggle::after {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .toggle::before { content: "☼"; left: 10px; }
+    .toggle::after { content: "☾"; right: 10px; }
+    html[data-theme="dark"] .toggle span { transform: translateX(34px); background: #fff; }
+
+    .hero {
+      display: block;
+      padding: 78px 0 36px;
+    }
+    .hero > div { width: 100%; }
+    .hero .lead { max-width: none; width: 100%; }
+    .hero .metrics { max-width: none; }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+      padding: 6px 9px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--stroke);
+      background: var(--chip);
+      color: color-mix(in srgb, var(--primary) 74%, var(--text));
+      font-size: 13px;
+      font-weight: 450;
+    }
+    .eyebrow i {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: var(--green);
+      box-shadow: 0 0 0 5px color-mix(in srgb, var(--green) 13%, transparent);
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+    h1 {
+      margin-bottom: 18px;
+      font-size: clamp(44px, 6vw, 76px);
+      line-height: .95;
+      letter-spacing: -.064em;
+      font-weight: 520;
+    }
+    .gradient-text {
+      background: linear-gradient(120deg, var(--text), color-mix(in srgb, var(--primary) 66%, var(--cyan)), var(--magenta));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      display: inline-block;
+      padding-right: .12em;
+    }
+    .lead {
+      max-width: 690px;
+      margin-bottom: 26px;
+      color: var(--muted);
+      font-size: clamp(18px, 2.2vw, 22px);
+      line-height: 1.5;
+      font-weight: 400;
+    }
+    .hero-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 28px; }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      max-width: 680px;
+    }
+    .metric {
+      padding: 14px;
+      border: 1px solid var(--stroke);
+      border-radius: var(--radius);
+      background: color-mix(in srgb, var(--card) 78%, transparent);
+      backdrop-filter: var(--glass-blur);
+    }
+    .metric strong { display: block; margin-bottom: 4px; font-size: 22px; font-weight: 520; letter-spacing: -.03em; }
+    .metric span { color: var(--muted); font-size: 13px; }
+
+    .feature-card {
+      border: 1px solid var(--stroke);
+      border-radius: var(--radius);
+      background: var(--card);
+      backdrop-filter: var(--glass-blur);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .preview {
+      min-height: 100%;
+      padding: 18px;
+      position: relative;
+      isolation: isolate;
+    }
+    .preview::before {
+      content: "";
+      position: absolute;
+      inset: 16px;
+      border-radius: var(--radius-sm);
+      background: color-mix(in srgb, var(--card-strong) 28%, transparent);
+      pointer-events: none;
+      z-index: -1;
+    }
+    .mock-head { display: flex; justify-content: space-between; align-items: center; gap: 14px; margin-bottom: 16px; }
+    .mock-title { display: grid; gap: 2px; }
+    .mock-title strong { font-size: 17px; font-weight: 520; letter-spacing: -.02em; }
+    .mock-title span { color: var(--muted); font-size: 13px; }
+
+    .pill-row { display: flex; gap: 7px; flex-wrap: wrap; }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 28px;
+      padding: 5px 8px;
+      border: 1px solid var(--stroke);
+      border-radius: var(--radius-sm);
+      background: color-mix(in srgb, var(--card-strong) 78%, transparent);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 420;
+    }
+    .pill.blue { color: var(--primary); background: color-mix(in srgb, var(--primary) 9%, transparent); }
+    .pill.green { color: var(--green); background: color-mix(in srgb, var(--green) 9%, transparent); }
+    .pill.pink { color: var(--magenta); background: color-mix(in srgb, var(--magenta) 9%, transparent); }
+    .pill.amber { color: var(--amber); background: color-mix(in srgb, var(--amber) 10%, transparent); }
+    .pill.violet { color: var(--violet); background: color-mix(in srgb, var(--violet) 10%, transparent); }
+
+    .case-screen {
+      position: relative;
+      height: 310px;
+      margin-top: 12px;
+      border: 1px solid var(--stroke);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 50% 48%, color-mix(in srgb, var(--primary) 11%, transparent), transparent 38%),
+        radial-gradient(circle at 18% 18%, color-mix(in srgb, var(--magenta) 6%, transparent), transparent 32%),
+        radial-gradient(circle at 86% 76%, color-mix(in srgb, var(--cyan) 7%, transparent), transparent 30%),
+        color-mix(in srgb, var(--bg-2) 82%, transparent);
+      background-size: auto;
+    }
+
+
+    .scan-ring {
+      position: absolute;
+      left: 50%; top: 50%;
+      width: 188px; height: 188px;
+      transform: translate(-50%, -50%);
+      border-radius: 999px;
+      border: 1px solid color-mix(in srgb, var(--primary) 44%, transparent);
+      box-shadow: 0 0 0 18px color-mix(in srgb, var(--primary) 5%, transparent), inset 0 0 32px color-mix(in srgb, var(--primary) 6%, transparent);
+    }
+    .target, .organ, .drug, .node, .beam {
+      position: absolute;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--stroke-strong);
+      background: var(--card-strong);
+      box-shadow: var(--shadow-soft);
+    }
+    .target {
+      left: 51%; top: 48%;
+      width: 54px; height: 44px;
+      transform: translate(-50%, -50%) rotate(-10deg);
+      border-radius: 42% 56% 45% 52%;
+      background: color-mix(in srgb, var(--magenta) 20%, var(--card-strong));
+      color: var(--magenta);
+      font-size: 18px;
+    }
+    .organ {
+      width: 52px; height: 34px;
+      border-radius: 16px 10px 18px 12px;
+      color: var(--green);
+      background: color-mix(in srgb, var(--green) 14%, var(--card-strong));
+      font-size: 15px;
+    }
+    .organ.o1 { left: 23%; top: 38%; transform: rotate(7deg); }
+    .organ.o2 { right: 22%; bottom: 26%; transform: rotate(-8deg); color: var(--amber); background: color-mix(in srgb, var(--amber) 16%, var(--card-strong)); }
+    .drug {
+      left: 18%; bottom: 18%;
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      color: var(--violet);
+      background: color-mix(in srgb, var(--violet) 13%, var(--card-strong));
+      font-size: 18px;
+    }
+    .node {
+      right: 19%; top: 19%;
+      width: 40px; height: 40px;
+      border-radius: 999px;
+      color: var(--cyan);
+      background: color-mix(in srgb, var(--cyan) 12%, var(--card-strong));
+      font-size: 16px;
+    }
+    .beam {
+      left: 50%; bottom: -18px;
+      width: 84px; height: 184px;
+      transform-origin: 50% 100%;
+      transform: translateX(-50%) rotate(-28deg);
+      border: 0;
+      background: linear-gradient(to top, color-mix(in srgb, var(--primary) 26%, transparent), transparent 78%);
+      clip-path: polygon(44% 100%, 56% 100%, 100% 0, 0 0);
+      box-shadow: none;
+      opacity: .9;
+    }
+    .hud {
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      bottom: 12px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .meter-card {
+      border: 1px solid var(--stroke);
+      border-radius: var(--radius-sm);
+      background: color-mix(in srgb, var(--card-strong) 84%, transparent);
+      backdrop-filter: blur(14px);
+      padding: 9px;
+    }
+    .meter-meta { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 7px; color: var(--muted); font-size: 12px; }
+    .meter-meta strong { color: var(--text); font-weight: 500; }
+    .meter { height: 7px; overflow: hidden; border-radius: 999px; background: color-mix(in srgb, var(--muted) 16%, transparent); }
+    .meter span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--green), var(--cyan)); }
+    .meter.tox span { width: 23%; background: linear-gradient(90deg, var(--green), var(--amber)); }
+
+
+    .featured-game {
+      padding: 18px 0 40px;
+    }
+    .featured-card {
+      display: grid;
+      grid-template-columns: minmax(0, .95fr) minmax(320px, 1.05fr);
+      gap: 18px;
+      align-items: stretch;
+      border: 1px solid var(--stroke);
+      border-radius: var(--radius);
+      background: var(--card);
+      backdrop-filter: var(--glass-blur);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .featured-copy {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-height: 360px;
+    }
+    .featured-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      width: fit-content;
+      margin-bottom: 14px;
+      padding: 6px 9px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--stroke);
+      background: var(--chip);
+      color: color-mix(in srgb, var(--primary) 74%, var(--text));
+      font-size: 13px;
+      font-weight: 450;
+    }
+    .featured-kicker i {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: var(--green);
+      box-shadow: 0 0 0 5px color-mix(in srgb, var(--green) 13%, transparent);
+    }
+    .featured-copy h2 {
+      margin: 0 0 12px;
+      font-size: clamp(34px, 4.6vw, 58px);
+      line-height: 1.08;
+      letter-spacing: -.058em;
+      font-weight: 520;
+      padding-bottom: .06em;
+    }
+    .featured-copy h2 .gradient-text { display: inline-block; padding-bottom: .04em; }
+    .featured-copy p {
+      margin-bottom: 18px;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.55;
+    }
+    .featured-pills { display: flex; gap: 7px; flex-wrap: wrap; margin: 0 0 20px; }
+    .featured-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .radcraft-screen .rc-npc, .radcraft-screen .rc-hud { display: none; }
+
+    .radcraft-preview {
+      position: relative;
+      min-height: 360px;
+      padding: 18px;
+      border-left: 1px solid var(--stroke);
+      background: color-mix(in srgb, var(--bg-2) 56%, transparent);
+      overflow: hidden;
+    }
+    .radcraft-screen {
+      position: absolute;
+      inset: 18px;
+      border: 1px solid var(--stroke);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      background: #0a141c;
+      box-shadow: 0 18px 44px rgba(15,23,42,.14);
+    }
+    .radcraft-screen img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+      object-position: center center;
+    }
+    .radcraft-screen::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
+    }
+    .rc-npc {
+      position: absolute;
+      width: 20px;
+      height: 32px;
+      border-radius: 6px 6px 4px 4px;
+      background: #f2f6f8;
+      box-shadow: 0 14px 22px rgba(0,0,0,.25);
+    }
+    .rc-npc::before {
+      content: "";
+      position: absolute;
+      left: 5px;
+      top: -8px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #e9b990;
+    }
+    .rc-npc.one { left: 30%; top: 28%; background: #5fb0c0; }
+    .rc-npc.two { left: 62%; top: 46%; background: #f2f6f8; }
+    .rc-npc.three { left: 50%; top: 22%; background: #9a86e0; }
+    .rc-hud {
+      position: absolute;
+      left: 48px;
+      bottom: 46px;
+      z-index: 2;
+      width: min(300px, calc(100% - 96px));
+      color: #132430;
+    }
+    .rc-hud strong { display: block; margin-bottom: 4px; font-size: 16px; font-weight: 620; letter-spacing: -.02em; }
+    .rc-hud span { display: block; color: #5f7481; font-size: 12px; line-height: 1.35; }
+
+    section { padding: 44px 0; }
+    .section-head { display: flex; align-items: end; justify-content: space-between; gap: 20px; margin-bottom: 18px; }
+    .section-title { margin: 0; font-size: clamp(25px, 3vw, 36px); line-height: 1.1; letter-spacing: -.045em; font-weight: 500; }
+    .section-note { max-width: 530px; margin: 8px 0 0; color: var(--muted); }
+
+    .grid-games { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+    .game-card {
+      position: relative;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      min-height: 255px;
+      padding: 18px;
+      border: 1px solid var(--stroke);
+      border-radius: var(--radius);
+      background: var(--card);
+      backdrop-filter: var(--glass-blur);
+      box-shadow: var(--shadow-soft);
+      overflow: hidden;
+      transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease;
+    }
+    .game-card:hover { transform: translateY(-3px); border-color: var(--stroke-strong); box-shadow: var(--shadow); }
+    .game-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: radial-gradient(circle at 86% 10%, color-mix(in srgb, var(--game-color, var(--primary)) 17%, transparent), transparent 36%);
+    }
+    .game-top { display: flex; align-items: start; justify-content: space-between; gap: 12px; position: relative; z-index: 1; }
+    .game-icon {
+      width: 52px;
+      height: 52px;
+      display: grid;
+      place-items: center;
+      border-radius: var(--radius-sm);
+      border: 1px solid color-mix(in srgb, var(--game-color, var(--primary)) 36%, var(--stroke));
+      background: color-mix(in srgb, var(--game-color, var(--primary)) 11%, transparent);
+      color: var(--game-color, var(--primary));
+      font-size: 24px;
+    }
+    .game-card h3 { position: relative; z-index: 1; margin: 18px 0 7px; font-size: 22px; letter-spacing: -.03em; font-weight: 520; }
+    .game-card p { position: relative; z-index: 1; margin: 0; color: var(--muted); font-size: 14.5px; }
+    .game-foot { position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 18px; }
+    .game-meta { display: flex; gap: 6px; flex-wrap: wrap; }
+
+    .span-2 { grid-column: span 2; }
+    .beamlet { --game-color: var(--primary); }
+    .bragg { --game-color: var(--cyan); }
+    .fraction { --game-color: var(--amber); }
+    .oar { --game-color: var(--green); }
+    .contour { --game-color: var(--magenta); }
+    .tki { --game-color: var(--violet); }
+    .tox { --game-color: var(--red); }
+
+    .two-col { display: grid; grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr); gap: 18px; align-items: stretch; }
+    .panel {
+      border: 1px solid var(--stroke);
+      border-radius: var(--radius);
+      background: var(--card);
+      backdrop-filter: var(--glass-blur);
+      box-shadow: var(--shadow-soft);
+      padding: 20px;
+    }
+    .panel h3 { margin-bottom: 8px; font-size: 21px; letter-spacing: -.03em; font-weight: 520; }
+    .panel p { color: var(--muted); }
+
+    .identity-list { display: grid; gap: 10px; margin-top: 16px; }
+    .identity-row {
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      gap: 12px;
+      align-items: start;
+      padding: 12px;
+      border: 1px solid var(--stroke);
+      border-radius: var(--radius-sm);
+      background: color-mix(in srgb, var(--card-strong) 68%, transparent);
+    }
+    .identity-row i {
+      width: 34px; height: 34px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--stroke);
+      border-radius: var(--radius-sm);
+      background: var(--chip);
+      font-style: normal;
+    }
+    .identity-row strong { display: block; font-weight: 500; margin-bottom: 3px; }
+    .identity-row span { display: block; color: var(--muted); font-size: 13.5px; }
+
+    .leaderboard { display: grid; gap: 9px; margin-top: 18px; }
+    .score-row {
+      display: grid;
+      grid-template-columns: 34px 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 11px 12px;
+      border: 1px solid var(--stroke);
+      border-radius: var(--radius-sm);
+      background: color-mix(in srgb, var(--card-strong) 72%, transparent);
+    }
+    .rank { color: var(--muted); font-variant-numeric: tabular-nums; }
+    .player { display: grid; gap: 2px; min-width: 0; }
+    .player strong { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .player span { color: var(--muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .points { color: var(--text); font-variant-numeric: tabular-nums; font-weight: 520; }
+
+    .game-interface {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 295px;
+      gap: 14px;
+      padding: 14px;
+      border: 1px solid var(--stroke);
+      border-radius: var(--radius);
+      background: var(--card);
+      backdrop-filter: var(--glass-blur);
+      box-shadow: var(--shadow);
+    }
+    .play-area {
+      min-height: 410px;
+      border: 1px solid var(--stroke);
+      border-radius: var(--radius-sm);
+      background:
+        radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--primary) 7%, transparent), transparent 40%),
+        radial-gradient(circle at 20% 22%, color-mix(in srgb, var(--magenta) 5%, transparent), transparent 32%),
+        color-mix(in srgb, var(--bg-2) 76%, transparent);
+      background-size: auto;
+      position: relative;
+      overflow: hidden;
+    }
+    .mini-card {
+      position: absolute;
+      width: 130px;
+      padding: 10px;
+      border: 1px solid var(--stroke);
+      border-radius: var(--radius-sm);
+      background: color-mix(in srgb, var(--card-strong) 86%, transparent);
+      backdrop-filter: blur(14px);
+      box-shadow: var(--shadow-soft);
+      z-index: 2;
+    }
+    .mini-card h4 { margin: 0 0 5px; font-size: 13px; font-weight: 510; }
+    .mini-card p { margin: 0; color: var(--muted); font-size: 11px; }
+    .mini-card.a { left: 18px; top: 18px; }
+    .mini-card.b { right: 18px; top: 72px; }
+    .mini-card.c { left: 22%; bottom: 22px; }
+
+    .side-panel { display: grid; gap: 12px; }
+    .control-card {
+      padding: 14px;
+      border: 1px solid var(--stroke);
+      border-radius: var(--radius-sm);
+      background: color-mix(in srgb, var(--card-strong) 76%, transparent);
+    }
+    .control-card h4 { margin: 0 0 9px; font-weight: 520; letter-spacing: -.02em; }
+    .control-card p { margin: 0 0 12px; color: var(--muted); font-size: 13px; }
+    .stat { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 10px 0 6px; font-size: 13px; color: var(--muted); }
+    .stat strong { color: var(--text); font-weight: 500; }
+
+    .about {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }
+    .about-card {
+      padding: 24px;
+      border: 1px solid var(--stroke);
+      border-radius: var(--radius);
+      background: var(--card);
+      backdrop-filter: var(--glass-blur);
+      box-shadow: var(--shadow-soft);
+    }
+    .about-card h2 { font-size: 30px; line-height: 1.1; letter-spacing: -.05em; font-weight: 500; margin-bottom: 12px; }
+    .about-card p { color: var(--muted); }
+
+    .footer { padding: 38px 0 48px; color: var(--muted); font-size: 13px; }
+    .footer-inner { display: flex; justify-content: space-between; align-items: center; gap: 16px; border-top: 1px solid var(--stroke); padding-top: 18px; }
+
+    [data-en] { }
+    html[lang="fr"] .en { display: none !important; }
+    html[lang="en"] .fr { display: none !important; }
+
+    @media (max-width: 980px) {
+      .hero, .two-col, .about { grid-template-columns: 1fr; }
+      .featured-card { grid-template-columns: 1fr; }
+      .featured-copy { min-height: auto; }
+      .radcraft-preview { min-height: 320px; border-left: 0; border-top: 1px solid var(--stroke); }
+      .grid-games { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .span-2 { grid-column: span 1; }
+      .game-interface { grid-template-columns: 1fr; }
+      .side-panel { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 720px) {
+      .shell { width: min(100% - 24px, 1160px); }
+      .topbar { align-items: start; border-radius: var(--radius); flex-direction: column; }
+      .nav { width: 100%; flex-wrap: wrap; }
+      .nav .btn { flex: 1 1 auto; }
+      .hero { padding-top: 42px; }
+      h1 { font-size: clamp(42px, 13vw, 62px); }
+      .lead { font-size: 17px; }
+      .metrics, .grid-games, .side-panel { grid-template-columns: 1fr; }
+      .feature-card { margin-inline: -2px; }
+      .case-screen { height: 270px; }
+      .hud { grid-template-columns: 1fr; }
+      .section-head { display: block; }
+      .footer-inner { display: grid; }
+    }
+    .footer-inner.legal-wrap, .footer .footer-inner { flex-direction: column; align-items: stretch; }
+    .legal h4 { margin: 0 0 10px; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+    .legal p { margin: 0 0 8px; color: var(--muted); font-size: 12.5px; line-height: 1.55; max-width: none; }
+    .legal p strong { color: var(--text); font-weight: 600; }
+    .footer-meta { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; border-top: 1px solid var(--stroke); padding-top: 16px; margin-top: 10px; color: var(--soft); }
+    @media (max-width:720px){ .footer-meta { flex-direction: column; align-items: flex-start; } }
+  
+    .roster { display: flex; flex-direction: column; gap: 6px; max-height: 344px; overflow: auto; }
+    .roster-row { display: grid; grid-template-columns: 26px 1fr auto; align-items: center; gap: 10px; padding: 9px 11px; border: 1px solid var(--stroke); border-radius: 12px; background: var(--card); text-decoration: none; color: var(--text); transition: .12s; }
+    .roster-row:hover { border-color: var(--primary); transform: translateX(2px); }
+    .roster-row .ri { font-size: 16px; text-align: center; color: var(--primary); }
+    .roster-row .rn { font-weight: 560; font-size: 14px; letter-spacing: -.01em; }
+    .roster-row .rd { font-size: 11.5px; color: var(--muted); }
+
+    .feat-glyph{ position:absolute; inset:18px; border-radius:calc(var(--radius) - 6px); display:grid; place-items:center;
+      background:linear-gradient(150deg, color-mix(in srgb, var(--gc) 24%, var(--card)), color-mix(in srgb, var(--gc) 6%, var(--card)));
+      border:1px solid color-mix(in srgb, var(--gc) 30%, var(--stroke)); overflow:hidden; }
+    .feat-glyph::after{ content:""; position:absolute; width:220px; height:220px; border-radius:999px; right:-60px; top:-60px;
+      background:radial-gradient(circle, color-mix(in srgb, var(--gc) 30%, transparent), transparent 70%); }
+    .feat-glyph span{ position:relative; font-size:clamp(84px,14vw,140px); line-height:1; color:var(--gc);
+      filter:drop-shadow(0 10px 26px color-mix(in srgb, var(--gc) 45%, transparent)); }
+
+    /* ---- Notation par étoiles ---- */
+    .oa-stars{ display:flex; align-items:center; gap:9px; margin:2px 0 10px; }
+    .oa-stars-row{ position:relative; display:inline-block; line-height:1; font-size:17px; letter-spacing:3px; height:18px; }
+    .oa-stars-base{ color:color-mix(in srgb, var(--text) 20%, transparent); }
+    .oa-stars-fill{ position:absolute; top:0; left:0; width:0; overflow:hidden; white-space:nowrap; color:#f5a623; pointer-events:none; }
+    .oa-stars-hit{ position:absolute; inset:0; display:flex; }
+    .oa-stars-hit button{ flex:1; background:none; border:0; margin:0; padding:0; cursor:pointer; font-size:0; color:transparent; }
+    .oa-stars-info{ font-size:12px; color:var(--muted); white-space:nowrap; }
+    .oa-stars.voted .oa-stars-info{ color:var(--green); }
+
+    .oa-stars.locked .oa-stars-base{ opacity:.55; }
+    .oa-stars.locked .oa-stars-hit button{ cursor:not-allowed; }
+    .oa-stars.locked .oa-stars-info{ color:var(--muted); }
+    .oa-stars.shake{ animation:oaShake .34s ease; }
+    @keyframes oaShake{ 0%,100%{transform:translateX(0)} 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)} }
+    .featured-rating{ margin:0 0 18px; }
+    .featured-rating .oa-stars-row{ font-size:20px; letter-spacing:4px; height:22px; }
+    .featured-rating .oa-stars-info{ font-size:13px; }
+
+    .lb-controls{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .lb-select{ font:inherit; font-size:13px; font-weight:600; color:var(--text); background:var(--card); border:1px solid var(--stroke); border-radius:999px; padding:7px 30px 7px 12px; cursor:pointer; -webkit-appearance:none; appearance:none;
+      background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%); background-position:calc(100% - 15px) 50%,calc(100% - 10px) 50%; background-size:5px 5px,5px 5px; background-repeat:no-repeat; }
+    .lb-select:focus{ outline:2px solid var(--primary); outline-offset:1px; }
+
+    .score-row .player .lb-line{ display:block; font-size:12px; color:var(--muted); margin-top:1px; }
+
+    .score-row .player .player-top{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+    .team-tag{ font-size:11px; font-weight:800; letter-spacing:.01em; color:var(--primary); background:color-mix(in srgb, var(--primary) 12%, transparent); border:1px solid color-mix(in srgb, var(--primary) 32%, transparent); border-radius:6px; padding:1px 6px; white-space:nowrap; }
+
+    /* iOS : décaler le contenu et la barre flottante sous la Dynamic Island (safe-area) */
+    body{ padding-top: env(safe-area-inset-top, 0px); }
+    .topbar{ top: calc(14px + env(safe-area-inset-top, 0px)) !important; }
+</style>
+<style id="oa-liquid-glass">
+  /* ===== Liquid Glass (façon macOS Tahoe) ===== */
+  :root{ --glass-blur: blur(22px) saturate(180%); }
+  html[data-theme="dark"]{ --glass-blur: blur(24px) saturate(185%); }
+
+  /* Surfaces verre : dégradé de reflet + arête spéculaire + ombre portée profonde */
+  .topbar, .metric, .feature-card, .featured-card, .game-card, .panel, .game-interface, .about-card{
+    background-image: linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.04) 44%, rgba(255,255,255,0) 78%);
+    -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
+    border-color: color-mix(in srgb, var(--stroke) 45%, rgba(255,255,255,.18));
+    box-shadow:
+      inset 0 1px 0 0 rgba(255,255,255,.45),
+      inset 0 0 0 1px rgba(255,255,255,.05),
+      inset 0 -14px 30px -18px rgba(255,255,255,.10),
+      0 26px 64px -20px rgba(2,6,23,.55);
+  }
+  html[data-theme="dark"] .topbar, html[data-theme="dark"] .metric, html[data-theme="dark"] .feature-card,
+  html[data-theme="dark"] .featured-card, html[data-theme="dark"] .game-card, html[data-theme="dark"] .panel,
+  html[data-theme="dark"] .game-interface, html[data-theme="dark"] .about-card{
+    background-image: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.03) 44%, rgba(255,255,255,0) 78%);
+    box-shadow:
+      inset 0 1px 0 0 rgba(255,255,255,.28),
+      inset 0 0 0 1px rgba(255,255,255,.06),
+      0 30px 70px -22px rgba(0,0,0,.6);
+  }
+
+  /* Halo diagonal (le "reflet" de verre) sur les cartes vitrines */
+  .game-card, .featured-card{ position: relative; overflow: hidden; }
+  .game-card::before, .featured-card::before{
+    content:""; position:absolute; inset:0; pointer-events:none; border-radius:inherit; z-index:0;
+    background: linear-gradient(128deg, rgba(255,255,255,.20) 0%, rgba(255,255,255,.05) 20%, transparent 44%);
+  }
+  .game-card > *, .featured-card > *{ position: relative; z-index: 1; }
+
+  /* Relèvement au survol (profondeur) */
+  .game-card{ transition: transform .2s ease, box-shadow .2s ease; }
+  .game-card:hover{
+    transform: translateY(-3px);
+    box-shadow:
+      inset 0 1px 0 0 rgba(255,255,255,.5),
+      inset 0 0 0 1px rgba(255,255,255,.08),
+      0 40px 90px -24px rgba(2,6,23,.6);
+  }
+
+  /* Topbar : barre fine tout en haut -> pas de dégradé ni de reflet spéculaire (évite la bande claire) */
+  .topbar{ background-image: none !important; background: color-mix(in srgb, var(--card-strong) 55%, transparent) !important; box-shadow: 0 8px 24px -16px rgba(15,23,42,.28) !important; }
+  html[data-theme="dark"] .topbar{ background-image: none !important; box-shadow: 0 14px 34px -16px rgba(0,0,0,.5) !important; }
+</style>
+<style id="oa-glass-depth">
+  /* Cartes plus translucides : on voit le fond flouté à travers (vrai Liquid Glass) */
+  :root{ --card: rgba(255,255,255,.60); --glass-blur: blur(26px) saturate(190%); }
+  html[data-theme="dark"]{ --card: rgba(17,25,42,.52); --glass-blur: blur(28px) saturate(200%); }
+
+  /* Fond ambiant coloré (halos) -> matière à réfracter derrière le verre */
+  body{ background: transparent !important; }
+  body::before{ content:""; position:fixed; inset:0; z-index:-1; pointer-events:none;
+    background:
+      radial-gradient(52vw 46vw at 8% -6%,  rgba(37,99,235,.20),  transparent 56%),
+      radial-gradient(46vw 46vw at 98% -2%, rgba(217,70,239,.16), transparent 56%),
+      radial-gradient(58vw 52vw at 88% 96%, rgba(6,182,212,.16),  transparent 58%),
+      radial-gradient(50vw 46vw at 2% 102%, rgba(16,185,129,.14), transparent 56%); }
+  html[data-theme="dark"] body{ background: transparent !important; }
+  html[data-theme="dark"] body::before{
+    background:
+      radial-gradient(54vw 48vw at 8% -6%,  rgba(59,130,246,.30),  transparent 56%),
+      radial-gradient(48vw 48vw at 98% -2%, rgba(217,70,239,.24),  transparent 56%),
+      radial-gradient(60vw 54vw at 88% 96%, rgba(34,211,238,.22),  transparent 58%),
+      radial-gradient(52vw 48vw at 2% 102%, rgba(16,185,129,.18),  transparent 56%); }
+</style>
+<style id="oa-season-css">
+  /* Jeu pas encore sorti : voile + date de disponibilité */
+  .game-card.locked{ position:relative; }
+  .game-card.locked .game-lock{ position:absolute; inset:0; border-radius:inherit;
+    background:color-mix(in srgb,var(--bg) 66%,transparent); -webkit-backdrop-filter:blur(2px); backdrop-filter:blur(2px);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; text-align:center; padding:16px; z-index:4; }
+  .game-card.locked .game-lock .lk{ font-size:22px; opacity:.9; }
+  .game-card.locked .game-lock .ld{ font-size:13px; font-weight:520; color:var(--text); }
+  .game-card.locked .game-lock .lc{ font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums; }
+  .game-card.locked h3, .game-card.locked p, .game-card.locked .game-top{ filter:saturate(.5); opacity:.75; }
+  .section-sub{ color:var(--muted); font-size:14px; line-height:1.55; margin:6px 0 0; max-width:640px; }
+  .jotw-meta{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin:12px 0 2px; }
+  .jotw-prog{ font-size:13px; font-weight:520; color:var(--muted); }
+  .jotw-prog b{ color:var(--primary); }
+  .jotw-count{ font-size:13px; font-weight:520; color:var(--text);
+    background:color-mix(in srgb,var(--primary) 10%,transparent); padding:6px 12px; border-radius:20px; font-variant-numeric:tabular-nums; }
+</style>
+</head>
+<body>
+  <header class="shell topbar">
+    <a href="#top" class="brand" aria-label="Onco Arcade home">
+      <span class="mark" aria-hidden="true"></span>
+      <span class="brand-text">
+        <span class="brand-title">Onco Arcade</span>
+        <span class="brand-subtitle fr">Mini-jeux cliniques en oncologie</span>
+        <span class="brand-subtitle en">Clinical mini-games in oncology</span>
+      </span>
+    </a>
+    <nav class="nav" aria-label="Navigation">
+      <a class="btn small" href="#games"><span class="fr">Jeux</span><span class="en">Games</span></a>
+      <a class="btn small" href="#leaderboard">Leaderboard</a>
+      <button class="btn small ghost" id="langBtn" type="button">FR / EN</button>
+      <button class="toggle" id="themeBtn" type="button" aria-label="Toggle light and dark mode"><span></span></button>
+    </nav>
+  </header>
+
+  <main id="top" class="shell">
+    <section class="hero">
+      <div>
+        <div class="eyebrow"><i></i><span class="fr">Oncologie · pédagogie interactive</span><span class="en">Oncology · interactive learning</span></div>
+        <h1><span class="gradient-text">Onco Arcade</span></h1>
+        <p class="lead fr">Onze mini-jeux sur l’oncologie et la radiothérapie : contourer et valider les contours d’une IA, piloter un arc VMAT en contre-la-montre, valider une chimiothérapie, composer un plan de protons au millimètre, protéger les organes à risque, ou encore trancher en RCP quand les données ne racontent pas toutes la même histoire.</p><p class="lead fr">Chaque jeu transforme un geste clinique, une décision thérapeutique ou une contrainte du quotidien en défi rapide, visuel et addictif. On y retrouve la précision, le timing et la stratégie qui font le sel de ces spécialités.</p><p class="lead fr">C’est de l’arcade, oui, mais avec un vrai fond médical : tu joues, tu scores, tu recommences pour faire mieux, et au passage tu révises les réflexes essentiels sans même t’en rendre compte.</p><p class="lead en">Eleven mini-games about oncology and radiation therapy: contour a target and vet an AI’s contours, race a VMAT arc against the clock, clear a chemotherapy order, build a proton plan down to the millimetre, spare the organs at risk, or make the call at the tumor board when the data don’t all tell the same story.</p><p class="lead en">Each game turns a clinical gesture, a treatment decision or an everyday constraint into a fast, visual, addictive challenge. You’ll find the precision, the timing and the strategy that make these specialties what they are.</p><p class="lead en">It’s arcade, yes, but with real medical substance: you play, you score, you start over to do better, and along the way you revise the essential reflexes without even realising it.</p><div class="hero-actions">
+          <a class="btn primary" href="#games"><span class="fr">Découvrir les jeux</span><span class="en">Explore games</span></a>
+          <a class="btn" href="#about"><span class="fr">À propos</span><span class="en">About</span></a>
+          <a class="btn" href="#leaderboard"><span class="fr">Classement</span><span class="en">Leaderboard</span></a>
+          <button type="button" class="btn" onclick="window.oaReport&&window.oaReport()"><span class="fr">Signaler un problème</span><span class="en">Report a problem</span></button>
+        </div>
+        <div class="metrics" aria-label="Collection metrics">
+          <div class="metric"><strong>11</strong><span class="fr">jeux jouables</span><span class="en">playable games</span></div>
+          <div class="metric"><strong>FR / EN</strong><span class="fr">bilingue par défaut</span><span class="en">bilingual by design</span></div>
+          <div class="metric"><strong>Leaderboard</strong><span class="fr">classement persistant</span><span class="en">persistent leaderboard</span></div>
+        </div>
+      </div>
+    </section>
+
+
+    <section class="featured-game" id="featured-rotator">
+      <article class="featured-card">
+        <div class="featured-copy">
+          <div class="featured-kicker"><i></i><span class="fr">Jeu de la semaine prochaine</span><span class="en">Next week's game</span></div>
+          <h2><span class="gradient-text" id="feat-title">—</span></h2>
+          <p class="fr" id="feat-desc-fr"></p>
+          <p class="en" id="feat-desc-en"></p>
+          <div class="featured-pills" id="feat-pills"></div>
+          <div class="oa-stars-wrap featured-rating" id="feat-rating"></div>
+          <div class="featured-actions">
+            <a class="btn primary" id="feat-play" href="#games" target="_blank" rel="noopener"><span class="fr">Jouer</span><span class="en">Play</span></a>
+            <a class="btn" href="#games"><span class="fr">Voir les autres jeux</span><span class="en">See other games</span></a>
+          </div>
+        </div>
+        <div class="radcraft-preview" id="feat-preview" aria-label="Aperçu du jeu à la une"></div>
+      </article>
+    </section>
+
+    <section id="games">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title fr">La saison</h2>
+          <h2 class="section-title en">The season</h2>
+          <p class="section-sub fr">La saison se joue tout l’été : un nouveau jeu déverrouillé chaque semaine. Reviens pour le jeu du moment, défie les autres centres au classement, et repère déjà ceux qui arrivent.</p>
+          <p class="section-sub en">The season runs all summer: a new game unlocked every week. Come back for this week’s game, challenge other centres on the leaderboard, and spot what’s coming next.</p>
+        </div>
+        <a class="btn" href="#leaderboard"><span class="fr">Scores</span><span class="en">Scores</span></a>
+      </div>
+
+      <div class="grid-games">
+        <article class="game-card span-2" style="--game-color:var(--primary)">
+          <div class="game-top"><div class="game-icon">▣</div><span class="pill blue fr">Radiothérapie · carrière 3D</span><span class="pill blue en">Radiation · 3D career</span></div>
+          <h3>RadCraft</h3>
+          <p class="fr">Explore un service d’oncologie radiothérapie en 3D voxel. Les dialogues et arbitrages cliniques font évoluer les jauges, déclenchent des conséquences et construisent ta trajectoire professionnelle.</p>
+          <p class="en">Explore a voxel 3D radiation-oncology department. Dialogues and clinical trade-offs change your gauges, trigger consequences and shape your career path.</p>
+          <div class="game-foot"><div class="game-meta"><span class="pill">10–20 min</span><span class="pill">3D</span></div><a class="btn small primary" href="games/radcraft/index.html" target="_blank" rel="noopener"><span class="fr">Jouer</span><span class="en">Play</span></a></div>
+        </article>
+        <article class="game-card" style="--game-color:var(--cyan)">
+          <div class="game-top"><div class="game-icon">▤</div><span class="pill blue fr">Radiothérapie · revue de plan</span><span class="pill blue en">Radiation · plan review</span></div>
+          <h3>Plan, Please</h3>
+          <p class="fr">Dans la peau du contrôle qualité : accepte ou refuse des plans de traitement. Repère l’erreur d’isodose, la marge absente, l’OAR surdosé — avant que le faisceau ne parte.</p>
+          <p class="en">Play plan QA: approve or reject treatment plans. Spot the isodose error, the missing margin, the overdosed OAR — before the beam goes on.</p>
+          <div class="game-foot"><div class="game-meta"><span class="pill">2–5 min</span></div><a class="btn small primary fr" href="games/plan-please/index.html?lang=fr" target="_blank" rel="noopener">Jouer</a><a class="btn small primary en" href="games/plan-please/index.html?lang=en" target="_blank" rel="noopener">Play</a></div>
+        </article>
+
+        <article class="game-card" style="--game-color:var(--primary)">
+          <div class="game-top"><div class="game-icon">◠</div><span class="pill blue fr">Radiothérapie · VMAT</span><span class="pill blue en">Radiation · VMAT</span></div>
+          <h3>Arc Racer</h3>
+          <p class="fr">Un contre-la-montre en 3D : pilote la vitesse du gantry et le débit de dose pour épouser le profil de dose VMAT autour du patient, vite et sans toucher les organes à risque.</p>
+          <p class="en">A 3D time-trial: steer gantry speed and dose rate to match the VMAT dose profile around the patient, fast and without hitting the organs at risk.</p>
+          <div class="game-foot"><div class="game-meta"><span class="pill">2–4 min</span></div><a class="btn small primary fr" href="games/arc-racer/index.html?lang=fr" target="_blank" rel="noopener">Jouer</a><a class="btn small primary en" href="games/arc-racer/index.html?lang=en" target="_blank" rel="noopener">Play</a></div>
+        </article>
+
+        <article class="game-card" style="--game-color:var(--cyan)">
+          <div class="game-top"><div class="game-icon">⌁</div><span class="pill blue fr">Radiothérapie · physique</span><span class="pill blue en">Radiation · physics</span></div>
+          <h3>Beamlet</h3>
+          <p class="fr">Un puzzle de physique des faisceaux : place photons, arcs et protons pour couvrir la cible et épargner les OAR. L’histogramme dose-volume note ton plan en direct.</p>
+          <p class="en">A beam-physics puzzle: place photons, arcs and protons to cover the target and spare the OARs. The dose-volume histogram scores your plan live.</p>
+          <div class="game-foot"><div class="game-meta"><span class="pill">15–20 min</span></div><a class="btn small primary fr" href="games/beamlet/index.html?lang=fr" target="_blank" rel="noopener">Jouer</a><a class="btn small primary en" href="games/beamlet/index.html?lang=en" target="_blank" rel="noopener">Play</a></div>
+        </article>
+
+        <article class="game-card" style="--game-color:var(--violet)">
+          <div class="game-top"><div class="game-icon">◭</div><span class="pill violet fr">Protonthérapie</span><span class="pill violet en">Proton therapy</span></div>
+          <h3>Bragg Peak</h3>
+          <p class="fr">Sculpte un SOBP, place le pic de Bragg au millimètre, épargne les OAR et dompte l’incertitude balistique du proton.</p>
+          <p class="en">A precision roguelite: sculpt a SOBP, place the Bragg peak to the millimetre, spare the OARs and tame proton range uncertainty.</p>
+          <div class="game-foot"><div class="game-meta"><span class="pill">4–8 min</span></div><a class="btn small primary fr" href="games/bragg-peak/index.html?lang=fr" target="_blank" rel="noopener">Jouer</a><a class="btn small primary en" href="games/bragg-peak/index.html?lang=en" target="_blank" rel="noopener">Play</a></div>
+        </article>
+
+        <article class="game-card" style="--game-color:var(--green)">
+          <div class="game-top"><div class="game-icon">◍</div><span class="pill green fr">Curiethérapie</span><span class="pill green en">Brachytherapy</span></div>
+          <h3>Seed Master</h3>
+          <p class="fr">Planifie un implant de prostate sous échographie TRUS : charge la périphérie, épargne l’urètre et le rectum, et couvre toute la profondeur, de la base à l’apex.</p>
+          <p class="en">Plan a prostate implant under TRUS ultrasound: load the periphery, spare the urethra and rectum, and cover the full depth, base to apex.</p>
+          <div class="game-foot"><div class="game-meta"><span class="pill">15–20 min</span></div><a class="btn small primary fr" href="games/seed-master/index.html?lang=fr" target="_blank" rel="noopener">Jouer</a><a class="btn small primary en" href="games/seed-master/index.html?lang=en" target="_blank" rel="noopener">Play</a></div>
+        </article>
+
+        <article class="game-card" style="--game-color:var(--violet)">
+          <div class="game-top"><div class="game-icon">◑</div><span class="pill violet fr">Oncologie médicale</span><span class="pill violet en">Medical oncology</span></div>
+          <h3><span class="fr">OK Chimio</span><span class="en">Fit for chemo</span></h3>
+          <p class="fr">En HdJ : lis chaque ordonnance de chimiothérapie, valide les protocoles conformes et bloque les prescriptions dangereuses. Trois erreurs et le guichet ferme.</p>
+          <p class="en">At the pharmacy validation desk: read each chemotherapy order, release the correct ones and hold the dangerous ones. Three strikes and the desk closes.</p>
+          <div class="game-foot"><div class="game-meta"><span class="pill">2–5 min</span></div><a class="btn small primary fr" href="games/ok-chimio/index.html?lang=fr" target="_blank" rel="noopener">Jouer</a><a class="btn small primary en" href="games/ok-chimio/index.html?lang=en" target="_blank" rel="noopener">Play</a></div>
+        </article>
+
+        <article class="game-card" style="--game-color:var(--primary)">
+          <div class="game-top"><div class="game-icon">❖</div><span class="pill blue fr">Radiothérapie · roguelite</span><span class="pill blue en">Radiation · roguelite</span></div>
+          <h3>Fraction Hero</h3>
+          <p class="fr">Imprévus d’anatomie, toxicités, pannes machine. Sauve le contrôle tumoral (TCP), dompte la toxicité (NTCP) et assure la guérison du patient.</p>
+          <p class="en">A clinical roguelite where every fraction is a decision: anatomy surprises, toxicities, machine faults. Save tumour control (TCP), tame toxicity (NTCP) and keep the run alive.</p>
+          <div class="game-foot"><div class="game-meta"><span class="pill">4–10 min</span></div><a class="btn small primary fr" href="games/fraction-hero/index.html?lang=fr" target="_blank" rel="noopener">Jouer</a><a class="btn small primary en" href="games/fraction-hero/index.html?lang=en" target="_blank" rel="noopener">Play</a></div>
+        </article>
+
+        <article class="game-card" style="--game-color:var(--cyan)">
+          <div class="game-top"><div class="game-icon">⊟</div><span class="pill blue fr">Radiothérapie · arcade</span><span class="pill blue en">Radiation · arcade</span></div>
+          <h3>MLC Ninja</h3>
+          <p class="fr">Un arcade nerveux : manipule les lames du collimateur multi-lames comme un ninja pour laisser passer les photons vers la tumeur et protéger les organes à risque, vague après vague.</p>
+          <p class="en">A twitchy arcade: move the multi-leaf collimator leaves like a ninja to let photons through to the tumour while shielding the organs at risk, wave after wave.</p>
+          <div class="game-foot"><div class="game-meta"><span class="pill">1–4 min</span></div><a class="btn small primary fr" href="games/mlc-ninja/index.html?lang=fr" target="_blank" rel="noopener">Jouer</a><a class="btn small primary en" href="games/mlc-ninja/index.html?lang=en" target="_blank" rel="noopener">Play</a></div>
+        </article>
+
+        <article class="game-card" style="--game-color:var(--violet)">
+          <div class="game-top"><div class="game-icon">✚</div><span class="pill violet fr">RCP · QCM</span><span class="pill violet en">Tumor board · MCQ</span></div>
+          <h3>Tumor Board</h3>
+          <p class="fr">Un QCM de RCP : des cas d’oncologie courts et réalistes, générés parmi plus de 45 000 combinaisons cohérentes (âge, sexe, stade, biomarqueurs). Choisis la décision conforme au NCCN, avec justification à chaque réponse.</p>
+          <p class="en">A tumor-board MCQ: short, realistic oncology cases drawn from 45,000+ coherent combinations (age, sex, stage, biomarkers). Pick the NCCN-concordant decision, with a rationale every time.</p>
+          <div class="game-foot"><div class="game-meta"><span class="pill">6–12 min</span></div><a class="btn small primary fr" href="games/tumor-board/index.html?lang=fr" target="_blank" rel="noopener">Jouer</a><a class="btn small primary en" href="games/tumor-board/index.html?lang=en" target="_blank" rel="noopener">Play</a></div>
+        </article>
+        <article class="game-card" style="--game-color:var(--magenta)">
+          <div class="game-top"><div class="game-icon">◌</div><span class="pill pink fr">Radiothérapie · contourage</span><span class="pill pink en">Radiation · contouring</span></div>
+          <h3>GTV — Grand Theft Volume</h3>
+          <p class="fr">Contourez l’organe demandé avant la fin du chrono. Votre note est le coefficient de Dice réel contre la référence — et sur la moelle, quelques pixels coûtent cher.</p>
+          <p class="en">Contour the requested structure before the timer runs out. Your grade is the real Dice against the reference — and on the cord, a few pixels cost you.</p>
+          <div class="game-foot"><div class="game-meta"><span class="pill">3–6 min</span><span class="pill">Dice</span></div><a class="btn small primary fr" href="games/gtv/index.html?lang=fr" target="_blank" rel="noopener">Jouer</a><a class="btn small primary en" href="games/gtv/index.html?lang=en" target="_blank" rel="noopener">Play</a></div>
+        </article>
+      </div>
+    </section>
+
+    <section id="leaderboard">
+      <div class="panel">
+        <div class="mock-head">
+          <div class="mock-title">
+            <strong class="fr">Classement</strong><strong class="en">Leaderboard</strong>
+            <span id="lbSub"></span>
+          </div>
+          <div class="lb-controls">
+            <select id="lbGame" class="lb-select" aria-label="Jeu / Game"></select>
+            <div class="pill-row" id="lbPeriods">
+              <button class="pill blue" data-period="week" type="button"><span class="fr">Semaine</span><span class="en">Week</span></button>
+              <button class="pill" data-period="today" type="button"><span class="fr">Aujourd’hui</span><span class="en">Today</span></button>
+              <button class="pill" data-period="all" type="button"><span class="fr">Tout-temps</span><span class="en">All-time</span></button>
+            </div>
+          </div>
+        </div>
+        <div class="leaderboard" id="lbGlobal" aria-live="polite">
+          <div class="score-row"><span class="rank">—</span><span class="player"><strong class="fr">Chargement…</strong><strong class="en">Loading…</strong></span><span class="points"></span></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="about" class="about">
+      <div class="about-card">
+        <h2 class="fr">À propos</h2><h2 class="en">About</h2>
+        <p class="fr">Onco Arcade est une collection expérimentale de mini-jeux web consacrés à l’oncologie, la radiothérapie et à la physique médicale, imaginés, conçus et développés par Jean-Emmanuel Bibault.</p>
+        <p class="en">Onco Arcade is an experimental collection of web mini-games devoted to oncology, radiation therapy and medical physics, imagined, designed and developed by Jean-Emmanuel Bibault.</p>
+        <p class="fr">L’objectif est de rendre certains concepts cliniques plus visibles, interactifs et mémorables : chimiothérapie, revue de plan, livraison VMAT, physique des faisceaux, histogramme dose-volume et protonthérapie. On y apprend en jouant.</p>
+        <p class="en">The aim is to make certain clinical concepts more visible, interactive and memorable: chemotherapy, plan review, VMAT delivery, beam physics, dose-volume histogram and proton therapy. You learn by playing.</p>
+      </div>
+      <div class="about-card">
+        <h2 class="fr">Fabriqué avec l’IA</h2><h2 class="en">Built with AI</h2>
+        <p class="fr">J’ai conçu et développé ces jeux en binôme avec deux modèles d’intelligence artificielle : <strong>Claude Opus 4.8</strong> (Anthropic) et <strong>ChatGPT 5.5</strong> (OpenAI). L’idée clinique, le cahier des charges pédagogique et les choix de design sont les miens ; l’IA a servi de partenaire de programmation et de rédaction pour accélérer la mise en œuvre.</p>
+        <p class="en">I designed and built these games in tandem with two AI models: <strong>Claude Opus 4.8</strong> (Anthropic) and <strong>ChatGPT 5.5</strong> (OpenAI). The clinical idea, the educational brief and the design choices are mine; the AI acted as a coding and writing partner to speed up implementation.</p>
+        <div class="pill-row"><span class="pill blue">Claude Opus 4.8</span><span class="pill violet">ChatGPT 5.5</span></div>
+      </div>
+      <div class="about-card">
+        <h2 class="fr">Mention importante</h2><h2 class="en">Important note</h2>
+        <p class="fr">Ces jeux sont des expériences ludiques et pédagogiques. Ils ne constituent pas des dispositifs médicaux, ne remplacent pas une formation clinique et ne doivent jamais être utilisés pour orienter une prise en charge réelle.</p>
+        <p class="en">These games are playful, educational experiences. They are not medical devices, do not replace clinical training, and must never be used to guide real patient care.</p>
+        <div class="pill-row"><span class="pill blue">Éducation</span><span class="pill green">Open web</span><span class="pill violet">OVH</span></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="shell footer">
+    <div class="footer-inner">
+      <div class="legal">
+        <h4 class="fr">Mentions légales</h4><h4 class="en">Legal notice</h4>
+        <p class="fr"><strong>Éditeur &amp; auteur.</strong> Onco Arcade est un projet personnel et non commercial de Jean-Emmanuel Bibault. Les jeux sont fournis « en l’état », sans garantie, à des fins pédagogiques et de démonstration.</p>
+        <p class="en"><strong>Publisher &amp; author.</strong> Onco Arcade is a personal, non-commercial project by Jean-Emmanuel Bibault. The games are provided “as is”, without warranty, for educational and demonstration purposes.</p>
+        <p class="fr"><strong>Nature.</strong> Contenu pédagogique et expérimental. Ce ne sont pas des dispositifs médicaux (hors champ du règlement UE 2017/745) et ils n’établissent aucune recommandation de soin. Les scénarios cliniques sont stylisés et simplifiés.</p>
+        <p class="en"><strong>Nature.</strong> Educational, experimental content. These are not medical devices (outside the scope of EU Regulation 2017/745) and provide no care recommendation. Clinical scenarios are stylized and simplified.</p>
+        <p class="fr"><strong>Données &amp; hébergement.</strong> Le classement enregistre uniquement un pseudo librement choisi et un score, sans compte ni donnée personnelle sensible. Aucun cookie publicitaire. Backend PHP/MySQL hébergé sur infrastructure OVH (France). Préférences (langue, thème, scores locaux) stockées dans votre navigateur.</p>
+        <p class="en"><strong>Data &amp; hosting.</strong> The leaderboard stores only a freely chosen nickname and a score — no account, no sensitive personal data. No advertising cookies. PHP/MySQL backend hosted on OVH infrastructure (France). Preferences (language, theme, local scores) are stored in your browser.</p>
+        <p class="fr"><strong>Propriété intellectuelle.</strong> Code, design et contenus © Jean-Emmanuel Bibault. Les marques citées (Claude, ChatGPT, OVH) appartiennent à leurs détenteurs respectifs.</p>
+        <p class="en"><strong>Intellectual property.</strong> Code, design and content © Jean-Emmanuel Bibault. Cited trademarks (Claude, ChatGPT, OVH) belong to their respective owners.</p>
+      </div>
+      <div class="footer-meta">
+        <span class="fr">Onco Arcade — mini-jeux cliniques créés par Jean-Emmanuel Bibault, avec Claude Opus 4.8 et ChatGPT 5.5.</span>
+        <span class="en">Onco Arcade — clinical mini-games by Jean-Emmanuel Bibault, with Claude Opus 4.8 and ChatGPT 5.5.</span>
+        <span id="footYear">© 2026</span>
+      </div>
+    </div>
+  </footer>
+  <style>#oaReportBtn{display:none!important} .report-link{font:inherit;font-size:inherit;color:var(--primary);background:none;border:none;padding:0;cursor:pointer;text-decoration:underline;text-underline-offset:2px}</style>
+
+  <script>
+    const root = document.documentElement;
+    const themeBtn = document.getElementById('themeBtn');
+    const langBtn = document.getElementById('langBtn');
+
+    // Préférences persistées (langue + thème) + deep-link ?lang=
+    try {
+      const urlTheme = (new URLSearchParams(location.search).get('theme') || '').toLowerCase();
+      const savedTheme = (urlTheme === 'dark' || urlTheme === 'light') ? urlTheme : localStorage.getItem('oa-theme');
+      const urlLang = (new URLSearchParams(location.search).get('lang') || '').toLowerCase();
+      const savedLang = (urlLang === 'fr' || urlLang === 'en') ? urlLang : localStorage.getItem('oa-lang');
+      if (savedTheme) root.dataset.theme = savedTheme;
+      if (savedLang) { root.lang = savedLang; langBtn.textContent = savedLang === 'fr' ? 'FR / EN' : 'EN / FR'; localStorage.setItem('oa-lang', savedLang); }
+    } catch (e) {}
+
+    themeBtn.addEventListener('click', () => {
+      const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+      root.dataset.theme = next;
+      try { localStorage.setItem('oa-theme', next); } catch (e) {}
+      updateGameLinks();
+    });
+
+    langBtn.addEventListener('click', () => {
+      const next = root.lang === 'fr' ? 'en' : 'fr';
+      root.lang = next;
+      langBtn.textContent = next === 'fr' ? 'FR / EN' : 'EN / FR';
+      try { localStorage.setItem('oa-lang', next); } catch (e) {}
+      updateGameLinks();
+    });
+
+    // Année du copyright
+    const yearEl = document.getElementById('footYear');
+    if (yearEl) yearEl.textContent = '© ' + new Date().getFullYear();
+
+    /* ----- Classement global live (API Onco Arcade sur OVH) ----- */
+    const API_ROOT = 'api';   // le hub est à /arcade/ ; l'API à /arcade/api
+    const lbEl = document.getElementById('lbGlobal');
+    const periodsEl = document.getElementById('lbPeriods');
+    let period = 'week';
+
+    const nf = new Intl.NumberFormat('fr-FR');
+    const isFR = () => root.lang !== 'en';
+
+    function lbMessage(fr, en) {
+      lbEl.innerHTML = `<div class="score-row"><span class="rank">—</span><span class="player"><strong class="fr">${fr}</strong><strong class="en">${en}</strong></span><span class="points"></span></div>`;
+    }
+
+    // Sélecteur de jeu (construit depuis les cartes de la bibliothèque)
+    const gameSel = document.getElementById('lbGame');
+    const lbSub = document.getElementById('lbSub');
+    let currentGame = 'global';
+    const gameNames = {};
+    let gamesItems = [];
+    function fillGameSelect() {
+      if (!gameSel) return;
+      if (!gamesItems.length) {
+        Array.from(document.querySelectorAll('#games .game-card')).forEach(c => {
+          const a = c.querySelector('a[href*="games/"]');
+          const m = a && a.getAttribute('href').match(/games\/([a-z0-9-]+)\//i);
+          const slug = m ? m[1] : null;
+          const name = ((c.querySelector('h3') || {}).textContent || '').trim();
+          if (slug && name && !gameNames[slug]) { gameNames[slug] = name; gamesItems.push({ slug, name }); }
+        });
+        gamesItems.sort((a, b) => a.name.localeCompare(b.name));
+      }
+      const keep = gameSel.value || currentGame || 'global';
+      let html = '<option value="global">' + (isFR() ? 'Global (tous les jeux)' : 'Global (all games)') + '</option>';
+      html += '<option value="teams">' + (isFR() ? 'Par équipe' : 'By team') + '</option>';
+      gamesItems.forEach(it => { html += '<option value="' + it.slug + '">' + it.name + '</option>'; });
+      gameSel.innerHTML = html;
+      gameSel.value = keep;
+    }
+    fillGameSelect();
+    // Retraduire le menu déroulant quand la langue change (les <option> ne suivent pas le CSS FR/EN)
+    try { new MutationObserver(() => fillGameSelect()).observe(root, { attributes: true, attributeFilter: ['lang'] }); } catch (e) {}
+
+    function updateSub() {
+      if (!lbSub) return;
+      if (currentGame === 'teams') {
+        lbSub.innerHTML = '<span class="fr">Classement des équipes — points cumulés</span><span class="en">Team leaderboard — total points</span>';
+      } else if (currentGame === 'global') {
+        lbSub.innerHTML = '<span class="fr">Derniers scores enregistrés — tous les jeux</span><span class="en">Latest scores — all games</span>';
+      } else {
+        const nm = gameNames[currentGame] || currentGame;
+        lbSub.innerHTML = '<span class="fr">Meilleurs scores — ' + nm + '</span><span class="en">Top scores — ' + nm + '</span>';
+      }
+    }
+
+    const esc = s => (s || '—').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    function fmtWhen(ts) {
+      if (!ts) return '';
+      const d = new Date(String(ts).replace(' ', 'T'));
+      if (isNaN(d.getTime())) return '';
+      try { return new Intl.DateTimeFormat(isFR() ? 'fr-FR' : 'en-GB', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' }).format(d); }
+      catch (e) { return ''; }
+    }
+
+    async function loadBoard() {
+      updateSub();
+      lbMessage('Chargement…', 'Loading…');
+      try {
+        const res = await fetch(`${API_ROOT}/top.php?game=${encodeURIComponent(currentGame)}&period=${period}&limit=10`, { cache: 'no-store' });
+        if (!res.ok) throw new Error('http');
+        const data = await res.json();
+        if (!data || !data.ok || !Array.isArray(data.rows)) throw new Error('bad');
+        if (!data.rows.length) { lbMessage('Aucun score pour cette période — soyez le premier.', 'No scores for this period — be the first.'); return; }
+        lbEl.innerHTML = data.rows.map((r, i) => {
+          const rank = `<span class="rank">${String(i + 1).padStart(2, '0')}</span>`;
+          const pts = `<span class="points">${nf.format(r.score || 0)}</span>`;
+          if (currentGame === 'teams') {
+            const pl = r.players || 0, pg = r.plays || 0;
+            const sub = `<span class="lb-line"><span class="fr">${pl} joueur${pl > 1 ? 's' : ''} · ${pg} partie${pg > 1 ? 's' : ''}</span><span class="en">${pl} player${pl > 1 ? 's' : ''} · ${pg} game${pg > 1 ? 's' : ''}</span></span>`;
+            return `<div class="score-row">${rank}<span class="player"><strong>${esc(r.team)}</strong>${sub}</span>${pts}</div>`;
+          }
+          const teamTag = r.team ? `<span class="team-tag">${esc(r.team)}</span>` : '';
+          let meta = '';
+          if (currentGame === 'global') {
+            const gname = gameNames[r.game] || r.game || '';
+            const when = fmtWhen(r.ts);
+            meta = `<span class="lb-line">${esc(gname)}${when ? ' · ' + when : ''}</span>`;
+          }
+          return `<div class="score-row">${rank}<span class="player"><span class="player-top">${teamTag}<strong>${esc(r.name)}</strong></span>${meta}</span>${pts}</div>`;
+        }).join('');
+      } catch (e) {
+        lbMessage('Classement hors-ligne — il s’activera une fois déployé sur OVH.', 'Leaderboard offline — it will come online once deployed on OVH.');
+      }
+    }
+
+    if (gameSel) gameSel.addEventListener('change', () => { currentGame = gameSel.value; loadBoard(); });
+    if (periodsEl) {
+      periodsEl.addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-period]');
+        if (!btn) return;
+        period = btn.dataset.period;
+        periodsEl.querySelectorAll('button').forEach(b => b.classList.toggle('blue', b === btn));
+        loadBoard();
+      });
+    }
+    loadBoard();
+
+    function currentLang() { return root.lang === 'en' ? 'en' : 'fr'; }
+    function currentTheme() { return root.dataset.theme === 'dark' ? 'dark' : 'light'; }
+    function withParams(href, lang, theme) {
+      // IMPORTANT : garder des chemins relatifs simples.
+      // Ancienne version : new URL(...).pathname renvoyait parfois "arcade/games/..."
+      // quand le site était déployé dans /arcade/, ce qui cassait tous les liens.
+      let raw = String(href || '').trim();
+      if (!raw || raw.startsWith('#') || raw.startsWith('mailto:') || raw.startsWith('tel:')) return raw;
+      const hashIndex = raw.indexOf('#');
+      const hash = hashIndex >= 0 ? raw.slice(hashIndex) : '';
+      if (hashIndex >= 0) raw = raw.slice(0, hashIndex);
+      const parts = raw.split('?');
+      const path = parts.shift();
+      const params = new URLSearchParams(parts.join('?'));
+      params.set('lang', lang);
+      params.set('theme', theme);
+      return path + '?' + params.toString() + hash;
+    }
+    function updateGameLinks() {
+      const lang = currentLang();
+      const theme = currentTheme();
+      document.querySelectorAll('a[href^="games/"]').forEach(a => {
+        if (!a.dataset.baseHref) a.dataset.baseHref = a.getAttribute('href') || '';
+        a.setAttribute('href', withParams(a.dataset.baseHref, lang, theme));
+        a.setAttribute('target', '_blank');
+        a.setAttribute('rel', 'noopener');
+      });
+    }
+    updateGameLinks();
+
+    // Navigation interne robuste pour À propos / Classement / Jeux.
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', e => {
+        const id = a.getAttribute('href');
+        if (!id || id === '#') return;
+        const el = document.querySelector(id);
+        if (!el) return;
+        e.preventDefault();
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        try { history.replaceState(null, '', id); } catch (_) {}
+      });
+    });
+
+  </script>
+<script id="oa-season">
+(function(){
+  /* =====================================================================
+     SAISON ONCO ARCADE — un jeu déverrouillé par semaine, automatiquement.
+     Pour régler le lancement : change SEASON_START ci-dessous.
+     Aperçu : ?preview=all débloque tout · ?week=N force la semaine N.
+     ===================================================================== */
+  var SEASON_START = new Date(2026, 6, 13, 8, 0, 0);  // lundi 13 juillet 2026, 08:00 (mois 0-indexé : 6 = juillet)
+  var ORDER = ['gtv','plan-please','ok-chimio','mlc-ninja','fraction-hero','seed-master','beamlet','bragg-peak','tumor-board','radcraft'];
+  var WEEK = 7*24*3600*1000;
+  function param(k){ try{ return new URLSearchParams(location.search).get(k); }catch(e){ return null; } }
+  function unlockAt(slug){ var i=ORDER.indexOf(slug); return i<0?null:SEASON_START.getTime()+i*WEEK; }
+
+  function run(){
+    var grid=document.getElementById('games'); if(!grid) return;
+    var cards=Array.prototype.slice.call(grid.querySelectorAll('.game-card'));
+    if(!cards.length) return;
+    var en=(document.documentElement.getAttribute('lang')==='en');
+    var now=Date.now();
+
+    // nombre de jeux débloqués (n)
+    var n, wk=param('week'), all=param('preview')==='all';
+    if(all) n=ORDER.length;
+    else if(wk!==null) n=Math.max(0,Math.min(ORDER.length, parseInt(wk,10)||0));
+    else n = now<SEASON_START.getTime() ? 0 : Math.min(ORDER.length, Math.floor((now-SEASON_START.getTime())/WEEK)+1);
+
+    function slugOf(c){ var a=c.querySelector('a[href*="games/"]'); if(!a) return null; var m=a.getAttribute('href').match(/games\/([a-z0-9-]+)\//); return m?m[1]:null; }
+    function unlocked(slug){ var i=ORDER.indexOf(slug); return i<0?true:i<n; }
+    function fmtDate(ms){ try{ return new Date(ms).toLocaleDateString(en?'en-GB':'fr-FR',{day:'numeric',month:'long'}); }catch(e){ return ''; } }
+
+    var bySlug={}; cards.forEach(function(c){ var sg=slugOf(c); if(sg) bySlug[sg]=c; });
+
+    // (ré)initialiser + verrouiller
+    cards.forEach(function(c){
+      c.style.display=''; c.classList.remove('locked');
+      var old=c.querySelector('.game-lock'); if(old) old.remove();
+      var sg=slugOf(c); if(!sg) return;
+      if(!unlocked(sg)){
+        c.classList.add('locked');
+        var ov=document.createElement('div'); ov.className='game-lock';
+        ov.innerHTML='<div class="lk">\uD83D\uDD12</div><div class="ld">'+(en?'Unlocks ':'Disponible le ')+fmtDate(unlockAt(sg))+'</div>';
+        c.appendChild(ov);
+        Array.prototype.forEach.call(c.querySelectorAll('a[href*="games/"]'),function(a){
+          a.setAttribute('aria-disabled','true');
+          if(!a.__oaLock){ a.__oaLock=true; a.addEventListener('click',function(e){ if(this.getAttribute('aria-disabled')==='true') e.preventDefault(); }); }
+        });
+      } else {
+        Array.prototype.forEach.call(c.querySelectorAll('a[href*="games/"]'),function(a){ a.removeAttribute('aria-disabled'); });
+      }
+    });
+    // Réordonner la grille par ordre de dévoilement
+    var gridBox=grid.querySelector('.grid-games')||grid;
+    ORDER.forEach(function(sg){ if(bySlug[sg]) gridBox.appendChild(bySlug[sg]); });
+
+    // jeu de la semaine = dernier débloqué (ou 1er en avant-première)
+    var featSlug = n>=1 ? ORDER[n-1] : ORDER[0];
+    var fc = bySlug[featSlug];
+    var setTxt=function(id,v){var e=document.getElementById(id); if(e) e.textContent=v;};
+    if(fc){
+      var link=fc.querySelector('a[href*="games/"]');
+      var href=link?link.getAttribute('href').replace(/[?&].*$/,''):'#games';
+      var pf=fc.querySelector('p.fr'), pe=fc.querySelector('p.en')||fc.querySelector('p');
+      setTxt('feat-title',((fc.querySelector('h3')||{}).textContent||'').trim());
+      setTxt('feat-desc-fr',(pf?pf.textContent:'').trim());
+      setTxt('feat-desc-en',(pe?pe.textContent:'').trim());
+      var pills=document.getElementById('feat-pills'); if(pills) pills.innerHTML=Array.prototype.map.call(fc.querySelectorAll('.game-top .pill'),function(p){return p.outerHTML;}).join('');
+      var play=document.getElementById('feat-play');
+      if(play){
+        if(n>=1){ play.setAttribute('href',href); play.style.pointerEvents=''; play.style.opacity=''; play.setAttribute('target','_blank'); }
+        else { play.setAttribute('href','#games'); play.style.pointerEvents='none'; play.style.opacity='.4'; }
+      }
+      var prev=document.getElementById('feat-preview');
+      if(prev){
+        if(/radcraft/i.test(href)) prev.innerHTML='<div class="radcraft-screen"><img src="images/RadCraft.png" alt="RadCraft" loading="lazy"></div>';
+        else { var icon=((fc.querySelector('.game-icon')||{}).textContent||'\u25A3').trim(); var color=(fc.style.getPropertyValue('--game-color')||'var(--primary)').trim(); prev.innerHTML='<div class="feat-glyph" style="--gc:'+color+'"><span>'+icon+'</span></div>'; }
+      }
+      if(n>=1) fc.style.display='none';
+    }
+
+    // progression + compte à rebours
+    var copy=document.querySelector('.featured-copy');
+    if(copy){
+      var meta=document.getElementById('jotw-meta');
+      if(!meta){ meta=document.createElement('div'); meta.id='jotw-meta'; meta.className='jotw-meta';
+        var pl=document.getElementById('feat-pills');
+        if(pl&&pl.parentNode) pl.parentNode.insertBefore(meta, pl.nextSibling); else copy.appendChild(meta); }
+      var shown=Math.max(0,Math.min(n,ORDER.length));
+      var progTxt = n===0 ? (en?'The next game is released in':'Le prochain jeu arrive dans') : (en?('Week '+shown+' / '+ORDER.length):('Semaine '+shown+' / '+ORDER.length));
+      var nextIdx=n;
+      clearInterval(window.__jotwTimer);
+      if(nextIdx<ORDER.length){
+        var nextSlug=ORDER[nextIdx], nd=unlockAt(nextSlug);
+        var nc=bySlug[nextSlug]; var nextName=nc?((nc.querySelector('h3')||{}).textContent||'').trim():'';
+        meta.innerHTML='<span class="jotw-prog"><b>'+progTxt+'</b></span><span class="jotw-count" id="jotw-count"></span>';
+        var cEl=document.getElementById('jotw-count');
+        var tick=function(){
+          var diff=nd-Date.now();
+          if(diff<=0){ run(); return; }
+          var d=Math.floor(diff/86400000), h=Math.floor(diff%86400000/3600000), m=Math.floor(diff%3600000/60000);
+          var lbl = n===0 ? (en?'':'') : (en?'Next \u2013 '+nextName+' : ':'Prochain \u2013 '+nextName+' : ');
+          if(cEl) cEl.textContent=lbl+d+'j '+h+'h '+m+'m';
+        };
+        tick(); window.__jotwTimer=setInterval(tick,60000);
+      } else {
+        meta.innerHTML='<span class="jotw-prog"><b>'+progTxt+'</b></span><span class="jotw-count">'+(en?'Full season \u00b7 10/10':'Saison compl\u00e8te \u00b7 10/10')+'</span>';
+      }
+    }
+  }
+  window.__oaSeasonRun=run;
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',run); else run();
+  try{ new MutationObserver(function(){ run(); }).observe(document.documentElement,{attributes:true,attributeFilter:['lang']}); }catch(e){}
+})();
+</script>
+<script id="oa-ratings">
+(function(){
+  var API='api';
+  function lget(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+  function lset(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+  function voter(){ var v=lget('oa-voter'); if(!v){ v='v'+Date.now().toString(36)+Math.random().toString(36).slice(2,8); lset('oa-voter',v);} return v; }
+  function slugFromHref(h){ var m=(h||'').match(/games\/([a-z0-9-]+)\//i); return m?m[1]:null; }
+  function played(slug){ return lget('oa-played:'+slug)==='1'; }
+  function infoHTML(st, locked){
+    var tail=st.count?(' · '+st.avg.toFixed(1)+'/5 ('+st.count+')'):'';
+    if(st.yours){ return '<span class="fr">Ta note : '+st.yours+'★'+tail+'</span><span class="en">Your rating: '+st.yours+'★'+tail+'</span>'; }
+    if(locked){ return '<span class="fr">Joue pour noter'+tail+'</span><span class="en">Play to rate'+tail+'</span>'; }
+    if(!st.count){ return '<span class="fr">Pas encore noté</span><span class="en">Not rated yet</span>'; }
+    return '<span class="fr">'+st.avg.toFixed(1)+'/5 · '+st.count+' avis</span><span class="en">'+st.avg.toFixed(1)+'/5 · '+st.count+' ratings</span>';
+  }
+  var REG={};
+  function makeWidget(slug){
+    var w=document.createElement('div'); w.className='oa-stars'; w.setAttribute('data-game',slug);
+    w.innerHTML='<div class="oa-stars-row"><div class="oa-stars-base">★★★★★</div><div class="oa-stars-fill">★★★★★</div>'+
+      '<div class="oa-stars-hit">'+[1,2,3,4,5].map(function(v){return '<button type="button" data-v="'+v+'" aria-label="'+v+'/5"></button>';}).join('')+'</div></div>'+
+      '<span class="oa-stars-info"></span>';
+    var fill=w.querySelector('.oa-stars-fill'), info=w.querySelector('.oa-stars-info'), hit=w.querySelector('.oa-stars-hit');
+    var st={avg:0,count:0,yours:parseInt(lget('oa-rate:'+slug),10)||0};
+    function locked(){ return !played(slug) && !st.yours; }
+    function paint(v){ fill.style.width=(Math.max(0,Math.min(5,v))/5*100)+'%'; }
+    function refresh(){ w.classList.toggle('locked',locked()); if(st.yours){w.classList.add('voted');paint(st.yours);}else paint(st.avg); info.innerHTML=infoHTML(st,locked()); }
+    w._st=st; w._refresh=refresh; refresh();
+    Array.prototype.forEach.call(hit.children,function(b){
+      b.addEventListener('mouseenter',function(){ if(locked())return; paint(parseInt(b.getAttribute('data-v'),10)); });
+      b.addEventListener('click',function(){
+        if(locked()){ w.classList.remove('shake'); void w.offsetWidth; w.classList.add('shake'); return; }
+        var v=parseInt(b.getAttribute('data-v'),10), was=st.yours;
+        st.yours=v; lset('oa-rate:'+slug,String(v)); w.classList.add('voted');
+        if(!st.count && !was){ st.avg=v; st.count=1; }
+        (REG[slug]||[]).forEach(function(x){ x._st.yours=v; x._refresh(); });
+        fetch(API+'/rate.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({game:slug,stars:v,voter:voter()})})
+          .then(function(r){return r.ok?r.json():null;}).then(function(d){ if(d&&d.ok){ (REG[slug]||[]).forEach(function(x){ x._st.avg=d.avg; x._st.count=d.count; x._st.yours=d.yours; x._refresh(); }); }}).catch(function(){});
+      });
+    });
+    hit.addEventListener('mouseleave',refresh);
+    (REG[slug]=REG[slug]||[]).push(w);
+    return w;
+  }
+  function markPlayed(slug){ if(!slug)return; lset('oa-played:'+slug,'1'); (REG[slug]||[]).forEach(function(w){ w._refresh(); }); }
+  function run(){
+    Array.prototype.forEach.call(document.querySelectorAll('#games .game-card'),function(card){
+      var a=card.querySelector('a[href*="games/"]'); var slug=slugFromHref(a&&a.getAttribute('href'));
+      var foot=card.querySelector('.game-foot');
+      if(slug&&foot&&!card.querySelector('.oa-stars')){ card.insertBefore(makeWidget(slug),foot); }
+    });
+    var fr=document.getElementById('feat-rating'), fp=document.getElementById('feat-play');
+    if(fr&&fp){ var fs=slugFromHref(fp.getAttribute('href')); if(fs){ fr.innerHTML=''; fr.appendChild(makeWidget(fs)); } }
+    Array.prototype.forEach.call(document.querySelectorAll('a[href*="games/"]'),function(a){
+      a.addEventListener('click',function(){ markPlayed(slugFromHref(a.getAttribute('href'))); });
+    });
+    fetch(API+'/ratings.php',{cache:'no-store'}).then(function(r){return r.ok?r.json():null;}).then(function(d){
+      if(!d||!d.ok||!d.ratings) return;
+      Object.keys(REG).forEach(function(slug){ var r=d.ratings[slug]; if(r){ REG[slug].forEach(function(w){ w._st.avg=r.avg||0; w._st.count=r.count||0; w._refresh(); }); }});
+    }).catch(function(){});
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',run); else run();
+})();
+</script>
+<button id="oaReportBtn" type="button" aria-label="Signaler un problème" style="position:fixed;left:12px;bottom:12px;z-index:2147482000;width:38px;height:38px;border-radius:50%;border:1px solid rgba(148,163,184,.35);background:rgba(15,22,38,.55);color:#e5e9f0;font-size:17px;line-height:1;cursor:pointer;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);opacity:.55;transition:opacity .15s;font-family:ui-sans-serif,system-ui,sans-serif" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.55" title="Signaler un problème">⚠</button>
+<div id="oaReport" style="display:none;position:fixed;inset:0;z-index:2147483100;background:rgba(3,8,18,.74);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif">
+  <div style="width:min(420px,94vw);background:#0f1626;color:#f8fafc;border:1px solid rgba(255,255,255,.14);border-radius:18px;padding:22px;box-shadow:0 30px 80px rgba(0,0,0,.55)">
+    <div id="oaReportTitle" style="font-size:18px;font-weight:800;letter-spacing:-.01em;margin-bottom:4px">Signaler un problème</div>
+    <div id="oaReportSub" style="font-size:13px;color:#a7b0c2;line-height:1.4;margin-bottom:14px">Décrivez le souci ; il me sera envoyé par e-mail. Aucune adresse n’est affichée.</div>
+    <div id="oaReportForm">
+      <label id="oaReportGameLbl" style="font-size:12px;color:#a7b0c2;display:block;margin-bottom:5px">Jeu concerné</label>
+      <select id="oaReportGame" style="width:100%;box-sizing:border-box;font:inherit;font-size:14px;font-weight:600;color:#f8fafc;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:11px 12px;outline:none;margin-bottom:12px"></select>
+      <label id="oaReportMsgLbl" style="font-size:12px;color:#a7b0c2;display:block;margin-bottom:5px">Description</label>
+      <textarea id="oaReportMsg" rows="5" maxlength="4000" placeholder="Que s’est-il passé ?" style="width:100%;box-sizing:border-box;font:inherit;font-size:14px;color:#f8fafc;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:11px 12px;outline:none;resize:vertical"></textarea>
+      <div id="oaReportErr" style="display:none;font-size:12px;color:#fb7185;margin-top:8px"></div>
+      <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
+        <button id="oaReportCancel" type="button" style="font:inherit;font-weight:700;color:#a7b0c2;background:none;border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:9px 14px;cursor:pointer">Annuler</button>
+        <button id="oaReportSend" type="button" style="font:inherit;font-weight:800;color:#fff;background:linear-gradient(135deg,#2557d6,#0891b2);border:none;border-radius:999px;padding:9px 16px;cursor:pointer">Envoyer</button>
+      </div>
+    </div>
+    <div id="oaReportDone" style="display:none;text-align:center;padding:10px 0">
+      <div style="font-size:34px;line-height:1">✅</div>
+      <div id="oaReportDoneTxt" style="font-size:15px;font-weight:700;margin-top:8px">Merci, c’est envoyé.</div>
+      <button id="oaReportClose2" type="button" style="margin-top:16px;font:inherit;font-weight:800;color:#fff;background:linear-gradient(135deg,#2557d6,#0891b2);border:none;border-radius:999px;padding:9px 18px;cursor:pointer">Fermer</button>
+    </div>
+  </div>
+</div>
+<script id="oa-report">
+(function(){
+  var GAMES=[['plan-please','Plan, Please'],['ok-chimio','OK Chimio'],['arc-racer','Arc Racer'],['beamlet','Beamlet'],['bragg-peak','Bragg Peak'],['fraction-hero','Fraction Hero'],['seed-master','Seed Master'],['mlc-ninja','MLC Ninja'],['tumor-board','Tumor Board'],['radcraft','RadCraft']];
+  function isEn(){ var l=(document.documentElement.getAttribute('lang')||document.documentElement.lang||navigator.language||'fr'); return String(l).slice(0,2).toLowerCase()==='en'; }
+  function API(){ return /\/games\/[^/]+\//.test(location.pathname) ? '../../api' : 'api'; }
+  function curGame(){ var m=location.pathname.match(/\/games\/([a-z0-9-]+)\//i); return m?m[1]:''; }
+  var el=document.getElementById('oaReport');
+  var sel=document.getElementById('oaReportGame'), msg=document.getElementById('oaReportMsg'), err=document.getElementById('oaReportErr');
+  var form=document.getElementById('oaReportForm'), done=document.getElementById('oaReportDone');
+  function labels(){
+    var en=isEn();
+    document.getElementById('oaReportTitle').textContent=en?'Report a problem':'Signaler un problème';
+    document.getElementById('oaReportSub').textContent=en?'Describe the issue; it will be emailed to me. No address is shown.':'Décrivez le souci ; il me sera envoyé par e-mail. Aucune adresse n’est affichée.';
+    document.getElementById('oaReportGameLbl').textContent=en?'Game concerned':'Jeu concerné';
+    document.getElementById('oaReportMsgLbl').textContent=en?'Description':'Description';
+    msg.placeholder=en?'What happened?':'Que s’est-il passé ?';
+    document.getElementById('oaReportCancel').textContent=en?'Cancel':'Annuler';
+    document.getElementById('oaReportSend').textContent=en?'Send':'Envoyer';
+    document.getElementById('oaReportDoneTxt').textContent=en?'Thanks, it’s been sent.':'Merci, c’est envoyé.';
+    document.getElementById('oaReportClose2').textContent=en?'Close':'Fermer';
+    document.getElementById('oaReportBtn').setAttribute('aria-label',en?'Report a problem':'Signaler un problème');
+    document.getElementById('oaReportBtn').title=en?'Report a problem':'Signaler un problème';
+  }
+  function fillSelect(){
+    var en=isEn(), cur=curGame();
+    var html='<option value="">'+(en?'The site / hub':'Le site / le hub')+'</option>';
+    GAMES.forEach(function(g){ html+='<option value="'+g[0]+'">'+g[1]+'</option>'; });
+    html+='<option value="other">'+(en?'Other':'Autre')+'</option>';
+    sel.innerHTML=html; sel.value=cur||'';
+  }
+  window.oaReport=function(){
+    labels(); fillSelect();
+    err.style.display='none'; msg.value=''; form.style.display='block'; done.style.display='none';
+    el.style.display='flex'; setTimeout(function(){ try{msg.focus();}catch(e){} },60);
+  };
+  function close(){ el.style.display='none'; }
+  document.getElementById('oaReportBtn').onclick=window.oaReport;
+  document.getElementById('oaReportCancel').onclick=close;
+  document.getElementById('oaReportClose2').onclick=close;
+  el.addEventListener('click',function(e){ if(e.target===el) close(); });
+  document.getElementById('oaReportSend').onclick=function(){
+    var en=isEn(); var text=(msg.value||'').trim();
+    if(text.length<3){ err.textContent=en?'Please describe the problem.':'Merci de décrire le problème.'; err.style.display='block'; return; }
+    var btn=this; btn.disabled=true; btn.style.opacity=.6;
+    fetch(API()+'/report.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({game:sel.value,message:text,page:location.href})})
+      .then(function(r){return r.ok?r.json():null;}).then(function(d){
+        btn.disabled=false; btn.style.opacity=1;
+        if(d&&d.ok){ form.style.display='none'; done.style.display='block'; }
+        else { err.textContent=en?'Sending failed. Please try again later.':'Envoi impossible. Réessayez plus tard.'; err.style.display='block'; }
+      }).catch(function(){ btn.disabled=false; btn.style.opacity=1; err.textContent=en?'Network error.':'Erreur réseau.'; err.style.display='block'; });
+  };
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,2638 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#f7f8fb">
+<meta name="description" content="Plan, Please — mini-jeu Onco Arcade : validez les plans de radiothérapie conformes, refusez les plans dangereux.">
+<title>Plan, Please — Onco Arcade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<!-- ===== Charte graphique Onco Arcade (intégrée pour portabilité) ===== -->
+<style id="onco-arcade-charte">
+/* =====================================================================
+   ONCO ARCADE — Charte graphique partagée (v1.0)
+   Auteur : Pr Jean-Emmanuel Bibault
+   Un seul fichier importé par TOUS les jeux → habillage identique.
+   Thème clair/sombre via  html[data-theme="dark"]
+   Bilingue via             html[lang="fr"] / html[lang="en"]  + classes .fr / .en
+   ===================================================================== */
+
+:root {
+  --bg: #f7f8fb;
+  --bg-2: #ffffff;
+  --text: #111827;
+  --muted: #667085;
+  --soft: #98a2b3;
+  --card: rgba(255, 255, 255, .82);
+  --card-strong: rgba(255, 255, 255, .97);
+  --stroke: rgba(17, 24, 39, .11);
+  --stroke-strong: rgba(17, 24, 39, .18);
+  --shadow: 0 16px 42px rgba(15, 23, 42, .08);
+  --shadow-soft: 0 8px 24px rgba(15, 23, 42, .06);
+  --primary: #2557d6;
+  --cyan: #0891b2;
+  --magenta: #c02678;
+  --violet: #6d28d9;
+  --green: #047857;
+  --amber: #b45309;
+  --red: #c2414b;
+  --chip: rgba(37, 87, 214, .08);
+  --mist: rgba(37, 87, 214, .055);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --glass-blur: blur(18px);
+  --focus: 0 0 0 4px rgba(37, 87, 214, .16);
+}
+
+html[data-theme="dark"] {
+  --bg: #070a12;
+  --bg-2: #0d1323;
+  --text: #f8fafc;
+  --muted: #a7b0c2;
+  --soft: #7d8798;
+  --card: rgba(15, 23, 42, .74);
+  --card-strong: rgba(15, 23, 42, .96);
+  --stroke: rgba(255, 255, 255, .12);
+  --stroke-strong: rgba(255, 255, 255, .2);
+  --shadow: 0 24px 72px rgba(0, 0, 0, .38);
+  --shadow-soft: 0 14px 36px rgba(0, 0, 0, .24);
+  --primary: #7aa2ff;
+  --cyan: #22d3ee;
+  --magenta: #f472b6;
+  --violet: #a78bfa;
+  --green: #34d399;
+  --amber: #f6bd60;
+  --red: #fb7185;
+  --chip: rgba(122, 162, 255, .14);
+  --mist: rgba(122, 162, 255, .08);
+  --focus: 0 0 0 4px rgba(122, 162, 255, .18);
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--text);
+  background: var(--bg);
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.45;
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 14% 6%, rgba(37, 87, 214, .10), transparent 34%),
+    radial-gradient(circle at 88% 8%, rgba(192, 38, 120, .06), transparent 32%),
+    radial-gradient(circle at 44% 92%, rgba(8, 145, 178, .055), transparent 36%);
+  z-index: -2;
+}
+body::after {
+  content: "";
+  position: fixed;
+  width: 560px; height: 560px;
+  right: -210px; top: 210px;
+  border-radius: 999px;
+  background: conic-gradient(from 160deg, rgba(37,87,214,.18), rgba(192,38,120,.14), rgba(8,145,178,.16), rgba(37,87,214,.18));
+  filter: blur(54px);
+  opacity: .72;
+  z-index: -3;
+  pointer-events: none;
+}
+
+a, a:visited, a:hover, a:focus, a:active { color: inherit; text-decoration: none; }
+button, input, select, textarea { font: inherit; }
+button { -webkit-tap-highlight-color: transparent; }
+::selection { background: rgba(37, 87, 214, .18); }
+
+/* ---------- Layout ---------- */
+.shell { width: min(1160px, calc(100% - 36px)); margin: 0 auto; }
+
+h1, h2, h3, p { margin-top: 0; }
+h1 {
+  margin-bottom: 18px;
+  font-size: clamp(44px, 6vw, 76px);
+  line-height: .95;
+  letter-spacing: -.064em;
+  font-weight:520;
+}
+.gradient-text {
+  background: linear-gradient(120deg, var(--text), color-mix(in srgb, var(--primary) 66%, var(--cyan)), var(--magenta));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.lead {
+  max-width: 690px;
+  margin-bottom: 26px;
+  color: var(--muted);
+  font-size: clamp(18px, 2.2vw, 22px);
+  line-height: 1.5;
+  font-weight:400;
+}
+
+/* ---------- Topbar / brand ---------- */
+.topbar {
+  position: sticky;
+  top: 14px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-top: 14px;
+  padding: 9px 10px;
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--card-strong) 82%, transparent);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--shadow-soft);
+}
+.brand { display: inline-flex; align-items: center; gap: 10px; min-width: 0; }
+.mark {
+  width: 36px; height: 36px;
+  position: relative;
+  flex: 0 0 auto;
+  border-radius: 9px;
+  border: 1px solid color-mix(in srgb, var(--primary) 28%, var(--stroke));
+  background:
+    radial-gradient(circle at 48% 50%, var(--magenta) 0 3px, transparent 4px),
+    conic-gradient(from 110deg, transparent 0 22deg, var(--primary) 22deg 126deg, transparent 126deg 194deg, var(--cyan) 194deg 320deg, transparent 320deg 360deg),
+    linear-gradient(135deg, rgba(37,87,214,.12), rgba(8,145,178,.08));
+  box-shadow: inset 0 0 0 7px color-mix(in srgb, var(--bg-2) 72%, transparent);
+}
+.mark::before, .mark::after {
+  content: "";
+  position: absolute;
+  left: 8px; right: 8px; top: 17px;
+  height: 1px;
+  background: color-mix(in srgb, var(--text) 32%, transparent);
+}
+.mark::after { transform: rotate(90deg); }
+.brand-text { display: grid; gap: 0; line-height: 1.08; }
+.brand-title { font-weight:560; letter-spacing: -.02em; white-space: nowrap; }
+.brand-subtitle { color: var(--muted); font-size: 12px; white-space: nowrap; }
+.nav { display: flex; align-items: center; gap: 8px; }
+.nav a, .nav button { flex: 0 0 auto; }
+
+/* ---------- Buttons ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 9px 13px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--stroke);
+  color: var(--text);
+  background: color-mix(in srgb, var(--card-strong) 82%, transparent);
+  box-shadow: none;
+  cursor: pointer;
+  font-weight:450;
+  transition: transform .16s ease, border-color .16s ease, background .16s ease, box-shadow .16s ease, color .16s ease;
+}
+.btn:hover { transform: translateY(-1px); border-color: var(--stroke-strong); box-shadow: var(--shadow-soft); }
+.btn:active { transform: translateY(0); box-shadow: none; }
+.btn:focus-visible { outline: 0; box-shadow: var(--focus); }
+.btn.primary {
+  color: #fff;
+  border-color: color-mix(in srgb, var(--primary) 62%, black);
+  background: linear-gradient(135deg, var(--primary), color-mix(in srgb, var(--primary) 68%, var(--cyan)));
+  box-shadow: 0 12px 26px rgba(37, 87, 214, .18);
+}
+.btn.ghost { background: transparent; }
+.btn.small { min-height: 32px; padding: 7px 10px; font-size: 13px; }
+.btn.block { width: 100%; }
+.btn[disabled] { opacity: .5; cursor: not-allowed; transform: none; }
+
+/* ---------- Theme toggle ---------- */
+.toggle {
+  position: relative;
+  width: 68px; min-height: 34px;
+  border-radius: 999px;
+  padding: 3px;
+  border: 1px solid var(--stroke);
+  background: color-mix(in srgb, var(--card-strong) 82%, transparent);
+  cursor: pointer;
+}
+.toggle span {
+  position: absolute;
+  inset: 3px auto 3px 3px;
+  width: 28px;
+  border-radius: 999px;
+  background: var(--text);
+  transition: transform .18s ease, background .18s ease;
+}
+.toggle::before, .toggle::after {
+  position: absolute; top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px; color: var(--muted);
+}
+.toggle::before { content: "\2600"; left: 10px; }
+.toggle::after { content: "\263E"; right: 10px; }
+html[data-theme="dark"] .toggle span { transform: translateX(34px); background: #fff; }
+
+/* ---------- Eyebrow / sections ---------- */
+.eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  margin-bottom: 16px;
+  padding: 6px 9px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--stroke);
+  background: var(--chip);
+  color: color-mix(in srgb, var(--primary) 74%, var(--text));
+  font-size: 13px; font-weight:450;
+}
+.eyebrow i {
+  width: 7px; height: 7px; border-radius: 999px;
+  background: var(--green);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--green) 13%, transparent);
+}
+section { padding: 44px 0; }
+.section-head { display: flex; align-items: end; justify-content: space-between; gap: 20px; margin-bottom: 18px; }
+.section-title { margin: 0; font-size: clamp(25px, 3vw, 36px); line-height: 1.1; letter-spacing: -.045em; font-weight:500; }
+.section-note { max-width: 530px; margin: 8px 0 0; color: var(--muted); }
+
+/* ---------- Pills ---------- */
+.pill-row { display: flex; gap: 7px; flex-wrap: wrap; }
+.pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  min-height: 28px; padding: 5px 8px;
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--card-strong) 78%, transparent);
+  color: var(--muted);
+  font-size: 12px; font-weight:420;
+}
+.pill.blue { color: var(--primary); background: color-mix(in srgb, var(--primary) 9%, transparent); }
+.pill.green { color: var(--green); background: color-mix(in srgb, var(--green) 9%, transparent); }
+.pill.pink { color: var(--magenta); background: color-mix(in srgb, var(--magenta) 9%, transparent); }
+.pill.amber { color: var(--amber); background: color-mix(in srgb, var(--amber) 10%, transparent); }
+.pill.violet { color: var(--violet); background: color-mix(in srgb, var(--violet) 10%, transparent); }
+
+/* ---------- Cards / panels ---------- */
+.panel {
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius);
+  background: var(--card);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--shadow-soft);
+  padding: 20px;
+}
+.panel h3 { margin-bottom: 8px; font-size: 21px; letter-spacing: -.03em; font-weight:520; }
+.panel p { color: var(--muted); }
+
+.metric {
+  padding: 14px;
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--card) 78%, transparent);
+  backdrop-filter: var(--glass-blur);
+}
+.metric strong { display: block; margin-bottom: 4px; font-size: 22px; font-weight:520; letter-spacing: -.03em; }
+.metric span { color: var(--muted); font-size: 13px; }
+.metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; max-width: 680px; }
+
+.control-card {
+  padding: 14px;
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--card-strong) 76%, transparent);
+}
+.control-card h4 { margin: 0 0 9px; font-weight:520; letter-spacing: -.02em; }
+.control-card p { margin: 0 0 12px; color: var(--muted); font-size: 13px; }
+.stat { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 10px 0 6px; font-size: 13px; color: var(--muted); }
+.stat strong { color: var(--text); font-weight:500; }
+
+/* ---------- Meters ---------- */
+.meter { height: 7px; overflow: hidden; border-radius: 999px; background: color-mix(in srgb, var(--muted) 16%, transparent); }
+.meter span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--green), var(--cyan)); }
+.meter.tox span { background: linear-gradient(90deg, var(--green), var(--amber)); }
+
+/* ---------- Game cards (hub) ---------- */
+.grid-games { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.game-card {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  min-height: 255px;
+  padding: 18px;
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius);
+  background: var(--card);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--shadow-soft);
+  overflow: hidden;
+  transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease;
+}
+.game-card:hover { transform: translateY(-3px); border-color: var(--stroke-strong); box-shadow: var(--shadow); }
+.game-card::before {
+  content: "";
+  position: absolute; inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 86% 10%, color-mix(in srgb, var(--game-color, var(--primary)) 17%, transparent), transparent 36%);
+}
+.game-top { display: flex; align-items: start; justify-content: space-between; gap: 12px; position: relative; z-index: 1; }
+.game-icon {
+  width: 52px; height: 52px;
+  display: grid; place-items: center;
+  border-radius: var(--radius-sm);
+  border: 1px solid color-mix(in srgb, var(--game-color, var(--primary)) 36%, var(--stroke));
+  background: color-mix(in srgb, var(--game-color, var(--primary)) 11%, transparent);
+  color: var(--game-color, var(--primary));
+  font-size: 24px;
+}
+.game-card h3 { position: relative; z-index: 1; margin: 18px 0 7px; font-size: 22px; letter-spacing: -.03em; font-weight:520; }
+.game-card p { position: relative; z-index: 1; margin: 0; color: var(--muted); font-size: 14.5px; }
+.game-foot { position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 18px; }
+.game-meta { display: flex; gap: 6px; flex-wrap: wrap; }
+
+/* Domain accents */
+.beamlet  { --game-color: var(--primary); }
+.bragg    { --game-color: var(--cyan); }
+.fraction { --game-color: var(--amber); }
+.oar      { --game-color: var(--green); }
+.contour  { --game-color: var(--magenta); }
+.tki      { --game-color: var(--violet); }
+.tox      { --game-color: var(--red); }
+
+/* ---------- Leaderboard ---------- */
+.leaderboard { display: grid; gap: 9px; margin-top: 18px; }
+.score-row {
+  display: grid;
+  grid-template-columns: 34px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 11px 12px;
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--card-strong) 72%, transparent);
+}
+.score-row.me { border-color: color-mix(in srgb, var(--primary) 55%, var(--stroke)); background: color-mix(in srgb, var(--primary) 8%, var(--card-strong)); }
+.rank { color: var(--muted); font-variant-numeric: tabular-nums; }
+.player { display: grid; gap: 2px; min-width: 0; }
+.player strong { font-weight:500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.player span { color: var(--muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.points { color: var(--text); font-variant-numeric: tabular-nums; font-weight:520; }
+.mock-head { display: flex; justify-content: space-between; align-items: center; gap: 14px; margin-bottom: 16px; }
+.mock-title { display: grid; gap: 2px; }
+.mock-title strong { font-size: 17px; font-weight:520; letter-spacing: -.02em; }
+.mock-title span { color: var(--muted); font-size: 13px; }
+
+/* ---------- About / footer ---------- */
+.about { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.about-card {
+  padding: 24px;
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius);
+  background: var(--card);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--shadow-soft);
+}
+.about-card h2 { font-size: 30px; line-height: 1.1; letter-spacing: -.05em; font-weight:500; margin-bottom: 12px; }
+.about-card p { color: var(--muted); }
+.footer { padding: 38px 0 48px; color: var(--muted); font-size: 13px; }
+.footer-inner { display: flex; justify-content: space-between; align-items: center; gap: 16px; border-top: 1px solid var(--stroke); padding-top: 18px; }
+
+/* =====================================================================
+   COMPOSANTS DE JEU GÉNÉRIQUES  (préfixe .oa-)  — nouveaux, partagés
+   ===================================================================== */
+
+/* Coque de jeu : topbar + scène + panneau latéral */
+.oa-game {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius);
+  background: var(--card);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--shadow);
+}
+.oa-stage {
+  position: relative;
+  min-height: min(60vh, 460px);
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--primary) 7%, transparent), transparent 40%),
+    radial-gradient(circle at 20% 22%, color-mix(in srgb, var(--magenta) 5%, transparent), transparent 32%),
+    color-mix(in srgb, var(--bg-2) 76%, transparent);
+  touch-action: manipulation;
+}
+.oa-side { display: grid; gap: 12px; align-content: start; }
+
+/* Bandeau de score / HUD compact */
+.oa-hud { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.oa-score { font-variant-numeric: tabular-nums; font-weight:560; letter-spacing: -.02em; font-size: 20px; }
+.oa-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 8px; border-radius: 999px;
+  border: 1px solid var(--stroke);
+  background: color-mix(in srgb, var(--card-strong) 78%, transparent);
+  font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums;
+}
+
+/* Champs de saisie (pseudo) */
+.oa-field {
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius-sm);
+  background: var(--bg-2);
+  color: var(--text);
+}
+.oa-field:focus-visible { outline: 0; box-shadow: var(--focus); border-color: color-mix(in srgb, var(--primary) 50%, var(--stroke)); }
+.oa-label { display: block; margin-bottom: 6px; font-size: 13px; color: var(--muted); }
+
+/* Modale (fin de partie, aide, soumission de score) */
+.oa-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  display: none;
+  place-items: center;
+  padding: 18px;
+  background: color-mix(in srgb, #000 46%, transparent);
+  backdrop-filter: blur(6px);
+}
+.oa-overlay.open { display: grid; }
+.oa-modal {
+  width: min(460px, 100%);
+  max-height: calc(100vh - 36px);
+  overflow: auto;
+  padding: 22px;
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius);
+  background: var(--card-strong);
+  box-shadow: var(--shadow);
+  animation: oa-pop .18s ease;
+}
+@keyframes oa-pop { from { transform: translateY(8px) scale(.98); opacity: 0; } to { transform: none; opacity: 1; } }
+.oa-modal h2 { margin: 0 0 8px; font-size: 26px; letter-spacing: -.04em; font-weight:520; }
+.oa-modal .oa-big { font-size: clamp(40px, 9vw, 58px); font-weight:560; letter-spacing: -.04em; line-height: 1; margin: 6px 0 2px; }
+.oa-modal p { color: var(--muted); }
+.oa-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+.oa-actions .btn { flex: 1 1 auto; }
+
+/* Note pédagogique de fin de partie */
+.oa-note {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--stroke);
+  border-left: 3px solid var(--green);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--green) 6%, transparent);
+  font-size: 13.5px;
+}
+
+/* Toasts */
+.oa-toasts { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 300; display: grid; gap: 8px; width: min(420px, calc(100% - 24px)); }
+.oa-toast {
+  padding: 11px 14px;
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius-sm);
+  background: var(--card-strong);
+  box-shadow: var(--shadow-soft);
+  font-size: 13.5px;
+  animation: oa-pop .18s ease;
+}
+.oa-toast.err { border-left: 3px solid var(--red); }
+.oa-toast.ok  { border-left: 3px solid var(--green); }
+
+/* ---------- Bilingue ---------- */
+html[lang="fr"] .en { display: none !important; }
+html[lang="en"] .fr { display: none !important; }
+
+/* ---------- Accessibilité mouvement ---------- */
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: .001ms !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 980px) {
+  .hero, .two-col, .about { grid-template-columns: 1fr; }
+  .grid-games { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .oa-game { grid-template-columns: 1fr; }
+  .oa-side { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 720px) {
+  .shell { width: min(100% - 24px, 1160px); }
+  .topbar { align-items: start; border-radius: var(--radius); flex-direction: column; }
+  .nav { width: 100%; flex-wrap: wrap; }
+  .nav .btn { flex: 1 1 auto; }
+  h1 { font-size: clamp(42px, 13vw, 62px); }
+  .lead { font-size: 17px; }
+  .metrics, .grid-games, .oa-side { grid-template-columns: 1fr; }
+  .section-head { display: block; }
+  .footer-inner { display: grid; }
+}
+
+</style>
+
+<style>
+/* =====================================================================
+   Plan, Please — styles PROPRES au jeu, par-dessus la charte Onco Arcade.
+   Tout l'habillage (topbar, boutons, pills, panels, score-row, clair/sombre)
+   vient de onco-arcade.css. Ici : la FICHE papier (identité protégée),
+   les effets de jeu, et la mise en page de la scène.
+   ===================================================================== */
+:root{
+  /* Jetons de la FICHE papier — constants quel que soit le thème */
+  --paper:#e9ebe2; --paper2:#dfe2d6; --ink:#1c2b26; --ink-mut:#5c6b64;
+  /* Alias vers des jetons de la charte pour le CSS repris de la fiche */
+  --muted2:var(--soft);
+  --line2:var(--stroke-strong);
+  --desk2:var(--card-strong);
+  --green-d:#0f9d6b;
+}
+.hidden{display:none !important}
+
+/* Colonne de lecture centrée (fiche = document portrait) */
+.pp-wrap{width:min(600px, calc(100% - 36px));margin:0 auto}
+
+/* ---------- Menu ---------- */
+#menu{padding-bottom:20px}
+.brand-trefoil{width:60px;height:60px;margin:2px auto 8px;display:block;filter:drop-shadow(0 4px 10px rgba(246,189,96,.25))}
+#menu h1{text-align:center;margin:2px 0 0}
+#menu h1 .p2{display:block;color:var(--amber);font-size:.58em;letter-spacing:.02em;margin-top:.06em;-webkit-text-fill-color:var(--amber)}
+.tagline{text-align:center;color:var(--muted);max-width:460px;margin:12px auto 24px;font-size:15px;line-height:1.55}
+.menu-btns{display:grid;gap:11px;max-width:400px;margin:0 auto;width:100%}
+.menu-btns .btn{justify-content:space-between;width:100%;min-height:52px;font-size:15px}
+.menu-btns .btn .k{color:var(--muted);font-size:12px;font-weight:400}
+.menu-btns .btn.primary .k{color:rgba(255,255,255,.72)}
+.name-row{max-width:400px;margin:20px auto 0;width:100%}
+.menu-foot{display:flex;gap:16px;justify-content:center;align-items:center;flex-wrap:wrap;margin:22px auto 0;color:var(--muted);font-size:12px}
+.menu-foot button{color:var(--muted);text-decoration:underline;text-underline-offset:3px;background:none;border:none;cursor:pointer;font-size:12px}
+.sound-toggle{display:inline-flex;align-items:center;gap:6px}
+.lang-switch{display:inline-flex;border:1px solid var(--stroke);border-radius:8px;overflow:hidden}
+.lang-switch .lang-b{padding:4px 11px;font-size:11px;letter-spacing:.05em;color:var(--muted);background:transparent;border:none;cursor:pointer}
+.lang-switch .lang-b.on{background:var(--primary);color:#fff;font-weight:500}
+
+/* Section À propos (composants charte .about / .about-card) */
+#about{grid-template-columns:1fr;width:min(400px, calc(100% - 36px));max-width:none;margin:0 auto;padding:34px 0 8px}
+.about-lede{color:var(--text);font-size:14.5px;line-height:1.55;margin:0 0 14px}
+.about-sig{display:flex;align-items:center;gap:12px;padding:12px 14px;margin:2px 0 4px;border:1px solid var(--stroke);border-radius:var(--radius-sm);background:color-mix(in srgb,var(--card-strong) 70%,transparent)}
+.about-sig b{display:block;font-size:15px;letter-spacing:-.01em}
+.about-sig span{font-size:12px;color:var(--muted)}
+.about-disc{padding:12px 14px;border:1px solid color-mix(in srgb,var(--amber) 45%,var(--stroke));border-left:3px solid var(--amber);border-radius:var(--radius-sm);background:color-mix(in srgb,var(--amber) 8%,transparent);font-size:13px;color:var(--text);line-height:1.55;margin:0}
+
+/* ---------- Écran de jeu ---------- */
+.pp-game{display:flex;flex-direction:column;gap:12px;height:calc(100dvh - 92px);padding-top:14px;padding-bottom:calc(6px + env(safe-area-inset-bottom))}
+.hud-panel{padding:14px 16px}
+.hud-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.hud-mode{font-family:"Space Grotesk",sans-serif;font-weight:520;font-size:12px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase}
+.hud-icons{display:flex;gap:6px}
+.iconbtn{width:36px;height:36px;border:1px solid var(--stroke);border-radius:var(--radius-sm);background:color-mix(in srgb,var(--card-strong) 80%,transparent);color:var(--text);display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;transition:transform .1s ease,border-color .15s}
+.iconbtn:active{transform:scale(.94)}
+.iconbtn:hover{border-color:var(--stroke-strong)}
+.hud-stats{display:flex;align-items:baseline;justify-content:space-between;margin-top:11px;gap:10px}
+.score-wrap{display:flex;align-items:baseline;gap:9px}
+.score{font-family:"Space Grotesk",sans-serif;font-weight:520;font-size:30px;line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.score-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+.combo{font-size:12px;color:var(--amber);font-weight:500;opacity:0;transition:opacity .2s}
+.combo.on{opacity:1}
+.strikes{display:flex;gap:5px;align-items:center}
+.strike{width:15px;height:15px;border-radius:4px;border:1.5px solid var(--soft);position:relative}
+.strike.x{border-color:var(--red);background:color-mix(in srgb,var(--red) 16%,transparent)}
+.strike.x::before,.strike.x::after{content:"";position:absolute;inset:2px 6px;width:2px;background:var(--red);border-radius:2px}
+.strike.x::before{transform:rotate(45deg)}.strike.x::after{transform:rotate(-45deg)}
+.timerbar{height:6px;border-radius:999px;background:color-mix(in srgb,var(--muted) 18%,transparent);margin-top:11px;overflow:hidden}
+.timerfill{height:100%;width:100%;border-radius:inherit;transform-origin:left;background:linear-gradient(90deg,#2f6df6,#22c3e0,#22b07a,#f4b60a,#e5484d);transition:none}
+
+/* ---------- FICHE PAPIER — identité protégée (repris à l'identique) ---------- */
+.stage{flex:1;position:relative;overflow:hidden;display:flex;flex-direction:column;min-height:0}
+.plan-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:2px 2px 6px}
+.queue-note{text-align:center;font-size:11px;color:var(--muted2);letter-spacing:.14em;text-transform:uppercase;margin:2px 0 10px}
+.plan{
+  position:relative;background:
+    repeating-linear-gradient(0deg,transparent,transparent 27px,rgba(28,43,38,.05) 27px,rgba(28,43,38,.05) 28px),
+    linear-gradient(180deg,var(--paper),var(--paper2));
+  color:var(--ink);border-radius:6px;box-shadow:var(--shadow);
+  border:1px solid #c9ccc0;overflow:hidden;
+}
+.plan.deal{animation:dealIn .34s cubic-bezier(.2,.9,.25,1)}
+@keyframes dealIn{from{transform:translateY(26px) rotate(.6deg);opacity:0}to{transform:none;opacity:1}}
+.plan-tab{display:flex;align-items:center;justify-content:space-between;gap:8px;background:linear-gradient(180deg,#20302a,#1a2a24);color:#dfe6e1;padding:9px 13px;font-family:"Space Grotesk";font-weight:520;font-size:12.5px;letter-spacing:.1em}
+.plan-tab .pid{font-family:"IBM Plex Mono";font-weight:500;color:#9fb0aa;letter-spacing:0}
+.isoswatch{height:7px;border-radius:2px;flex:0 0 46px;background:linear-gradient(90deg,#2f6df6,#22c3e0,#22b07a,#f4b60a,#e5484d)}
+.plan-body{padding:12px 13px 14px}
+.row{display:flex;gap:10px;padding:7px 0;border-bottom:1px dashed rgba(28,43,38,.16)}
+.row:last-child{border-bottom:none}
+.row .lab{flex:0 0 92px;font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-mut);padding-top:2px}
+.row .val{flex:1;font-weight:500;font-size:14.5px;color:var(--ink)}
+.row .val .sub{color:var(--ink-mut);font-weight:400;font-size:12.5px}
+.rx{font-size:16px;font-weight:500}
+.rx b{color:#0e5c3f}
+.plan .pill{display:inline-block;padding:1px 7px;border-radius:20px;font-size:11px;font-weight:500;letter-spacing:.03em;border:1px solid rgba(28,43,38,.25)}
+.plan .pill.side{background:rgba(47,109,246,.12);color:#1f4fb0;border-color:rgba(47,109,246,.35)}
+.plan .pill.intent{background:rgba(28,43,38,.06);color:var(--ink-mut)}
+.iso-val{display:flex;align-items:center;gap:7px}
+.crosshair{flex:0 0 16px}
+.oars{margin-top:2px}
+.oar{display:flex;align-items:center;gap:8px;font-size:13px;padding:3px 0}
+.oar .on{flex:1;color:var(--ink)}
+.oar .met{color:var(--ink-mut);font-size:12px}
+.oar .v{font-weight:500;font-variant-numeric:tabular-nums}
+.oar .lim{color:var(--ink-mut);font-size:11.5px}
+.plan-foot{padding:8px 13px;border-top:1px solid rgba(28,43,38,.14);font-size:10.5px;color:var(--ink-mut);display:flex;justify-content:space-between;background:rgba(28,43,38,.03)}
+.stamp{position:absolute;top:34%;left:50%;transform:translate(-50%,-50%) rotate(-15deg);font-family:"Space Grotesk";font-weight:520;font-size:44px;letter-spacing:.04em;padding:6px 20px;border:5px solid;border-radius:8px;text-transform:uppercase;opacity:0;pointer-events:none;mix-blend-mode:multiply;box-shadow:inset 0 0 0 3px currentColor}
+.stamp.show{animation:stampIn .42s cubic-bezier(.2,1.2,.3,1) forwards}
+.stamp.approve{color:#0f8a5e;border-color:#0f8a5e}
+.stamp.reject{color:#c62a2f;border-color:#c62a2f}
+@keyframes stampIn{0%{opacity:0;transform:translate(-50%,-50%) rotate(-15deg) scale(2.6)}55%{opacity:.92;transform:translate(-50%,-50%) rotate(-15deg) scale(.92)}70%{transform:translate(-50%,-50%) rotate(-15deg) scale(1.04)}100%{opacity:.9;transform:translate(-50%,-50%) rotate(-15deg) scale(1)}}
+.shake{animation:shake .38s}
+@keyframes shake{10%,90%{transform:translateX(-2px)}20%,80%{transform:translateX(4px)}30%,50%,70%{transform:translateX(-7px)}40%,60%{transform:translateX(7px)}}
+.flash{position:absolute;inset:0;pointer-events:none;opacity:0;z-index:5}
+.flash.good{background:radial-gradient(circle at 50% 40%,rgba(34,176,122,.45),transparent 70%);animation:fl .5s}
+.flash.bad{background:radial-gradient(circle at 50% 40%,rgba(229,72,77,.5),transparent 70%);animation:fl .5s}
+@keyframes fl{0%{opacity:1}100%{opacity:0}}
+.popup{position:absolute;left:50%;top:30%;transform:translateX(-50%);font-family:"Space Grotesk";font-weight:520;font-size:26px;color:var(--amber);text-shadow:0 2px 8px rgba(0,0,0,.5);pointer-events:none;z-index:6;opacity:0}
+.popup.go{animation:pop 1s ease forwards}
+@keyframes pop{0%{opacity:0;transform:translate(-50%,6px)}18%{opacity:1}100%{opacity:0;transform:translate(-50%,-34px)}}
+.toast{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);background:var(--desk2);border:1px solid var(--line2);border-radius:20px;padding:7px 16px;font-size:12.5px;color:var(--text);z-index:8;opacity:0;transition:opacity .2s;white-space:nowrap;max-width:92%;text-align:center;backdrop-filter:blur(10px)}
+.toast.on{opacity:1}
+.toast.good{border-color:var(--green-d);color:var(--green)}
+
+/* ---------- Barre d'action (Valider / Refuser) ---------- */
+.actions{display:flex;gap:12px;padding-top:12px}
+.act{flex:1;border-radius:var(--radius);padding:15px 10px 14px;display:flex;flex-direction:column;align-items:center;gap:3px;font-family:"Space Grotesk",sans-serif;font-weight:520;font-size:16px;letter-spacing:.05em;border:1px solid;color:#fff;box-shadow:var(--shadow-soft);cursor:pointer;transition:transform .06s ease}
+.act:active{transform:scale(.96)}
+.act .ico{font-size:22px;line-height:1}
+.act .sub{font-family:"IBM Plex Mono",monospace;font-weight:400;font-size:10px;letter-spacing:.02em;opacity:.8}
+.act.reject{background:linear-gradient(180deg,var(--red),color-mix(in srgb,var(--red) 66%,#000));border-color:color-mix(in srgb,var(--red) 55%,#000)}
+.act.approve{background:linear-gradient(180deg,var(--green),color-mix(in srgb,var(--green) 70%,#000));border-color:color-mix(in srgb,var(--green) 52%,#000);color:#05261a}
+.act.approve .sub{color:rgba(5,38,26,.72)}
+.act[disabled]{opacity:.45;pointer-events:none}
+
+/* ---------- Overlays / modales (verre Onco Arcade) ---------- */
+.overlay{position:fixed;inset:0;z-index:200;display:grid;place-items:center;padding:18px;background:color-mix(in srgb,#000 50%,transparent);backdrop-filter:blur(6px)}
+.overlay.hidden{display:none !important}
+.sheet{width:min(440px,100%);max-height:calc(100vh - 36px);overflow-y:auto;border:1px solid var(--stroke);border-radius:var(--radius);background:var(--card-strong);box-shadow:var(--shadow)}
+.sheet-h{padding:16px 18px 12px;border-bottom:1px solid var(--stroke)}
+.sheet-h h2{margin:0;font-size:20px;letter-spacing:-.02em;font-weight:520}
+.sheet-h .sub{color:var(--muted);font-size:12px;margin-top:3px}
+.sheet-b{padding:16px 18px}
+.sheet-b p{margin:0 0 10px;font-size:13.5px;color:var(--text)}
+.sheet-b .btn{width:100%}
+.close-x{float:right;font-size:20px;color:var(--muted);width:30px;height:30px;margin:-4px -4px 0 0;background:none;border:none;cursor:pointer}
+
+/* incident */
+.incident .sheet{border-color:color-mix(in srgb,var(--red) 50%,var(--stroke))}
+.inc-flag{display:inline-flex;align-items:center;gap:7px;background:color-mix(in srgb,var(--red) 14%,transparent);border:1px solid color-mix(in srgb,var(--red) 45%,transparent);color:var(--red);padding:4px 11px;border-radius:20px;font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px}
+.inc-what{font-family:"Space Grotesk";font-weight:520;font-size:18px;margin:0 0 8px;line-height:1.25}
+.inc-body{font-size:13.5px;color:var(--text);line-height:1.55}
+.inc-std{margin-top:12px;padding:10px 12px;background:color-mix(in srgb,var(--green) 9%,transparent);border:1px solid color-mix(in srgb,var(--green) 40%,transparent);border-radius:var(--radius-sm);font-size:12.5px}
+.inc-std b{color:var(--green)}
+
+/* protocol drawer */
+.proto h3{font-family:"Space Grotesk";font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--primary);margin:16px 0 7px}
+.proto h3:first-child{margin-top:0}
+.ptab{display:grid;grid-template-columns:1fr auto;gap:2px 10px;font-size:12.5px;padding:4px 0;border-bottom:1px dashed var(--stroke)}
+.ptab .d{color:var(--muted)}
+
+/* game over */
+#over .sheet{max-width:420px}
+.rankbadge{display:flex;align-items:center;gap:14px;padding:14px 16px;background:color-mix(in srgb,var(--card-strong) 60%,transparent);border:1px solid var(--stroke);border-radius:var(--radius);margin-bottom:14px}
+.rankbadge .medal{width:52px;height:52px;flex:0 0 52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:26px;background:radial-gradient(circle at 40% 35%,#f4d24a,#c8930d);color:#3a2a00;box-shadow:inset 0 -3px 8px rgba(0,0,0,.25)}
+.rankbadge .rk-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+.rankbadge .rk-name{font-family:"Space Grotesk";font-weight:520;font-size:19px;line-height:1.1;margin-top:2px}
+.ostats{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:14px}
+.ostat{border:1px solid var(--stroke);border-radius:var(--radius-sm);padding:11px 13px;background:color-mix(in srgb,var(--card-strong) 45%,transparent)}
+.ostat .n{font-family:"Space Grotesk";font-weight:520;font-size:22px;font-variant-numeric:tabular-nums}
+.ostat .l{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-top:1px}
+.grid-share{border:1px solid var(--stroke);border-radius:var(--radius-sm);padding:12px;margin-bottom:14px;text-align:center;background:color-mix(in srgb,var(--card-strong) 45%,transparent)}
+.grid-share .emojis{font-size:18px;letter-spacing:2px;line-height:1.5;word-break:break-all}
+.grid-share .cap{font-size:11px;color:var(--muted);margin-top:6px}
+.over-btns{display:flex;flex-direction:column;gap:9px}
+.over-btns .btn{width:100%}
+
+/* leaderboard */
+.lb-tabs{display:flex;gap:8px;margin-bottom:12px}
+.lb-tab{flex:1;padding:9px;border:1px solid var(--stroke);border-radius:var(--radius-sm);text-align:center;font-size:12.5px;color:var(--muted);background:transparent;cursor:pointer}
+.lb-tab.on{color:#fff;background:var(--primary);border-color:transparent;font-weight:500}
+.lb-list{display:grid;gap:8px}
+.lb-empty{text-align:center;color:var(--muted);font-size:13px;padding:24px 10px}
+.cloud-note{font-size:10.5px;color:var(--muted);text-align:center;margin-top:10px;line-height:1.5}
+
+@media (max-width:520px){
+  .ostats{grid-template-columns:1fr 1fr}
+  #about{grid-template-columns:1fr}
+  .pp-game{height:calc(100dvh - 84px)}
+}
+</style>
+<script id="onco-arcade-query-sync">
+(function(){
+  try{
+    var p=new URLSearchParams(location.search);
+    var theme=(p.get('theme')||'').toLowerCase();
+    if(theme==='dark'||theme==='light'){document.documentElement.setAttribute('data-theme',theme);localStorage.setItem('oa-theme',theme);}
+    var lang=(p.get('lang')||'').toLowerCase();
+    if(lang==='fr'||lang==='en'){document.documentElement.lang=lang;localStorage.setItem('oa-lang',lang);localStorage.setItem('vrt_lang',lang);}
+  }catch(e){}
+})();
+</script>
+
+<style id="oa-plan-no-topbar">
+/* La barre de navigation flottante a ete retiree du HTML. Cette regle garantit
+   qu'aucune barre de ce type ne peut reapparaitre (securite). */
+.topbar, header.topbar, .topbar.shell, body > header { display: none !important; }
+</style>
+<style id="oa-vh-fill">
+/* Plein ecran mobile : le fond remplit tout le viewport, y compris sous la Dynamic Island */
+html{ background:var(--bg, #070a12) !important; min-height:100dvh; }
+html[data-theme="light"]{ background:var(--bg, #f7f8fb) !important; }
+</style>
+<style id="oa-pp-cardfill">
+  /* Mobile : la fiche remplit la hauteur dispo (plus de grand vide haut/bas) */
+  @media (max-width: 820px){
+    .plan-scroll{ display:flex; flex-direction:column; justify-content:flex-start; }
+    /* flex-shrink:0 -> la fiche ne se comprime pas sous son contenu : pas de découpe, scroll possible */
+    .plan-scroll > .plan{ flex:1 0 auto; display:flex; flex-direction:column; }
+    .plan-scroll > .plan .plan-body{ flex:1 0 auto; }
+  }
+</style>
+<style id="oa-charter-weights">b,strong{font-weight:560}</style>
+<style id="oa-hide-inner-pseudo">/* pseudo demande une seule fois par l'overlay commun : saisie interne masquee */ .name-row:has(#nameInput){display:none!important}</style>
+</head>
+<body>
+
+<main class="shell">
+
+  <!-- ===================== MENU ===================== -->
+  <section id="menu">
+    <div class="pp-wrap" style="padding-top:26px">
+      <div style="text-align:center">
+        <div class="eyebrow" style="margin-bottom:14px"><i></i><span id="uiEyebrow">Onco Arcade · radiothérapie</span></div>
+        <svg class="brand-trefoil" viewBox="0 0 100 100" aria-hidden="true">
+          <circle cx="50" cy="50" r="48" fill="none" stroke="var(--amber)" stroke-width="2.5"/>
+          <circle cx="50" cy="50" r="8" fill="var(--amber)"/>
+          <g fill="var(--amber)">
+            <path d="M50 50 L50 12 A38 38 0 0 1 82.9 31 Z" opacity=".92"/>
+            <path d="M50 50 L82.9 69 A38 38 0 0 1 17.1 69 Z" opacity=".92"/>
+            <path d="M50 50 L17.1 31 A38 38 0 0 1 50 12 Z" opacity=".92"/>
+          </g>
+          <circle cx="50" cy="50" r="13" fill="var(--bg-2)"/>
+          <circle cx="50" cy="50" r="7" fill="var(--amber)"/>
+        </svg>
+        <h1><span class="gradient-text">Plan,</span><span class="p2">Please</span></h1>
+        <p class="tagline" id="uiTagline"></p>
+      </div>
+
+      <div class="menu-btns">
+        <button class="btn primary" id="btnDaily"><span id="uiDailyLabel"></span><span class="k" id="dailyTag"></span></button>
+        <button class="btn" id="btnEndless"><span id="uiEndlessLabel"></span><span class="k" id="uiEndlessSub"></span></button>
+        <button class="btn" id="btnLb"><span id="uiLbLabel"></span><span class="k">&rarr;</span></button>
+        <button class="btn ghost" id="btnHow"><span id="uiHowLabel"></span><span class="k">?</span></button>
+      </div>
+
+      <div class="name-row">
+        <label class="oa-label" for="nameInput" id="uiNameLabel"></label>
+        <input class="oa-field" id="nameInput" maxlength="18" placeholder="Dr …" autocomplete="off" spellcheck="false">
+      </div>
+
+      <div class="menu-foot">
+        <button class="sound-toggle" id="btnSound"><span id="soundIco">🔊</span> <span id="uiSoundLabel">Son</span></button>
+        <button id="btnAbout"><span id="uiAboutLabel">À propos</span></button>
+        <a href="../../index.html" id="oaHub" style="text-decoration:none;color:var(--muted)"><span id="uiHubLabel">Tous les jeux</span></a>
+        <div class="lang-switch" role="group" aria-label="Language"><button class="lang-b" id="langFr">FR</button><button class="lang-b" id="langEn">EN</button></div>
+        <button class="toggle" data-oa-theme-toggle type="button" aria-label="Thème clair / sombre"><span></span></button>
+        <span id="bestTag"></span>
+      </div>
+    </div>
+
+    <!-- ============ À PROPOS (section, composants charte) ============ -->
+    <section id="about" class="about">
+      <div class="about-card">
+        <h2 id="uiAboutTitle"></h2>
+        <p class="about-lede" id="uiAbout1"></p>
+        <div class="about-sig">
+          <span class="mark" aria-hidden="true"></span>
+          <div><b id="uiAboutName">Pr Jean-Emmanuel Bibault</b><span id="uiAboutRole"></span></div>
+        </div>
+        <div class="pill-row" style="margin-top:13px"><span class="pill blue" id="uiAboutTag1"></span><span class="pill" id="uiAboutTag2"></span><span class="pill violet" id="uiAboutTag3"></span></div>
+      </div>
+      <div class="about-card">
+        <h2 id="uiAboutT2"></h2>
+        <p class="about-disc" id="uiAboutDisc"></p>
+      </div>
+    </section>
+  </section>
+
+  <!-- ===================== JEU ===================== -->
+  <section id="game" class="hidden">
+    <div class="pp-wrap pp-game">
+      <div class="panel hud-panel">
+        <div class="hud-top">
+          <div class="hud-mode" id="hudMode">GARDE INFINIE</div>
+          <div class="hud-icons">
+            <button class="iconbtn" id="btnProto" title="Référence des protocoles">📋</button>
+            <button class="iconbtn" id="btnSound2" title="Son">🔊</button>
+            <button class="iconbtn" id="btnQuit" title="Terminer la garde">✕</button>
+          </div>
+        </div>
+        <div class="hud-stats">
+          <div class="score-wrap">
+            <div><div class="score" id="score">0</div><div class="score-lbl">score</div></div>
+            <div class="combo" id="combo">×1.0</div>
+          </div>
+          <div class="strikes" id="strikes"></div>
+        </div>
+        <div class="timerbar"><div class="timerfill" id="timerfill"></div></div>
+      </div>
+
+      <div class="stage">
+        <div class="plan-scroll" id="planScroll">
+          <div class="queue-note" id="queueNote">PLAN 1</div>
+          <div class="plan" id="plan"></div>
+        </div>
+        <div class="flash" id="flash"></div>
+        <div class="popup" id="popup"></div>
+        <div class="toast" id="toast"></div>
+      </div>
+
+      <div class="actions">
+        <button class="act reject" id="btnReject"><span class="ico">✖</span><span id="uiRejectLabel">REFUSER</span><span class="sub" id="uiRejectSub">rejeter le plan</span></button>
+        <button class="act approve" id="btnApprove"><span class="ico">✔</span><span id="uiApproveLabel">VALIDER</span><span class="sub" id="uiApproveSub">signer</span></button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ===================== OVERLAYS ===================== -->
+<div class="overlay hidden" id="incidentOv">
+  <div class="incident" style="width:100%;max-width:440px">
+    <div class="sheet">
+      <div class="sheet-b">
+        <div class="inc-flag" id="incFlag">⚠ Rapport d'incident</div>
+        <div class="inc-what" id="incWhat"></div>
+        <div class="inc-body" id="incBody"></div>
+        <div class="inc-std" id="incStd"></div>
+        <button class="btn primary" id="btnIncNext" style="margin-top:16px">Continuer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay hidden" id="protoOv">
+  <div class="sheet">
+    <div class="sheet-h"><button class="close-x" data-close="protoOv">✕</button><h2 id="uiProtoTitle"></h2><div class="sub" id="uiProtoSub"></div></div>
+    <div class="sheet-b proto" id="protoBody"></div>
+  </div>
+</div>
+
+<div class="overlay hidden" id="howOv">
+  <div class="sheet">
+    <div class="sheet-h"><button class="close-x" data-close="howOv">✕</button><h2 id="uiHowTitle"></h2><div class="sub" id="uiHowSub"></div></div>
+    <div class="sheet-b">
+      <p id="uiHow1"></p>
+      <p id="uiHow2"></p>
+      <p id="uiHow3"></p>
+      <p id="uiHow4"></p>
+      <p style="color:var(--muted)" id="uiHow5"></p>
+      <button class="btn primary" data-close="howOv" id="uiHowBtn" style="margin-top:6px"></button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay hidden" id="over">
+  <div class="sheet">
+    <div class="sheet-h"><h2 id="overTitle">Garde terminée</h2><div class="sub" id="overSub"></div></div>
+    <div class="sheet-b">
+      <div class="rankbadge">
+        <div class="medal" id="overMedal">🎖️</div>
+        <div><div class="rk-lbl" id="uiRankLbl"></div><div class="rk-name" id="overRank"></div></div>
+      </div>
+      <div class="ostats">
+        <div class="ostat"><div class="n" id="ovScore">0</div><div class="l" id="uiOsScore"></div></div>
+        <div class="ostat"><div class="n" id="ovCleared">0</div><div class="l" id="uiOsCleared"></div></div>
+        <div class="ostat"><div class="n" id="ovAcc">0%</div><div class="l" id="uiOsAcc"></div></div>
+        <div class="ostat"><div class="n" id="ovStreak">0</div><div class="l" id="uiOsStreak"></div></div>
+      </div>
+      <div class="grid-share hidden" id="shareBox">
+        <div class="emojis" id="shareGrid"></div>
+        <div class="cap" id="shareCap"></div>
+      </div>
+      <div class="over-btns">
+        <button class="btn" id="btnCopy"><span id="uiCopyLabel"></span><span class="k">⧉</span></button>
+        <button class="btn primary" id="btnAgain"></button>
+        <button class="btn ghost" id="btnOverLb"></button>
+        <button class="btn ghost" id="btnMenu"></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay hidden" id="lbOv">
+  <div class="sheet">
+    <div class="sheet-h"><button class="close-x" data-close="lbOv">✕</button><h2 id="uiLbTitle"></h2><div class="sub" id="uiLbSub"></div></div>
+    <div class="sheet-b">
+      <div class="lb-tabs">
+        <button class="lb-tab on" id="lbTabDaily"></button>
+        <button class="lb-tab" id="lbTabEndless"></button>
+      </div>
+      <div class="lb-list" id="lbList"></div>
+      <div class="cloud-note" id="cloudNote"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===== Onco Arcade — comportements partagés (intégrés) ===== */
+/* =====================================================================
+   ONCO ARCADE — Comportements partagés (v1.0)
+   Thème (clair/sombre) + langue (FR/EN) persistants via localStorage.
+   Auto-câblage : ajoutez  data-oa-theme-toggle  /  data-oa-lang-toggle
+   à n'importe quel bouton, aucun JS spécifique par jeu n'est requis.
+   Expose window.OncoArcade.
+   ===================================================================== */
+(function () {
+  "use strict";
+  var LS_THEME = "oa-theme";
+  var LS_LANG  = "oa-lang";
+  var root = document.documentElement;
+
+  function getTheme() {
+    try { return localStorage.getItem(LS_THEME); } catch (e) { return null; }
+  }
+  function getLang() {
+    try { return localStorage.getItem(LS_LANG); } catch (e) { return null; }
+  }
+
+  function setTheme(theme, persist) {
+    theme = theme === "dark" ? "dark" : "light";
+    root.setAttribute("data-theme", theme);
+    if (persist !== false) { try { localStorage.setItem(LS_THEME, theme); } catch (e) {} }
+  }
+  function setLang(lang, persist) {
+    lang = lang === "en" ? "en" : "fr";
+    root.setAttribute("lang", lang);
+    if (persist !== false) { try { localStorage.setItem(LS_LANG, lang); } catch (e) {} }
+    // Met à jour les libellés des boutons de langue
+    document.querySelectorAll("[data-oa-lang-toggle]").forEach(function (b) {
+      b.textContent = lang === "fr" ? "FR / EN" : "EN / FR";
+    });
+    document.dispatchEvent(new CustomEvent("oa:langchange", { detail: { lang: lang } }));
+  }
+
+  function toggleTheme() { setTheme(root.getAttribute("data-theme") === "dark" ? "light" : "dark"); }
+  function toggleLang()  { setLang(root.getAttribute("lang") === "fr" ? "en" : "fr"); }
+
+  /* ---- Toasts ---- */
+  function toast(msg, kind, ms) {
+    var wrap = document.querySelector(".oa-toasts");
+    if (!wrap) { wrap = document.createElement("div"); wrap.className = "oa-toasts"; document.body.appendChild(wrap); }
+    var t = document.createElement("div");
+    t.className = "oa-toast" + (kind ? " " + kind : "");
+    t.textContent = msg;
+    wrap.appendChild(t);
+    setTimeout(function () {
+      t.style.transition = "opacity .3s ease";
+      t.style.opacity = "0";
+      setTimeout(function () { t.remove(); }, 320);
+    }, ms || 2600);
+  }
+
+  /* ---- Initialisation ---- */
+  function init() {
+    // Thème : préférence stockée, sinon attribut HTML existant, sinon clair.
+    var stored = getTheme();
+    if (stored) setTheme(stored, false);
+    else if (!root.getAttribute("data-theme")) setTheme("light", false);
+
+    var lang = getLang();
+    if (lang) setLang(lang, false);
+    else setLang(root.getAttribute("lang") === "en" ? "en" : "fr", false);
+
+    // Auto-câblage des boutons
+    document.querySelectorAll("[data-oa-theme-toggle]").forEach(function (b) {
+      b.addEventListener("click", toggleTheme);
+    });
+    document.querySelectorAll("[data-oa-lang-toggle]").forEach(function (b) {
+      b.addEventListener("click", toggleLang);
+    });
+  }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+  else init();
+
+  window.OncoArcade = {
+    setTheme: setTheme,
+    setLang: setLang,
+    toggleTheme: toggleTheme,
+    toggleLang: toggleLang,
+    toast: toast
+  };
+})();
+
+</script>
+<script>
+"use strict";
+/* ============================================================
+   Plan, Please — single-file bilingual game (FR / EN)
+   ============================================================ */
+
+/* ============================================================
+   BACKEND LEADERBOARD — Onco Arcade sur OVH (PHP + MySQL)
+   API_BASE pointe vers /arcade/api (chemin relatif depuis
+   /arcade/games/plan-please/). Mettre "" pour forcer le stockage
+   local ; le repli local est de toute façon automatique si l'API
+   est injoignable (fichier ouvert seul, hors-ligne, etc.).
+   ============================================================ */
+var API_BASE = "../../api";
+
+/* Les deux tableaux du jeu -> slug + période de l'API Onco Arcade.
+   - garde infinie -> "plan-please"        (compte pour le classement GLOBAL de la collection)
+   - garde du jour -> "plan-please-daily"  (défi quotidien, exclu du global) */
+function boardToApi(key){
+  if(key.indexOf("pp_lb_daily_")===0) return { game:"plan-please-daily", period:"today" };
+  return { game:"plan-please", period:"all" };
+}
+
+/* ---------- language ---------- */
+function detectLang(){
+  try{ var u=(new URLSearchParams(location.search).get("lang")||"").toLowerCase(); if(u==="fr"||u==="en"){ try{localStorage.setItem("pp_lang",u);}catch(e){} return u; } }catch(e){}
+  try{ var s=localStorage.getItem("pp_lang"); if(s==="fr"||s==="en") return s; }catch(e){}
+  try{ var n=(navigator.language||navigator.userLanguage||"fr").toLowerCase(); if(n.indexOf("en")===0) return "en"; }catch(e){}
+  return "fr"; // French by default
+}
+var LANG = detectLang();
+
+/* short UI strings used inside JS-generated markup */
+var TXT = {
+  fr:{ planTab:"PLAN DE TRAITEMENT RT", patient:"Patient", yrs:" ans", mrn:"IPP",
+       diagnosis:"Diagnostic", priorRT:"RT antérieure", cordAbbr:"moelle", ago:"il y a ",
+       intent:"Intention", prescription:"Prescription", inWord:"en", fxWord:"fractions", perFx:"Gy/fraction",
+       targetSide:"Cible / côté", technique:"Technique", isocenter:"Isocentre", oarCheck:"Contrôle OAR",
+       cordCum:"Moelle — cumulée", newCourse:"nouveau cours", planSys:"SYSTÈME DE PLANIFICATION",
+       reviewer:"Validateur :", drDash:"Dr —", hudDaily:"GARDE DU JOUR", hudEndless:"GARDE INFINIE",
+       queue:"PLAN", stampOk:"APPROUVÉ", stampNo:"REFUSÉ",
+       toastClean:"Validé — plan conforme.", toastCatch:"Bien vu — ", bestEndless:"Record garde infinie : ",
+       copyOk:"Copié dans le presse-papiers", copyFail:"Copie indisponible — appui long pour sélectionner" },
+  en:{ planTab:"RT TREATMENT PLAN", patient:"Patient", yrs:"y", mrn:"MRN",
+       diagnosis:"Diagnosis", priorRT:"Prior RT", cordAbbr:"cord", ago:"",
+       intent:"Intent", prescription:"Prescription", inWord:"in", fxWord:"fx", perFx:"Gy/fx",
+       targetSide:"Target / side", technique:"Technique", isocenter:"Isocenter", oarCheck:"OAR check",
+       cordCum:"Cord — cumulative", newCourse:"new course", planSys:"PLANNING SYSTEM",
+       reviewer:"Reviewer:", drDash:"Dr —", hudDaily:"DAILY SHIFT", hudEndless:"ENDLESS SHIFT",
+       queue:"PLAN", stampOk:"APPROVED", stampNo:"RETURNED",
+       toastClean:"Signed off — clean plan.", toastCatch:"Good catch — ", bestEndless:"Best endless: ",
+       copyOk:"Copied to clipboard", copyFail:"Copy not available — long-press to select" }
+};
+function tr(k){ return (TXT[LANG]&&TXT[LANG][k]!=null)?TXT[LANG][k]:TXT.fr[k]; }
+
+/* bone targets (parallel FR/EN; region token stays an internal key) */
+var BONES = {
+  fr:[ {n:"Vertèbre T8", r:"Thorax"},{n:"Vertèbre L3", r:"Abdomen"},{n:"Sacrum", r:"Pelvis"},
+       {d:"Fémur droit", g:"Fémur gauche", r:"femur", side:"Droite"},
+       {d:"Humérus droit", g:"Humérus gauche", r:"humerus", side:"Gauche"},
+       {d:"Aile iliaque droite", g:"Aile iliaque gauche", r:"Pelvis", side:"Droite"},
+       {d:"Col fémoral droit", g:"Col fémoral gauche", r:"femur", side:"Gauche"} ],
+  en:[ {n:"T8 vertebra", r:"Thorax"},{n:"L3 vertebra", r:"Abdomen"},{n:"Sacrum", r:"Pelvis"},
+       {d:"Right femur", g:"Left femur", r:"femur", side:"Droite"},
+       {d:"Right humerus", g:"Left humerus", r:"humerus", side:"Gauche"},
+       {d:"Right iliac wing", g:"Left iliac wing", r:"Pelvis", side:"Droite"},
+       {d:"Right femoral neck", g:"Left femoral neck", r:"femur", side:"Gauche"} ]
+};
+/* wrong-isocenter pool (parallel FR/EN) + the region label to exclude per family */
+var ISOPOOL = { fr:["Bassin","Thorax","Crâne (SAD médian)","Cou médian (C3)","Abdomen supérieur"],
+                en:["Pelvis","Thorax","Cranium (mid-SAD)","Mid-neck (C3)","Upper abdomen"] };
+var FAMISO = { "Pelvis":{fr:"Bassin",en:"Pelvis"}, "Thorax":{fr:"Thorax",en:"Thorax"},
+               "Brain":{fr:"Crâne (SAD médian)",en:"Cranium (mid-SAD)"},
+               "Head & neck":{fr:"Cou médian (C3)",en:"Mid-neck (C3)"},
+               "breast":{fr:"Thorax",en:"Thorax"} };
+
+/* ---------- storage abstraction (cloud if in Claude artifact, else localStorage) ---------- */
+var hasCloud = (typeof window !== "undefined" && window.storage && typeof window.storage.get === "function");
+async function storeGet(key, shared){
+  if(hasCloud){ try{ var r = await window.storage.get(key, !!shared); return r && r.value != null ? r.value : null; }catch(e){ return null; } }
+  try{ return localStorage.getItem(key); }catch(e){ return null; }
+}
+async function storeSet(key, val, shared){
+  if(hasCloud){ try{ await window.storage.set(key, val, !!shared); return; }catch(e){} }
+  try{ localStorage.setItem(key, val); }catch(e){}
+}
+async function lbGet(key){ var v = await storeGet(key, true); try{ return v ? JSON.parse(v) : []; }catch(e){ return []; } }
+async function lbSet(key, arr){ await storeSet(key, JSON.stringify(arr), true); }
+
+/* Leaderboard distant Onco Arcade (OVH). Renvoie null en cas d'échec → repli local/cloud. */
+async function apiTop(key){
+  if(!API_BASE) return null;
+  var m = boardToApi(key);
+  try{
+    var r = await fetch(API_BASE.replace(/\/$/,"")+"/top.php?game="+encodeURIComponent(m.game)+"&period="+m.period+"&limit=100");
+    if(!r.ok) return null;
+    var d = await r.json();
+    if(!d || !d.ok || !Array.isArray(d.rows)) return null;
+    var myUid = await getUID();
+    var myName = (typeof state!=="undefined" && state.playerName) ? state.playerName : null;
+    return d.rows.map(function(row, i){
+      var acc = 0;
+      if(row.meta){ var parts=String(row.meta).split("|"); acc = parseInt(parts[0],10)||0; }
+      return { uid:(myName && row.name===myName) ? myUid : ("x"+i+"_"+row.name), name:row.name, score:row.score, acc:acc };
+    });
+  }catch(e){ return null; }
+}
+async function apiSubmit(key, entry){
+  if(!API_BASE) return null;
+  var m = boardToApi(key);
+  try{
+    var r = await fetch(API_BASE.replace(/\/$/,"")+"/submit.php", {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({ game:m.game, name:entry.name, score:entry.score, ts:entry.ts||Date.now(), meta:(entry.acc+"|"+entry.streak) })
+    });
+    if(!r.ok) return null;
+    var d = await r.json();
+    return (d && d.ok) ? d : null;
+  }catch(e){ return null; }
+}
+
+/* ---------- RNG ---------- */
+function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; var t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+var rng = Math.random;
+function rand(lo,hi){ return lo + (hi-lo)*rng(); }
+function randint(lo,hi){ return Math.floor(rand(lo,hi+1)); }
+function pick(a){ return a[Math.floor(rng()*a.length)]; }
+function chance(p){ return rng() < p; }
+function round(x,d){ var m=Math.pow(10,d||0); return Math.round(x*m)/m; }
+function fmt(x){ return (Math.round(x*100)/100).toString(); }
+function todayKey(){ var d=new Date(); return d.getFullYear()*10000 + (d.getMonth()+1)*100 + d.getDate(); }
+function dateLabel(){ var d=new Date(); return d.toISOString().slice(0,10); }
+
+/* ---------- names ---------- */
+var FN_M=["James","Robert","Ahmed","Wei","Marco","Luca","Karl","Sanjay","Pierre","Omar","David","Hassan","Ivan","Diego","Yusuf","Henri","Noah","Thomas","Andreas","Kenji"];
+var FN_F=["Maria","Anna","Fatima","Ling","Sofia","Elena","Ingrid","Priya","Claire","Aisha","Sarah","Emma","Nadia","Olga","Lucia","Zara","Julie","Marie","Chloé","Laura"];
+var LN=["Nguyen","Smith","Kowalski","Khan","Rossi","Müller","Dubois","Silva","Johansson","Patel","Garcia","Chen","Ahmadi","Novak","Fischer","Haddad","Bernard","Andersson","Yamada","Costa","Weber","Moreau","Ivanov","Reyes","Okafor","Lindqvist","Bianchi","Tremblay","Schmidt","Park"];
+function makeName(sex){ var fn = sex==="M" ? pick(FN_M) : pick(FN_F); return pick(LN)+", "+fn; }
+function makeMRN(){ return String(randint(1000000,9999999)); }
+
+/* ---------- site templates ---------- */
+/* region families for isocenter mismatch (internal keys, not shown to the user) */
+var REGIONS = ["Pelvis","Thorax","Brain","Head & neck","Abdomen"];
+
+var SITES_FR = [
+  { key:"prostate", label:"Adénocarcinome prostatique", lateral:false, sex:"M", age:[58,84], region:"Pelvis",
+    intent:"Curatif", stages:["cT2a N0 M0","cT2c N0 M0","cT3a N0 M0","cT1c N0 M0"],
+    rx:[{t:78,f:39,d:2.0,tech:["VMAT","IMRT"]},{t:80,f:40,d:2.0,tech:["VMAT","IMRT"]},{t:60,f:20,d:3.0,tech:["VMAT"]},{t:70,f:28,d:2.5,tech:["VMAT"]},{t:36.25,f:5,d:7.25,tech:["SBRT","VMAT"],sbrt:true}],
+    energy:["6 MV","10 MV","15 MV"], target:"Prostate ± vésicules séminales",
+    oars:[["Rectum","V60","%",35,.4,.8,0],["Vessie","V65","%",50,.35,.8,0],["Tête fémorale","D0.1cc","Gy",50,.55,.9,1]],
+    doseTxt:"60 Gy/20, 70 Gy/28, 78–80 Gy/39–40, ou SBRT 36.25 Gy/5",
+    errs:["FRACTIONATION_MATH","ISOCENTER_WRONG","ENERGY_WRONG","OAR_VIOLATION","IDENTITY_MISMATCH"] },
+
+  { key:"breast", label:"Carcinome mammaire (sein en totalité)", lateral:true, sex:"F", age:[38,78], region:"breast",
+    intent:"Adjuvant", stages:["pT1c N0","pT2 N0","pT1b N0 (post-tumorectomie)","pTis (CCIS)"],
+    rx:[{t:40.05,f:15,d:2.67,tech:["Tangentiels","IMRT","VMAT"]},{t:42.56,f:16,d:2.66,tech:["Tangentiels","VMAT"]},{t:26,f:5,d:5.2,tech:["VMAT","IMRT"]},{t:50,f:25,d:2.0,tech:["Tangentiels","IMRT"]}],
+    energy:["6 MV","6–10 MV"], target:"sein",
+    oars:[["Cœur","moyenne","Gy",4,.15,.7,1],["Poumon homolatéral","V20","%",20,.3,.8,0]],
+    doseTxt:"40.05 Gy/15, 42.56 Gy/16, 26 Gy/5 (FAST-Forward) ou 50 Gy/25",
+    errs:["LATERALITY_FLIP","ISOCENTER_WRONG","FRACTIONATION_MATH","OAR_VIOLATION","DOSE_TOO_HIGH"] },
+
+  { key:"lung", label:"CBNPC (traitement définitif)", lateral:true, sex:"any", age:[55,82], region:"Thorax",
+    intent:"Curatif", stages:["cT2 N0","cT2 N2 (IIIA)","cT3 N1","cT1c N2"],
+    rx:[{t:60,f:30,d:2.0,tech:["VMAT","IMRT"]},{t:66,f:33,d:2.0,tech:["VMAT","IMRT"]}],
+    energy:["6 MV","10 MV"], target:"poumon",
+    oars:[["Moelle épinière","D0.1cc","Gy",45,.4,.85,1],["Poumon total","V20","%",35,.4,.85,0],["Cœur","moyenne","Gy",30,.2,.75,1]],
+    doseTxt:"60–66 Gy en fractions de 2 Gy (chimiothérapie concomitante)",
+    errs:["LATERALITY_FLIP","OAR_VIOLATION","DOSE_TOO_HIGH","FRACTIONATION_MATH","ISOCENTER_WRONG","ENERGY_WRONG"] },
+
+  { key:"lungsbrt", label:"CBNPC de stade précoce (SBRT)", lateral:true, sex:"any", age:[60,86], region:"Thorax",
+    intent:"SBRT", stages:["cT1a N0 (périphérique)","cT1b N0","cT2a N0 (périphérique)"],
+    rx:[{t:54,f:3,d:18.0,tech:["SBRT","VMAT"],sbrt:true},{t:50,f:5,d:10.0,tech:["SBRT","VMAT"],sbrt:true},{t:48,f:4,d:12.0,tech:["SBRT","VMAT"],sbrt:true}],
+    energy:["6 MV FFF","10 MV FFF"], target:"poumon",
+    oars:[["Moelle épinière","D0.1cc","Gy",26,.3,.8,1],["Paroi thoracique","V30","cc",30,.2,.7,0]],
+    doseTxt:"54 Gy/3, 50 Gy/5 ou 48 Gy/4 — SBRT conformationnelle avec IGRT",
+    errs:["LATERALITY_FLIP","TECHNIQUE_MISMATCH","FRACTIONATION_MATH","ISOCENTER_WRONG","OAR_VIOLATION"] },
+
+  { key:"wbrt", label:"Métastases cérébrales (encéphale in toto)", lateral:false, sex:"any", age:[45,80], region:"Brain",
+    intent:"Palliatif", stages:["métastases multiples","≥4 lésions","métastases diffuses"],
+    rx:[{t:30,f:10,d:3.0,tech:["RC3D (latéraux opposés)"]},{t:20,f:5,d:4.0,tech:["RC3D (latéraux opposés)"]},{t:37.5,f:15,d:2.5,tech:["RC3D"]}],
+    energy:["6 MV"], target:"encéphale in toto",
+    oars:[["Cristallin","D0.1cc","Gy",7,.3,.85,1]],
+    doseTxt:"30 Gy/10, 20 Gy/5 ou 37.5 Gy/15 — ne jamais escalader la dose sur l'encéphale in toto",
+    errs:["DOSE_TOO_HIGH","FRACTIONATION_MATH","ISOCENTER_WRONG"] },
+
+  { key:"gbm", label:"Glioblastome (post-opératoire)", lateral:false, sex:"any", age:[40,74], region:"Brain",
+    intent:"Curatif", stages:["IDH non muté, exérèse complète","exérèse subtotale","biopsie seule"],
+    rx:[{t:60,f:30,d:2.0,tech:["VMAT","IMRT"]},{t:59.4,f:33,d:1.8,tech:["IMRT"]},{t:40.05,f:15,d:2.67,tech:["VMAT"]}],
+    energy:["6 MV"], target:"cavité d'exérèse + marge",
+    oars:[["Tronc cérébral","D0.1cc","Gy",54,.4,.9,1],["Chiasma optique","D0.1cc","Gy",54,.35,.9,1]],
+    doseTxt:"60 Gy/30 (Stupp) ou 40.05 Gy/15 (sujet âgé) ; tronc cérébral/chiasma ≤54 Gy",
+    errs:["OAR_VIOLATION","FRACTIONATION_MATH","ISOCENTER_WRONG","DOSE_TOO_HIGH"] },
+
+  { key:"hn", label:"Carcinome oropharyngé", lateral:false, sex:"any", age:[48,78], region:"Head & neck",
+    intent:"Curatif", stages:["cT2 N1 (p16+)","cT3 N2","cT2 N2b"],
+    rx:[{t:70,f:35,d:2.0,tech:["VMAT","IMRT"]},{t:69.96,f:33,d:2.12,tech:["VMAT"]},{t:66,f:30,d:2.2,tech:["VMAT"]}],
+    energy:["6 MV"], target:"primitif + aires ganglionnaires bilatérales",
+    oars:[["Moelle épinière","D0.1cc","Gy",45,.4,.9,1],["Parotide (controlat.)","moyenne","Gy",26,.35,.9,1],["Tronc cérébral","D0.1cc","Gy",54,.3,.85,1]],
+    doseTxt:"70 Gy/35, 69.96 Gy/33 ou 66 Gy/30 ; moelle ≤45, parotide controlat. moyenne ≤26",
+    errs:["OAR_VIOLATION","FRACTIONATION_MATH","ISOCENTER_WRONG","DOSE_TOO_HIGH"] },
+
+  { key:"bone", label:"Métastase osseuse", lateral:false, sex:"any", age:[48,86], region:"bone",
+    intent:"Palliatif", stages:["métastase douloureuse","fracture imminente (post-op)","lésion symptomatique"],
+    rx:[{t:8,f:1,d:8.0,tech:["RC3D (faisceau unique)"]},{t:20,f:5,d:4.0,tech:["RC3D"]},{t:30,f:10,d:3.0,tech:["RC3D"]}],
+    energy:["6 MV","10 MV","15 MV"], target:"OS",
+    oars:[],
+    doseTxt:"8 Gy/1, 20 Gy/5 ou 30 Gy/10 pour une métastase osseuse non compliquée",
+    errs:["ISOCENTER_WRONG","DOSE_TOO_HIGH","FRACTIONATION_MATH","LATERALITY_FLIP"] },
+
+  { key:"rectum", label:"Adénocarcinome du rectum (néoadjuvant)", lateral:false, sex:"any", age:[45,82], region:"Pelvis",
+    intent:"Néoadjuvant", stages:["cT3 N1","cT3 N0","cT4 N1"],
+    rx:[{t:50.4,f:28,d:1.8,tech:["VMAT","IMRT"]},{t:25,f:5,d:5.0,tech:["VMAT"]},{t:45,f:25,d:1.8,tech:["VMAT"]}],
+    energy:["10 MV","15 MV"], target:"mésorectum + ganglions",
+    oars:[["Anses grêles","V45","cc",195,.3,.85,0],["Vessie","V50","%",50,.3,.8,0],["Tête fémorale","D0.1cc","Gy",50,.5,.9,1]],
+    doseTxt:"50.4 Gy/28 (schéma long) ou 25 Gy/5 (schéma court)",
+    errs:["FRACTIONATION_MATH","ISOCENTER_WRONG","OAR_VIOLATION","DOSE_TOO_HIGH","ENERGY_WRONG"] },
+
+  { key:"cervix", label:"Carcinome du col utérin (traitement définitif)", lateral:false, sex:"F", age:[35,74], region:"Pelvis",
+    intent:"Curatif", stages:["FIGO IIB","FIGO IIIC1","FIGO IB3"],
+    rx:[{t:45,f:25,d:1.8,tech:["VMAT","IMRT"]},{t:45,f:25,d:1.8,tech:["IMRT"]}],
+    energy:["10 MV","15 MV"], target:"pelvis (EBRT, curiethérapie à suivre)",
+    oars:[["Intestin","V45","cc",200,.3,.85,0],["Vessie","V45","%",50,.3,.8,0],["Rectum","V45","%",50,.3,.8,0]],
+    doseTxt:"45 Gy/25 EBRT + curiethérapie (l'EBRT seule n'est pas curative)",
+    errs:["FRACTIONATION_MATH","ISOCENTER_WRONG","OAR_VIOLATION","IDENTITY_MISMATCH","DOSE_TOO_HIGH"] },
+
+  { key:"eso", label:"Carcinome de l'œsophage (traitement définitif)", lateral:false, sex:"any", age:[55,82], region:"Thorax",
+    intent:"Curatif", stages:["cT3 N1","cT2 N1","cT3 N0"],
+    rx:[{t:50.4,f:28,d:1.8,tech:["VMAT","IMRT"]},{t:50,f:25,d:2.0,tech:["VMAT"]}],
+    energy:["6 MV","10 MV"], target:"œsophage + ganglions",
+    oars:[["Moelle épinière","D0.1cc","Gy",45,.4,.9,1],["Poumon total","V20","%",30,.35,.85,0],["Cœur","moyenne","Gy",30,.2,.75,1]],
+    doseTxt:"50–50.4 Gy avec chimiothérapie concomitante",
+    errs:["OAR_VIOLATION","FRACTIONATION_MATH","ISOCENTER_WRONG","DOSE_TOO_HIGH"] },
+
+  { key:"csi", label:"Médulloblastome (cranio-spinal)", lateral:false, sex:"any", age:[5,17], region:"Craniospinal axis",
+    intent:"Curatif", stages:["risque standard, post-op","risque moyen","M0 post-exérèse"],
+    rx:[{t:23.4,f:13,d:1.8,tech:["ISC (protons/VMAT)"]},{t:36,f:20,d:1.8,tech:["ISC (protons/VMAT)"]}],
+    energy:["6 MV","Protons"], target:"axe cranio-spinal en totalité",
+    oars:[["Cristallin","D0.1cc","Gy",7,.3,.85,1]],
+    doseTxt:"23.4–36 Gy ISC + surimpression fosse postérieure/lit tumoral (éviter les photons de haute énergie chez l'enfant)",
+    errs:["ENERGY_WRONG","FRACTIONATION_MATH","ISOCENTER_WRONG","DOSE_TOO_HIGH"] },
+];
+
+var SITES_EN = [
+  { key:"prostate", label:"Prostate adenocarcinoma", lateral:false, sex:"M", age:[58,84], region:"Pelvis",
+    intent:"Radical", stages:["cT2a N0 M0","cT2c N0 M0","cT3a N0 M0","cT1c N0 M0"],
+    rx:[{t:78,f:39,d:2.0,tech:["VMAT","IMRT"]},{t:80,f:40,d:2.0,tech:["VMAT","IMRT"]},{t:60,f:20,d:3.0,tech:["VMAT"]},{t:70,f:28,d:2.5,tech:["VMAT"]},{t:36.25,f:5,d:7.25,tech:["SBRT","VMAT"],sbrt:true}],
+    energy:["6 MV","10 MV","15 MV"], target:"Prostate ± seminal vesicles",
+    oars:[["Rectum","V60","%",35,.4,.8,0],["Bladder","V65","%",50,.35,.8,0],["Femoral head","D0.1cc","Gy",50,.55,.9,1]],
+    doseTxt:"60 Gy/20, 70 Gy/28, 78–80 Gy/39–40, or SBRT 36.25 Gy/5",
+    errs:["FRACTIONATION_MATH","ISOCENTER_WRONG","ENERGY_WRONG","OAR_VIOLATION","IDENTITY_MISMATCH"] },
+
+  { key:"breast", label:"Breast carcinoma (whole breast)", lateral:true, sex:"F", age:[38,78], region:"breast",
+    intent:"Adjuvant", stages:["pT1c N0","pT2 N0","pT1b N0 (post-BCS)","pTis (DCIS)"],
+    rx:[{t:40.05,f:15,d:2.67,tech:["Tangents","IMRT","VMAT"]},{t:42.56,f:16,d:2.66,tech:["Tangents","VMAT"]},{t:26,f:5,d:5.2,tech:["VMAT","IMRT"]},{t:50,f:25,d:2.0,tech:["Tangents","IMRT"]}],
+    energy:["6 MV","6–10 MV"], target:"whole breast",
+    oars:[["Heart","mean","Gy",4,.15,.7,1],["Ipsilateral lung","V20","%",20,.3,.8,0]],
+    doseTxt:"40.05 Gy/15, 42.56 Gy/16, 26 Gy/5 (FAST-Forward), or 50 Gy/25",
+    errs:["LATERALITY_FLIP","ISOCENTER_WRONG","FRACTIONATION_MATH","OAR_VIOLATION","DOSE_TOO_HIGH"] },
+
+  { key:"lung", label:"NSCLC (definitive)", lateral:true, sex:"any", age:[55,82], region:"Thorax",
+    intent:"Radical", stages:["cT2 N0","cT2 N2 (IIIA)","cT3 N1","cT1c N2"],
+    rx:[{t:60,f:30,d:2.0,tech:["VMAT","IMRT"]},{t:66,f:33,d:2.0,tech:["VMAT","IMRT"]}],
+    energy:["6 MV","10 MV"], target:"lung primary + nodes",
+    oars:[["Spinal cord","D0.1cc","Gy",45,.4,.85,1],["Total lung","V20","%",35,.4,.85,0],["Heart","mean","Gy",30,.2,.75,1]],
+    doseTxt:"60–66 Gy in 2 Gy fractions (concurrent chemo)",
+    errs:["LATERALITY_FLIP","OAR_VIOLATION","DOSE_TOO_HIGH","FRACTIONATION_MATH","ISOCENTER_WRONG","ENERGY_WRONG"] },
+
+  { key:"lungsbrt", label:"Early-stage NSCLC (SBRT)", lateral:true, sex:"any", age:[60,86], region:"Thorax",
+    intent:"SBRT", stages:["cT1a N0 (peripheral)","cT1b N0","cT2a N0 (peripheral)"],
+    rx:[{t:54,f:3,d:18.0,tech:["SBRT","VMAT"],sbrt:true},{t:50,f:5,d:10.0,tech:["SBRT","VMAT"],sbrt:true},{t:48,f:4,d:12.0,tech:["SBRT","VMAT"],sbrt:true}],
+    energy:["6 MV FFF","10 MV FFF"], target:"peripheral lung nodule",
+    oars:[["Spinal cord","D0.1cc","Gy",26,.3,.8,1],["Chest wall","V30","cc",30,.2,.7,0]],
+    doseTxt:"54 Gy/3, 50 Gy/5, or 48 Gy/4 — conformal SBRT with IGRT",
+    errs:["LATERALITY_FLIP","TECHNIQUE_MISMATCH","FRACTIONATION_MATH","ISOCENTER_WRONG","OAR_VIOLATION"] },
+
+  { key:"wbrt", label:"Brain metastases (whole brain)", lateral:false, sex:"any", age:[45,80], region:"Brain",
+    intent:"Palliative", stages:["multiple metastases","≥4 lesions","diffuse metastases"],
+    rx:[{t:30,f:10,d:3.0,tech:["3D-CRT (opposed laterals)"]},{t:20,f:5,d:4.0,tech:["3D-CRT (opposed laterals)"]},{t:37.5,f:15,d:2.5,tech:["3D-CRT"]}],
+    energy:["6 MV"], target:"whole brain",
+    oars:[["Lens","D0.1cc","Gy",7,.3,.85,1]],
+    doseTxt:"30 Gy/10, 20 Gy/5, or 37.5 Gy/15 — never dose-escalate whole brain",
+    errs:["DOSE_TOO_HIGH","FRACTIONATION_MATH","ISOCENTER_WRONG"] },
+
+  { key:"gbm", label:"Glioblastoma (post-op)", lateral:false, sex:"any", age:[40,74], region:"Brain",
+    intent:"Radical", stages:["IDH-wildtype, GTR","subtotal resection","biopsy only"],
+    rx:[{t:60,f:30,d:2.0,tech:["VMAT","IMRT"]},{t:59.4,f:33,d:1.8,tech:["IMRT"]},{t:40.05,f:15,d:2.67,tech:["VMAT"]}],
+    energy:["6 MV"], target:"resection cavity + margin",
+    oars:[["Brainstem","D0.1cc","Gy",54,.4,.9,1],["Optic chiasm","D0.1cc","Gy",54,.35,.9,1]],
+    doseTxt:"60 Gy/30 (Stupp) or 40.05 Gy/15 (elderly); brainstem/chiasm ≤54 Gy",
+    errs:["OAR_VIOLATION","FRACTIONATION_MATH","ISOCENTER_WRONG","DOSE_TOO_HIGH"] },
+
+  { key:"hn", label:"Oropharyngeal carcinoma", lateral:false, sex:"any", age:[48,78], region:"Head & neck",
+    intent:"Radical", stages:["cT2 N1 (p16+)","cT3 N2","cT2 N2b"],
+    rx:[{t:70,f:35,d:2.0,tech:["VMAT","IMRT"]},{t:69.96,f:33,d:2.12,tech:["VMAT"]},{t:66,f:30,d:2.2,tech:["VMAT"]}],
+    energy:["6 MV"], target:"primary + bilateral necks",
+    oars:[["Spinal cord","D0.1cc","Gy",45,.4,.9,1],["Parotid (contra)","mean","Gy",26,.35,.9,1],["Brainstem","D0.1cc","Gy",54,.3,.85,1]],
+    doseTxt:"70 Gy/35, 69.96 Gy/33, or 66 Gy/30; cord ≤45, contra parotid mean ≤26",
+    errs:["OAR_VIOLATION","FRACTIONATION_MATH","ISOCENTER_WRONG","DOSE_TOO_HIGH"] },
+
+  { key:"bone", label:"Bone metastasis", lateral:false, sex:"any", age:[48,86], region:"bone",
+    intent:"Palliative", stages:["painful metastasis","impending fracture (post-op)","symptomatic lesion"],
+    rx:[{t:8,f:1,d:8.0,tech:["3D-CRT (single field)"]},{t:20,f:5,d:4.0,tech:["3D-CRT"]},{t:30,f:10,d:3.0,tech:["3D-CRT"]}],
+    energy:["6 MV","10 MV","15 MV"], target:"BONE",
+    oars:[],
+    doseTxt:"8 Gy/1, 20 Gy/5, or 30 Gy/10 for uncomplicated bone metastases",
+    errs:["ISOCENTER_WRONG","DOSE_TOO_HIGH","FRACTIONATION_MATH","LATERALITY_FLIP"] },
+
+  { key:"rectum", label:"Rectal adenocarcinoma (neoadjuvant)", lateral:false, sex:"any", age:[45,82], region:"Pelvis",
+    intent:"Neoadjuvant", stages:["cT3 N1","cT3 N0","cT4 N1"],
+    rx:[{t:50.4,f:28,d:1.8,tech:["VMAT","IMRT"]},{t:25,f:5,d:5.0,tech:["VMAT"]},{t:45,f:25,d:1.8,tech:["VMAT"]}],
+    energy:["10 MV","15 MV"], target:"mesorectum + nodes",
+    oars:[["Bowel bag","V45","cc",195,.3,.85,0],["Bladder","V50","%",50,.3,.8,0],["Femoral head","D0.1cc","Gy",50,.5,.9,1]],
+    doseTxt:"50.4 Gy/28 (long course) or 25 Gy/5 (short course)",
+    errs:["FRACTIONATION_MATH","ISOCENTER_WRONG","OAR_VIOLATION","DOSE_TOO_HIGH","ENERGY_WRONG"] },
+
+  { key:"cervix", label:"Cervical carcinoma (definitive)", lateral:false, sex:"F", age:[35,74], region:"Pelvis",
+    intent:"Radical", stages:["FIGO IIB","FIGO IIIC1","FIGO IB3"],
+    rx:[{t:45,f:25,d:1.8,tech:["VMAT","IMRT"]},{t:45,f:25,d:1.8,tech:["IMRT"]}],
+    energy:["10 MV","15 MV"], target:"pelvis (EBRT, brachy to follow)",
+    oars:[["Bowel","V45","cc",200,.3,.85,0],["Bladder","V45","%",50,.3,.8,0],["Rectum","V45","%",50,.3,.8,0]],
+    doseTxt:"45 Gy/25 EBRT + brachytherapy boost (EBRT alone is not curative)",
+    errs:["FRACTIONATION_MATH","ISOCENTER_WRONG","OAR_VIOLATION","IDENTITY_MISMATCH","DOSE_TOO_HIGH"] },
+
+  { key:"eso", label:"Oesophageal carcinoma (definitive)", lateral:false, sex:"any", age:[55,82], region:"Thorax",
+    intent:"Radical", stages:["cT3 N1","cT2 N1","cT3 N0"],
+    rx:[{t:50.4,f:28,d:1.8,tech:["VMAT","IMRT"]},{t:50,f:25,d:2.0,tech:["VMAT"]}],
+    energy:["6 MV","10 MV"], target:"oesophagus + nodes",
+    oars:[["Spinal cord","D0.1cc","Gy",45,.4,.9,1],["Total lung","V20","%",30,.35,.85,0],["Heart","mean","Gy",30,.2,.75,1]],
+    doseTxt:"50–50.4 Gy with concurrent chemotherapy",
+    errs:["OAR_VIOLATION","FRACTIONATION_MATH","ISOCENTER_WRONG","DOSE_TOO_HIGH"] },
+
+  { key:"csi", label:"Medulloblastoma (craniospinal)", lateral:false, sex:"any", age:[5,17], region:"Craniospinal axis",
+    intent:"Radical", stages:["standard-risk, post-op","average-risk","M0 post-resection"],
+    rx:[{t:23.4,f:13,d:1.8,tech:["CSI (protons/VMAT)"]},{t:36,f:20,d:1.8,tech:["CSI (protons/VMAT)"]}],
+    energy:["6 MV","Protons"], target:"whole craniospinal axis",
+    oars:[["Lens","D0.1cc","Gy",7,.3,.85,1]],
+    doseTxt:"23.4–36 Gy CSI + posterior-fossa/tumour-bed boost (avoid high-energy photons in children)",
+    errs:["ENERGY_WRONG","FRACTIONATION_MATH","ISOCENTER_WRONG","DOSE_TOO_HIGH"] }
+];
+
+var SITES = SITES_FR;
+
+/* side helpers — canonical token "Droite"/"Gauche"; display resolved per language */
+function sideWord(s){ return LANG==='en' ? (s==="Droite"?"Right":"Left") : (s==="Droite"?"Droite":"Gauche"); }
+function sideAdjM(s){ return LANG==='en' ? (s==="Droite"?"right":"left") : (s==="Droite"?"droit":"gauche"); }
+function sideAdjF(s){ return LANG==='en' ? (s==="Droite"?"right":"left") : (s==="Droite"?"droite":"gauche"); }
+function boneName(bt, side){ return bt ? (bt.n ? bt.n : (side==="Droite"?bt.d:bt.g)) : null; }
+
+function targetFor(site, side, boneTarget){
+  if(site.key==="bone") return boneName(boneTarget, side) || site.target;
+  if(site.key==="breast") return LANG==='en' ? sideWord(side)+" breast" : "Sein "+sideAdjM(side);
+  if(site.key==="lung"||site.key==="lungsbrt") return LANG==='en' ? sideWord(side)+" lung" : "Poumon "+sideAdjM(side);
+  return site.target;
+}
+
+/* build one valid plan from a site */
+function buildValid(site){
+  var sex = site.sex==="any" ? (chance(.5)?"M":"F") : site.sex;
+  var rx = pick(site.rx);
+  var dxSide = site.lateral ? (chance(.5)?"Gauche":"Droite") : null;
+  var txSide = dxSide;
+  var tech = pick(rx.tech);
+  var energy = pick(site.energy);
+  var region = site.region;
+
+  // bone: choose a concrete target + region (region stays an internal key)
+  var boneTarget=null;
+  if(site.key==="bone"){
+    boneTarget = pick(BONES[LANG]);
+    region = boneTarget.r;
+    if(boneTarget.side){ dxSide = boneTarget.side; txSide = boneTarget.side; }
+  }
+
+  var targetLabel = targetFor(site, txSide, boneTarget);
+  var iso = isoLabel(site, region, txSide, boneTarget);
+
+  var oars = site.oars.map(function(o){
+    var v = round(o[3]*rand(o[4],o[5]), o[6]);
+    return {n:o[0], m:o[1], u:o[2], lim:o[3], v:v};
+  });
+
+  return {
+    site:site, key:site.key, label:site.label, sex:sex,
+    name:makeName(sex), mrn:makeMRN(), age:randint(site.age[0],site.age[1]),
+    stage:pick(site.stages), intent:site.intent,
+    dxSide:dxSide, txSide:txSide, boneTarget:boneTarget,
+    total:rx.t, fx:rx.f, dpf:rx.d, sbrt:!!rx.sbrt,
+    tech:tech, energy:energy, target:targetLabel, region:region, iso:iso,
+    oars:oars, valid:true, errs:[]
+  };
+}
+
+function isoLabel(site, region, side, boneTarget){
+  if(site.key==="bone") return boneName(boneTarget, side) || region;
+  if(site.key==="breast") return LANG==='en' ? sideWord(side)+" chest wall" : "Paroi thoracique "+sideAdjF(side);
+  if(region==="Pelvis") return LANG==='en' ? "Mid-pelvis" : "Bassin (médian)";
+  if(region==="Thorax") return site.lateral ? (LANG==='en'? sideWord(side)+" hemithorax" : "Hémithorax "+sideAdjM(side)) : (LANG==='en'?"Mid-thorax":"Médiastin");
+  if(region==="Brain") return LANG==='en' ? "Cranium (mid-SAD)" : "Crâne (SAD médian)";
+  if(region==="Head & neck") return LANG==='en' ? "Mid-neck (C3)" : "Cou médian (C3)";
+  if(region==="Craniospinal axis") return LANG==='en' ? "Cranial + spinal fields" : "Champs crânien + spinal";
+  return region;
+}
+
+/* ---------- error injection ---------- */
+function injectError(plan, code){
+  var s=plan.site;
+  if(code==="LATERALITY_FLIP"){
+    var other = plan.dxSide==="Droite"?"Gauche":"Droite";
+    plan.txSide = other;
+    plan.target = targetFor(s, other, plan.boneTarget);
+    // don't clobber a deliberately-wrong isocenter from a co-occurring error
+    if(!plan.errs.some(function(e){return e.code==="ISOCENTER_WRONG";})){
+      plan.iso = isoLabel(s, plan.region, other, plan.boneTarget);
+    }
+    plan.errs.push({code:code, side:plan.dxSide, wrong:other});
+  }
+  else if(code==="FRACTIONATION_MATH"){
+    // change stated total so it != dpf*fx
+    var real = round(plan.dpf*plan.fx,2);
+    var off = pick([2,4,6,-4,-6,8]);
+    plan.total = round(real+off,2);
+    plan.errs.push({code:code, calc:real});
+  }
+  else if(code==="DOSE_TOO_HIGH"){
+    var newTotal, ndpf=plan.dpf, nfx=plan.fx;
+    if(s.key==="wbrt"){ nfx=plan.fx; ndpf=plan.dpf; newTotal=round(plan.dpf*Math.round((rand(50,60))/plan.dpf),2); nfx=Math.round(newTotal/plan.dpf); }
+    else if(s.key==="bone"){ var rad=pick([{t:60,f:30,d:2.0},{t:50,f:25,d:2.0}]); newTotal=rad.t; nfx=rad.f; ndpf=rad.d; }
+    else if(s.key==="breast"){ newTotal=round(66,2); ndpf=2.0; nfx=33; }
+    else if(s.key==="cervix"){ newTotal=70; ndpf=2.0; nfx=35; }
+    else { newTotal=round(plan.total*1.35,1); nfx=Math.round(newTotal/plan.dpf); }
+    plan.total=newTotal; plan.fx=nfx; plan.dpf=round(newTotal/nfx,2);
+    plan.errs.push({code:code});
+  }
+  else if(code==="OAR_VIOLATION"){
+    if(!plan.oars.length){ return injectError(plan,"ISOCENTER_WRONG"); }
+    var idx = randint(0,plan.oars.length-1);
+    var o = plan.oars[idx];
+    var dec = (o.u==="Gy")?1:0;
+    var bump = (o.u==="Gy")? rand(2,7) : (o.u==="%"? rand(4,11) : rand(20,60));
+    o.v = round(o.lim + bump, dec);
+    plan.errs.push({code:code, oar:o});
+  }
+  else if(code==="ISOCENTER_WRONG"){
+    var fam = plan.region;
+    var excl = FAMISO[fam] ? FAMISO[fam][LANG] : null;
+    var pool = ISOPOOL[LANG].filter(function(r){ return r!==excl; });
+    var wrongRegion = pick(pool);
+    plan.iso = wrongRegion;
+    plan.errs.push({code:code, iso:wrongRegion});
+  }
+  else if(code==="ENERGY_WRONG"){
+    if(s.key==="csi"){ plan.energy="18 MV"; plan.errs.push({code:code, reason:"peds"}); }
+    else { plan.energy = pick(LANG==='en'?["9 MeV electrons","12 MeV electrons"]:["électrons 9 MeV","électrons 12 MeV"]); plan.errs.push({code:code, reason:"deep"}); }
+  }
+  else if(code==="TECHNIQUE_MISMATCH"){
+    plan.tech = LANG==='en' ? "3D-CRT" : "RC3D";
+    plan.errs.push({code:code});
+  }
+  else if(code==="IDENTITY_MISMATCH"){
+    // sex inconsistent with a sex-specific diagnosis
+    var wrong = plan.sex==="M" ? "F" : "M";
+    plan.sex = wrong;
+    plan.name = makeName(wrong);
+    plan.errs.push({code:code, site:plan.label});
+  }
+  else if(code==="CUMULATIVE_OAR"){
+    // push the new-course cord dose so the cumulative exceeds re-irradiation tolerance
+    var cap=plan.cordCap, pc=plan.priorCord;
+    var lo=cap+3-pc, hi=Math.min(cap+9-pc, plan.newMax, cap-1);
+    if(hi<lo) hi=lo;
+    plan.newCord=round(rand(lo,hi),1);
+    plan.errs.push({code:code});
+  }
+  plan.valid = false;
+}
+
+/* choose which errors are allowed at a given level */
+function tierOf(code){
+  if(code==="LATERALITY_FLIP"||code==="ISOCENTER_WRONG"||code==="DOSE_TOO_HIGH"||code==="FRACTIONATION_MATH") return 1;
+  if(code==="OAR_VIOLATION"||code==="ENERGY_WRONG"||code==="IDENTITY_MISMATCH") return 2;
+  return 3;
+}
+function maxTierForLevel(level){ return level<=4?1 : (level<=9?2:3); }
+
+/* errors that make sense for this specific plan (guards keep every tell visible) */
+function eligibleErrors(plan, site, mt){
+  return site.errs.filter(function(c){
+    if(tierOf(c) > mt) return false;
+    if(c==="LATERALITY_FLIP" && !plan.dxSide) return false;      // needs a real side to flip
+    if(c==="IDENTITY_MISMATCH" && site.sex==="any") return false; // needs a sex-specific dx
+    return true;
+  });
+}
+
+/* ---------- re-irradiation scenarios (cumulative-dose traps) ---------- */
+var REIRRAD_FR = [
+  { key:"reirr_hn", label:"Récidive oropharyngée (réirradiation)", region:"Head & neck",
+    prior:{site:"Oropharynx", dose:"50 Gy/25", interval:"18 mois"}, priorCord:[38,42],
+    stages:["récidive locale","reliquat évolutif","2e primitif in-field"],
+    rx:[{t:60,f:30,d:2.0,tech:["VMAT","IMRT"]},{t:66,f:33,d:2.0,tech:["VMAT"]}],
+    energy:["6 MV"], target:"lit oropharyngé (récidive)", iso:"Cou médian (C3)",
+    doseTxt:"réirradiation : cumul médullaire ≤ ~50 Gy (EQD2, récupération partielle selon l'intervalle)" },
+  { key:"reirr_thorax", label:"Récidive médiastinale (réirradiation)", region:"Thorax",
+    prior:{site:"Médiastin", dose:"45 Gy/25", interval:"22 mois"}, priorCord:[36,40],
+    stages:["récidive médiastinale","progression ganglionnaire in-field"],
+    rx:[{t:50,f:25,d:2.0,tech:["VMAT","IMRT"]},{t:45,f:25,d:1.8,tech:["VMAT"]}],
+    energy:["6 MV","10 MV"], target:"médiastin (récidive)", iso:"Médiastin",
+    doseTxt:"réirradiation : cumul médullaire ≤ ~50 Gy (EQD2, récupération partielle selon l'intervalle)" },
+  { key:"reirr_spine", label:"Métastase rachidienne en progression (réirradiation)", region:"Thorax",
+    prior:{site:"Rachis dorsal (T5–T8)", dose:"30 Gy/10", interval:"11 mois"}, priorCord:[28,32],
+    stages:["progression osseuse douloureuse","récidive in-field"],
+    rx:[{t:20,f:5,d:4.0,tech:["VMAT"]},{t:20,f:8,d:2.5,tech:["VMAT"]}],
+    energy:["6 MV"], target:"rachis dorsal (récidive)", iso:"Rachis dorsal",
+    doseTxt:"réirradiation : cumul médullaire ≤ ~50 Gy (EQD2, récupération partielle selon l'intervalle)" }
+];
+var REIRRAD_EN = [
+  { key:"reirr_hn", label:"Recurrent oropharyngeal carcinoma (re-irradiation)", region:"Head & neck",
+    prior:{site:"Oropharynx", dose:"50 Gy/25", interval:"18 months"}, priorCord:[38,42],
+    stages:["local recurrence","persistent disease","in-field 2nd primary"],
+    rx:[{t:60,f:30,d:2.0,tech:["VMAT","IMRT"]},{t:66,f:33,d:2.0,tech:["VMAT"]}],
+    energy:["6 MV"], target:"oropharyngeal bed (recurrence)", iso:"Mid-neck (C3)",
+    doseTxt:"re-irradiation: cumulative cord ≤ ~50 Gy (EQD2, with partial recovery over the interval)" },
+  { key:"reirr_thorax", label:"Recurrent mediastinal disease (re-irradiation)", region:"Thorax",
+    prior:{site:"Mediastinum", dose:"45 Gy/25", interval:"22 months"}, priorCord:[36,40],
+    stages:["mediastinal recurrence","in-field nodal progression"],
+    rx:[{t:50,f:25,d:2.0,tech:["VMAT","IMRT"]},{t:45,f:25,d:1.8,tech:["VMAT"]}],
+    energy:["6 MV","10 MV"], target:"mediastinum (recurrence)", iso:"Mid-thorax",
+    doseTxt:"re-irradiation: cumulative cord ≤ ~50 Gy (EQD2, with partial recovery over the interval)" },
+  { key:"reirr_spine", label:"Progressing spinal metastasis (re-irradiation)", region:"Thorax",
+    prior:{site:"Thoracic spine (T5–T8)", dose:"30 Gy/10", interval:"11 months"}, priorCord:[28,32],
+    stages:["painful bony progression","in-field recurrence"],
+    rx:[{t:20,f:5,d:4.0,tech:["VMAT"]},{t:20,f:8,d:2.5,tech:["VMAT"]}],
+    energy:["6 MV"], target:"thoracic spine (recurrence)", iso:"Thoracic spine",
+    doseTxt:"re-irradiation: cumulative cord ≤ ~50 Gy (EQD2, with partial recovery over the interval)" }
+];
+var REIRRAD = REIRRAD_FR;
+
+function buildReirrad(){
+  var sc=pick(REIRRAD), rx=pick(sc.rx), sex=chance(.5)?"M":"F";
+  var cap=50;
+  var priorCord=round(rand(sc.priorCord[0], sc.priorCord[1]),0);
+  var newMax=round(rx.t-1,1);                          // new course can't put more in the cord than its own dose
+  var loSafe=Math.max(4, cap-8-priorCord), hiSafe=Math.min(newMax, cap-1-priorCord);
+  if(hiSafe<loSafe) hiSafe=loSafe;
+  var newCord=round(rand(loSafe,hiSafe),1);
+  var reCap=((cap-priorCord)+3)<=newMax;              // a cumulative trap is physically possible for this scenario
+  return {
+    site:sc, key:sc.key, label:sc.label, sex:sex,
+    name:makeName(sex), mrn:makeMRN(), age:randint(52,82),
+    stage:pick(sc.stages), intent:(LANG==='en'?"Re-irradiation":"Réirradiation"),
+    dxSide:null, txSide:null, boneTarget:null,
+    total:rx.t, fx:rx.f, dpf:rx.d, sbrt:false,
+    tech:pick(rx.tech), energy:pick(sc.energy), target:sc.target, region:sc.region, iso:sc.iso,
+    oars:[], valid:true, errs:[],
+    reirrad:true, prior:sc.prior, priorCord:priorCord, newCord:newCord, cordCap:cap, newMax:newMax, reCap:reCap
+  };
+}
+
+/* generate a plan for a level */
+function generatePlan(level, cleanBias){
+  var pClean = cleanBias!=null ? cleanBias : 0.42;
+
+  // re-irradiation scenarios appear from mid-shift onward
+  if(level>=6 && chance(0.14)){
+    var rp = buildReirrad();
+    if(chance(pClean)) return rp;                     // safe re-irradiation (cumulative within tolerance)
+    var codes = rp.reCap ? ["CUMULATIVE_OAR","CUMULATIVE_OAR","FRACTIONATION_MATH"] : ["FRACTIONATION_MATH"];
+    injectError(rp, pick(codes));
+    return rp;
+  }
+
+  var site = pick(SITES);
+  var plan = buildValid(site);
+  if(chance(pClean)) return plan; // valid plan
+
+  var mt = maxTierForLevel(level);
+  var elig = eligibleErrors(plan, site, mt);
+  if(!elig.length) return plan;
+  injectError(plan, pick(elig));
+
+  // chance of a second, independent error deeper into a shift
+  if(level>=11 && chance(0.22)){
+    var elig2 = eligibleErrors(plan, site, mt).filter(function(c){ return !plan.errs.some(function(e){return e.code===c;}); });
+    if(elig2.length) injectError(plan, pick(elig2));
+  }
+  return plan;
+}
+
+/* ---------- render a plan ---------- */
+function crosshairSVG(){
+  return '<svg class="crosshair" width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="#b8850a" stroke-width="1.3"/><line x1="8" y1="0" x2="8" y2="16" stroke="#b8850a" stroke-width="1"/><line x1="0" y1="8" x2="16" y2="8" stroke="#b8850a" stroke-width="1"/></svg>';
+}
+function renderPlan(p, idx){
+  var sideChip = p.txSide ? '<span class="pill side">'+sideWord(p.txSide)+'</span>' : '';
+  var dxSideTxt = p.dxSide ? (LANG==='en' ? ' · <b>'+sideWord(p.dxSide)+'</b> side' : ' · côté <b>'+sideAdjM(p.dxSide)+'</b>') : '';
+  var oarRows = p.oars.map(function(o){
+    return '<div class="oar"><span class="on">'+o.n+'</span><span class="met">'+o.m+'</span><span class="v">'+fmt(o.v)+' '+o.u+'</span><span class="lim">(≤'+fmt(o.lim)+')</span></div>';
+  }).join("");
+  var oarBlock = p.oars.length ? '<div class="row"><div class="lab">'+tr('oarCheck')+'</div><div class="val oars">'+oarRows+'</div></div>' : '';
+
+  // re-irradiation: prior-course line + cumulative cord check
+  var priorRow='';
+  if(p.reirrad){
+    priorRow='<div class="row"><div class="lab">'+tr('priorRT')+'</div><div class="val">'+p.prior.site+' · '+p.prior.dose+' <span class="sub">· '+tr('ago')+p.prior.interval+' · '+tr('cordAbbr')+' '+fmt(p.priorCord)+' Gy</span></div></div>';
+    var cum=round(p.priorCord+p.newCord,1);
+    oarBlock='<div class="row"><div class="lab">'+tr('oarCheck')+'</div><div class="val oars">'+
+      '<div class="oar"><span class="on">'+tr('cordCum')+'</span><span class="met">Dmax</span><span class="v">'+fmt(cum)+' Gy</span><span class="lim">(≤'+fmt(p.cordCap)+')</span></div>'+
+      '<div class="oar"><span class="on" style="color:var(--ink-mut)">└ '+tr('newCourse')+'</span><span class="met"></span><span class="v" style="font-weight:500">'+fmt(p.newCord)+' Gy</span><span class="lim"></span></div>'+
+      '</div></div>';
+  }
+
+  var html =
+    '<div class="plan-tab"><span>'+tr('planTab')+'</span><span class="isoswatch"></span><span class="pid">#'+String(100000+idx).slice(1)+'</span></div>'+
+    '<div class="plan-body">'+
+      '<div class="row"><div class="lab">'+tr('patient')+'</div><div class="val">'+p.name+' <span class="sub">· '+tr('mrn')+' '+p.mrn+' · '+p.age+tr('yrs')+" · "+p.sex+'</span></div></div>'+
+      '<div class="row"><div class="lab">'+tr('diagnosis')+'</div><div class="val">'+p.label+' <span class="sub">'+p.stage+dxSideTxt+'</span></div></div>'+
+      priorRow+
+      '<div class="row"><div class="lab">'+tr('intent')+'</div><div class="val"><span class="pill intent">'+p.intent+'</span></div></div>'+
+      '<div class="row"><div class="lab">'+tr('prescription')+'</div><div class="val rx"><b>'+fmt(p.total)+' Gy</b> '+tr('inWord')+' '+p.fx+' '+tr('fxWord')+' <span class="sub">('+fmt(p.dpf)+' '+tr('perFx')+')</span></div></div>'+
+      '<div class="row"><div class="lab">'+tr('targetSide')+'</div><div class="val">'+cap(p.target)+' '+sideChip+'</div></div>'+
+      '<div class="row"><div class="lab">'+tr('technique')+'</div><div class="val">'+p.tech+' <span class="sub">· '+p.energy+'</span></div></div>'+
+      '<div class="row"><div class="lab">'+tr('isocenter')+'</div><div class="val"><span class="iso-val">'+crosshairSVG()+cap(p.iso)+'</span></div></div>'+
+      oarBlock+
+    '</div>'+
+    '<div class="plan-foot"><span>'+tr('planSys')+' · '+dateLabel()+'</span><span>'+tr('reviewer')+' '+(state.playerName||tr('drDash'))+'</span></div>'+
+    '<div class="stamp" id="stamp"></div>';
+  return html;
+}
+function cap(s){ return s? s.charAt(0).toUpperCase()+s.slice(1): s; }
+
+/* ---------- game state ---------- */
+var state = {
+  mode:"endless", score:0, strikes:0, streak:0, bestStreak:0,
+  level:0, correct:0, total:0, plan:null, deciding:false,
+  planN:0, dailyPlans:15, results:[], playerName:"", muted:false,
+  timer:{raf:0, start:0, dur:0, frac:1, active:false}
+};
+var DAILY_N = 15;
+
+/* ---------- audio (WebAudio, no assets) ---------- */
+var actx=null;
+function ac(){ if(state.muted) return null; if(!actx){ try{ actx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ return null; } } if(actx.state==="suspended"){ actx.resume(); } return actx; }
+function beep(freq, dur, type, vol, slideTo){
+  var c=ac(); if(!c) return;
+  var o=c.createOscillator(), g=c.createGain();
+  o.type=type||"sine"; o.frequency.value=freq;
+  if(slideTo){ o.frequency.exponentialRampToValueAtTime(slideTo, c.currentTime+dur); }
+  g.gain.setValueAtTime(0.0001, c.currentTime);
+  g.gain.exponentialRampToValueAtTime(vol||0.15, c.currentTime+0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime+dur);
+  o.connect(g); g.connect(c.destination); o.start(); o.stop(c.currentTime+dur+0.02);
+}
+function sfxStamp(){ var c=ac(); if(!c) return;
+  beep(150,0.12,"square",0.16,60);
+  // noise thud
+  var b=c.createBuffer(1,c.sampleRate*0.09,c.sampleRate), d=b.getChannelData(0);
+  for(var i=0;i<d.length;i++){ d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,3); }
+  var src=c.createBufferSource(), g=c.createGain(); src.buffer=b; g.gain.value=0.18; src.connect(g); g.connect(c.destination); src.start();
+}
+function sfxGood(){ beep(660,0.09,"sine",0.14); setTimeout(function(){beep(990,0.12,"sine",0.13);},80); }
+function sfxBad(){ beep(200,0.28,"sawtooth",0.14,90); }
+
+/* ---------- DOM refs ---------- */
+var $=function(id){return document.getElementById(id);};
+var elScore=$("score"), elCombo=$("combo"), elStrikes=$("strikes"), elPlan=$("plan"),
+    elQueue=$("queueNote"), elTimer=$("timerfill"), elFlash=$("flash"), elPopup=$("popup"),
+    elToast=$("toast"), elApprove=$("btnApprove"), elReject=$("btnReject");
+
+/* ---------- HUD ---------- */
+function renderStrikes(){
+  var h="";
+  for(var i=0;i<3;i++){ h+='<div class="strike'+(i<state.strikes?" x":"")+'"></div>'; }
+  elStrikes.innerHTML=h;
+}
+function updateHUD(){
+  elScore.textContent = state.score.toLocaleString();
+  renderStrikes();
+  var mult = comboMult();
+  if(state.streak>=2){ elCombo.textContent="×"+mult.toFixed(1); elCombo.classList.add("on"); }
+  else elCombo.classList.remove("on");
+}
+function comboMult(){ return Math.min(1 + state.streak*0.15, 3); }
+
+/* ---------- timer ---------- */
+function planDuration(){
+  if(state.mode==="daily") return 20000;
+  // endless: shrink 22s -> 9s
+  return Math.max(9000, 22000 - state.level*650);
+}
+function startTimer(){
+  var t=state.timer;
+  t.dur=planDuration(); t.start=performance.now(); t.active=true;
+  cancelAnimationFrame(t.raf);
+  function loop(now){
+    if(!t.active) return;
+    t.frac = 1 - (now - t.start)/t.dur;
+    if(t.frac<=0){ t.frac=0; elTimer.style.transform="scaleX(0)"; t.active=false; onTimeout(); return; }
+    elTimer.style.transform="scaleX("+t.frac+")";
+    t.raf=requestAnimationFrame(loop);
+  }
+  t.raf=requestAnimationFrame(loop);
+}
+function stopTimer(){ state.timer.active=false; cancelAnimationFrame(state.timer.raf); }
+
+/* ---------- flow ---------- */
+function startGame(mode){
+  state.mode=mode; state.score=0; state.strikes=0; state.streak=0; state.bestStreak=0;
+  state.level=0; state.correct=0; state.total=0; state.planN=0; state.results=[]; state.deciding=false;
+  if(mode==="daily"){ rng=mulberry32(todayKey()>>>0); state.dailyN=DAILY_N; $("hudMode").textContent=tr('hudDaily'); }
+  else { rng=Math.random; $("hudMode").textContent=tr('hudEndless'); }
+  show("game"); hideAllOverlays();
+  updateHUD();
+  nextPlan();
+}
+function nextPlan(){
+  state.level++; state.planN++;
+  var cleanBias = state.mode==="daily" ? 0.4 : 0.42;
+  state.plan = generatePlan(state.level, cleanBias);
+  elPlan.innerHTML = renderPlan(state.plan, state.planN);
+  elPlan.classList.remove("deal"); void elPlan.offsetWidth; elPlan.classList.add("deal");
+  $("planScroll").scrollTop=0;
+  if(state.mode==="daily"){ elQueue.textContent=tr('queue')+" "+state.planN+" / "+state.dailyN; }
+  else { elQueue.textContent=tr('queue')+" "+state.planN+"  ·  "+rankFor(state.correct).toUpperCase(); }
+  state.deciding=false;
+  elApprove.disabled=false; elReject.disabled=false;
+  startTimer();
+}
+
+function onTimeout(){
+  if(state.deciding) return;
+  decide(null, true);
+}
+
+function decide(approve, timedOut){
+  if(state.deciding) return;
+  state.deciding=true; stopTimer();
+  elApprove.disabled=true; elReject.disabled=true;
+  var p=state.plan;
+  var frac = Math.max(0, state.timer.frac);
+  var shouldApprove = p.valid;
+  var correct = !timedOut && (approve===shouldApprove);
+
+  // stamp
+  var stamp=$("stamp");
+  if(!timedOut){
+    stamp.textContent = approve?tr('stampOk'):tr('stampNo');
+    stamp.className = "stamp show "+(approve?"approve":"reject");
+    sfxStamp();
+  }
+
+  state.total++;
+  if(correct){
+    state.correct++; state.streak++; if(state.streak>state.bestStreak) state.bestStreak=state.streak;
+    var base=100, mult=comboMult();
+    var speed=Math.floor(frac*60);
+    var lvlBonus=Math.min(state.level*4, 80);
+    var gain=Math.round((base+speed+lvlBonus)*mult);
+    state.score+=gain;
+    state.results.push(1);
+    setTimeout(function(){ flash("good"); sfxGood(); showPopup("+"+gain); }, 120);
+    setTimeout(function(){ toast(approve? tr('toastClean') : tr('toastCatch')+catchMsg(p), true); }, 140);
+    updateHUD();
+    setTimeout(advance, 1000);
+  } else {
+    state.streak=0; state.strikes++;
+    state.results.push(0);
+    setTimeout(function(){ flash("bad"); shake(); sfxBad(); }, timedOut?0:120);
+    updateHUD();
+    setTimeout(function(){ showIncident(p, approve, timedOut); }, timedOut?260:520);
+  }
+}
+
+function advance(){
+  if(state.mode==="daily" && state.planN>=state.dailyN){ return gameOver(); }
+  if(state.strikes>=3){ return gameOver(); }
+  nextPlan();
+}
+
+/* ---------- feedback visuals ---------- */
+function flash(kind){ elFlash.className="flash "+kind; void elFlash.offsetWidth; }
+function shake(){ elPlan.classList.remove("shake"); void elPlan.offsetWidth; elPlan.classList.add("shake"); }
+function showPopup(txt){ elPopup.textContent=txt; elPopup.className="popup go"; void elPopup.offsetWidth; }
+var toastT;
+function toast(msg, good){ elToast.textContent=msg; elToast.className="toast on"+(good?" good":""); clearTimeout(toastT); toastT=setTimeout(function(){ elToast.className="toast"; }, 1400); }
+
+/* short "good catch" reason */
+function catchMsg(p){
+  var e=p.errs[0];
+  if(LANG==='en'){
+    if(!e) return "dangerous plan stopped.";
+    switch(e.code){
+      case "LATERALITY_FLIP": return "wrong side.";
+      case "FRACTIONATION_MATH": return "dose doesn't add up.";
+      case "DOSE_TOO_HIGH": return "dose too high.";
+      case "OAR_VIOLATION": return e.oar.n+" over limit.";
+      case "ISOCENTER_WRONG": return "isocenter off.";
+      case "ENERGY_WRONG": return "wrong beam energy.";
+      case "TECHNIQUE_MISMATCH": return "technique mismatch.";
+      case "IDENTITY_MISMATCH": return "patient mismatch.";
+      case "CUMULATIVE_OAR": return "cumulative cord dose too high.";
+    }
+    return "dangerous plan stopped.";
+  }
+  if(!e) return "plan dangereux arrêté.";
+  switch(e.code){
+    case "LATERALITY_FLIP": return "mauvais côté.";
+    case "FRACTIONATION_MATH": return "la dose ne tombe pas juste.";
+    case "DOSE_TOO_HIGH": return "dose trop élevée.";
+    case "OAR_VIOLATION": return e.oar.n+" au-dessus de la limite.";
+    case "ISOCENTER_WRONG": return "isocentre décalé.";
+    case "ENERGY_WRONG": return "mauvaise énergie de faisceau.";
+    case "TECHNIQUE_MISMATCH": return "technique inadaptée.";
+    case "IDENTITY_MISMATCH": return "identité incohérente.";
+    case "CUMULATIVE_OAR": return "dose médullaire cumulée trop élevée.";
+  }
+  return "plan dangereux arrêté.";
+}
+
+/* ---------- incident report ---------- */
+function showIncident(p, approve, timedOut){
+  var flag=$("incFlag"), what=$("incWhat"), body=$("incBody"), std=$("incStd");
+  var EN = (LANG==='en');
+  if(timedOut){
+    flag.textContent = EN ? "⏱ Delay report" : "⏱ Retard signalé";
+    what.textContent = EN ? "The plan sat on your desk." : "Le plan est resté bloqué sur votre bureau.";
+    body.innerHTML = EN
+      ? "Time ran out: the plan went unreviewed and the patient's treatment was delayed a day. In a busy department, decisions must be fast <i>and</i> right."
+      : "Le temps est écoulé : le plan est resté non relu et le traitement du patient a pris un jour de retard. Dans un service chargé, les décisions doivent être rapides <i>et</i> justes.";
+    std.innerHTML = EN
+      ? (p.valid ? "<b>For the record:</b> this plan was actually fine." : "<b>For the record:</b> it also had a problem — "+incidentText(p).plain)
+      : (p.valid ? "<b>Pour mémoire :</b> ce plan était en réalité conforme." : "<b>Pour mémoire :</b> il posait aussi un problème — "+incidentText(p).plain);
+  } else if(p.valid && approve===false){
+    flag.textContent = EN ? "↩ Complaint filed" : "↩ Réclamation déposée";
+    what.textContent = EN ? "You returned a correct plan." : "Vous avez refusé un plan correct.";
+    body.innerHTML = EN
+      ? "This plan had no flaw. Returning clean plans delays treatments and erodes the planning team's trust. Only return for a real problem."
+      : "Ce plan n'avait aucun défaut. Refuser des plans conformes retarde les traitements et érode la confiance de l'équipe de planification. Ne refusez que pour un vrai problème.";
+    std.innerHTML = (EN ? "<b>This plan met standard:</b> " : "<b>Ce plan respectait le standard :</b> ")+p.site.doseTxt+".";
+  } else {
+    var t=incidentText(p);
+    flag.textContent = EN ? "⚠ Incident report" : "⚠ Rapport d'incident";
+    what.textContent=t.title;
+    body.innerHTML=t.body;
+    std.innerHTML=(EN ? "<b>Standard:</b> " : "<b>Standard :</b> ")+t.std;
+  }
+  var isFatal = (state.strikes>=3) || (state.mode==="daily" && state.planN>=state.dailyN);
+  $("btnIncNext").textContent = isFatal ? (EN?"End shift":"Terminer la garde") : (EN?"Continue":"Continuer");
+  showOverlay("incidentOv");
+}
+
+function incidentText(p){
+  var e = p.errs[0];
+  var S = p.label;
+  if(LANG==='en'){
+    switch(e.code){
+      case "LATERALITY_FLIP":
+        return { title:"Wrong side treated.",
+          body:"The diagnosis was for a <b>"+sideWord(e.side)+"</b>-sided \u00ab "+S.toLowerCase()+" \u00bb, but the plan treated the <b>"+sideWord(e.wrong)+"</b> side. A laterality error leaves the tumour untreated and irradiates healthy tissue.",
+          std:"Always check the treated side and isocenter against the diagnosis and planning imaging.",
+          plain:"the treated side was flipped relative to the diagnosis." };
+      case "FRACTIONATION_MATH":
+        return { title:"The prescription doesn't add up.",
+          body:fmt(p.dpf)+" Gy \u00d7 "+p.fx+" fractions = <b>"+fmt(e.calc)+" Gy</b>, not the <b>"+fmt(p.total)+" Gy</b> shown. A prescription that fails this basic check should never be signed.",
+          std:"Re-multiply dose-per-fraction \u00d7 number of fractions on every plan before approving.",
+          plain:"total dose \u2260 dose/fraction \u00d7 fractions." };
+      case "DOSE_TOO_HIGH":
+        return { title:"Dose unsafe for this indication.",
+          body:"<b>"+fmt(p.total)+" Gy</b> is far beyond the accepted range for \u00ab "+S.toLowerCase()+" \u00bb. Escalating dose here adds no benefit and risks serious late toxicity.",
+          std:p.site.doseTxt+".",
+          plain:"the prescribed dose far exceeds the site standard." };
+      case "OAR_VIOLATION":
+        var oe=e.oar;
+        return { title:"OAR tolerance exceeded.",
+          body:"<b>"+oe.n+" "+oe.m+" = "+fmt(oe.v)+" "+oe.u+"</b>, above the limit of "+fmt(oe.lim)+" "+oe.u+". Approving this accepts avoidable healthy-tissue injury.",
+          std:oe.n+" "+oe.m+" \u2264 "+fmt(oe.lim)+" "+oe.u+" for this site.",
+          plain:oe.n+" "+oe.m+" exceeded its constraint." };
+      case "ISOCENTER_WRONG":
+        return { title:"Isocenter in the wrong region.",
+          body:"The isocenter is placed at <b>"+p.iso+"</b>, inconsistent with a \u00ab "+S.toLowerCase()+" \u00bb target. The beams would miss the target entirely.",
+          std:"Confirm the isocenter lies within the target region on the planning CT.",
+          plain:"the isocenter region didn't match the target." };
+      case "ENERGY_WRONG":
+        if(e.reason==="peds")
+          return { title:"High-energy photons in a child.",
+            body:"<b>18 MV</b> photons were chosen for a paediatric craniospinal treatment. High-energy beams produce neutron contamination \u2014 a real second-cancer risk in children.",
+            std:"Use 6 MV photons or protons for paediatric craniospinal irradiation.",
+            plain:"18 MV photons are inappropriate for a paediatric plan." };
+        return { title:"Beam energy won't reach the target.",
+          body:"<b>"+p.energy+"</b> were chosen for a deep target (\u00ab "+S.toLowerCase()+" \u00bb). Electrons deposit dose superficially and would never cover a deep tumour.",
+          std:"Deep targets need megavoltage photons (typically 6\u201318 MV), not electrons.",
+          plain:"electrons were prescribed for a deep target." };
+      case "TECHNIQUE_MISMATCH":
+        return { title:"Technique incompatible with an SBRT dose.",
+          body:"A high-dose-per-fraction SBRT prescription (<b>"+fmt(p.total)+" Gy / "+p.fx+"</b>) was planned as plain <b>3D-CRT</b>. SBRT needs highly conformal, image-guided delivery; 3D-CRT would overdose healthy tissue.",
+          std:"SBRT prescriptions require conformal VMAT/SBRT delivery with IGRT.",
+          plain:"an SBRT dose was delivered with a 3D-CRT technique." };
+      case "IDENTITY_MISMATCH":
+        return { title:"Patient record inconsistency.",
+          body:"The record lists sex <b>"+p.sex+"</b> for a diagnosis of \u00ab "+S.toLowerCase()+" \u00bb. Such a mismatch signals the wrong patient's data may be loaded.",
+          std:"Stop and re-verify patient identity whenever demographics and diagnosis conflict.",
+          plain:"the recorded sex was inconsistent with the diagnosis." };
+      case "CUMULATIVE_OAR":
+        var cumv2=round(p.priorCord+p.newCord,1);
+        return { title:"Cumulative cord dose exceeded.",
+          body:"The cord already received <b>"+fmt(p.priorCord)+" Gy</b> from the prior course ("+p.prior.site+", "+p.prior.dose+", "+p.prior.interval+" ago). The new course adds "+fmt(p.newCord)+" Gy, for a cumulative <b>"+fmt(cumv2)+" Gy</b> \u2014 beyond the re-irradiation tolerance (~"+fmt(p.cordCap)+" Gy). Taken alone the new course looks fine; it's the sum that risks radiation myelitis.",
+          std:"Sum cord doses across all courses (ideally in EQD2, with partial recovery over the interval) and stay under the cumulative tolerance.",
+          plain:"the cumulative cord dose exceeded the re-irradiation tolerance." };
+    }
+    return { title:"Missed problem.", body:"This plan should have been returned.", std:p.site.doseTxt, plain:"a problem was missed." };
+  }
+  switch(e.code){
+    case "LATERALITY_FLIP":
+      return { title:"Mauvais côté traité.",
+        body:"Le diagnostic portait sur un « "+S.toLowerCase()+" » du côté <b>"+sideAdjM(e.side)+"</b>, mais le plan a traité le côté <b>"+sideAdjM(e.wrong)+"</b>. Une erreur de latéralité laisse la tumeur non traitée et irradie des tissus sains.",
+        std:"Toujours vérifier le côté traité et l'isocentre par rapport au diagnostic et à l'imagerie de planification.",
+        plain:"le côté traité était inversé par rapport au diagnostic." };
+    case "FRACTIONATION_MATH":
+      return { title:"La prescription ne tombe pas juste.",
+        body:fmt(p.dpf)+" Gy × "+p.fx+" fractions = <b>"+fmt(e.calc)+" Gy</b>, et non les <b>"+fmt(p.total)+" Gy</b> annoncés. Une prescription qui échoue à ce contrôle élémentaire ne doit jamais être signée.",
+        std:"Re-multiplier dose par fraction × nombre de fractions sur chaque plan avant validation.",
+        plain:"dose totale ≠ dose/fraction × fractions." };
+    case "DOSE_TOO_HIGH":
+      return { title:"Dose dangereuse pour cette indication.",
+        body:"<b>"+fmt(p.total)+" Gy</b> se situe très au-delà de la fourchette admise pour « "+S.toLowerCase()+" ». Escalader la dose ici n'apporte aucun bénéfice et expose à une toxicité tardive grave.",
+        std:p.site.doseTxt+".",
+        plain:"la dose prescrite dépasse largement le standard du site." };
+    case "OAR_VIOLATION":
+      var o=e.oar;
+      return { title:"Tolérance de l'OAR dépassée.",
+        body:"<b>"+o.n+" "+o.m+" = "+fmt(o.v)+" "+o.u+"</b>, au-dessus de la limite de "+fmt(o.lim)+" "+o.u+". Valider ce plan revient à accepter des lésions évitables des tissus sains.",
+        std:o.n+" "+o.m+" ≤ "+fmt(o.lim)+" "+o.u+" pour ce site.",
+        plain:o.n+" "+o.m+" dépassait sa contrainte." };
+    case "ISOCENTER_WRONG":
+      return { title:"Isocentre dans la mauvaise région.",
+        body:"L'isocentre est placé sur <b>"+p.iso+"</b>, ce qui est incohérent avec une cible de type « "+S.toLowerCase()+" ». Les faisceaux manqueraient entièrement la cible.",
+        std:"Confirmer que l'isocentre se situe dans la région cible sur le scanner de planification.",
+        plain:"la région de l'isocentre ne correspondait pas à la cible." };
+    case "ENERGY_WRONG":
+      if(e.reason==="peds")
+        return { title:"Photons de haute énergie chez l'enfant.",
+          body:"Des photons de <b>18 MV</b> ont été choisis pour une irradiation cranio-spinale pédiatrique. Les faisceaux de haute énergie génèrent une contamination neutronique — un vrai risque de second cancer chez l'enfant.",
+          std:"Utiliser des photons 6 MV ou des protons pour l'irradiation cranio-spinale pédiatrique.",
+          plain:"des photons 18 MV sont inadaptés à un plan pédiatrique." };
+      return { title:"L'énergie du faisceau n'atteint pas la cible.",
+        body:"<b>"+p.energy+"</b> ont été choisis pour une cible profonde (« "+S.toLowerCase()+" »). Les électrons déposent la dose en surface et ne couvriraient jamais une tumeur profonde.",
+        std:"Les cibles profondes exigent des photons de mégavoltage (typiquement 6–18 MV), pas des électrons.",
+        plain:"des électrons ont été prescrits pour une cible profonde." };
+    case "TECHNIQUE_MISMATCH":
+      return { title:"Technique incompatible avec une dose SBRT.",
+        body:"Une prescription SBRT à forte dose par fraction (<b>"+fmt(p.total)+" Gy / "+p.fx+"</b>) a été planifiée en simple <b>RC3D</b>. La SBRT exige une délivrance très conformationnelle avec guidage par l'image ; la RC3D sur-irradierait les tissus sains.",
+        std:"Les prescriptions SBRT imposent une délivrance conformationnelle VMAT/SBRT avec IGRT.",
+        plain:"une dose SBRT a été délivrée avec une technique RC3D." };
+    case "IDENTITY_MISMATCH":
+      return { title:"Incohérence du dossier patient.",
+        body:"Le dossier indique le sexe <b>"+p.sex+"</b> pour un diagnostic de « "+S.toLowerCase()+" ». Une telle incohérence signale que les données du mauvais patient sont peut-être chargées.",
+        std:"S'arrêter et re-vérifier l'identité du patient dès que la démographie et le diagnostic se contredisent.",
+        plain:"le sexe enregistré était incohérent avec le diagnostic." };
+    case "CUMULATIVE_OAR":
+      var cumv=round(p.priorCord+p.newCord,1);
+      return { title:"Dose médullaire cumulée dépassée.",
+        body:"La moelle a déjà reçu <b>"+fmt(p.priorCord)+" Gy</b> lors de la RT antérieure ("+p.prior.site+", "+p.prior.dose+", il y a "+p.prior.interval+"). Le nouveau cours ajoute "+fmt(p.newCord)+" Gy, soit un cumul de <b>"+fmt(cumv)+" Gy</b> — au-delà de la tolérance de réirradiation (~"+fmt(p.cordCap)+" Gy). Pris isolément, le nouveau cours paraît acceptable ; c'est le cumul qui expose à une myélite radique.",
+        std:"Sommer les doses médullaires de tous les cours (idéalement en EQD2, avec une récupération partielle fonction de l'intervalle) et rester sous la tolérance cumulée.",
+        plain:"la dose médullaire cumulée dépassait la tolérance de réirradiation." };
+  }
+  return { title:"Problème manqué.", body:"Ce plan aurait dû être refusé.", std:p.site.doseTxt, plain:"un problème a été manqué." };
+}
+
+/* ---------- rank ---------- */
+function rankFor(clears){
+  if(LANG==='en'){
+    if(clears>=60) return "PU-PH — untouchable";
+    if(clears>=40) return "Chief of Radiation Oncology";
+    if(clears>=26) return "Professor";
+    if(clears>=19) return "Associate Professor";
+    if(clears>=14) return "Attending";
+    if(clears>=10) return "Chief Resident";
+    if(clears>=7)  return "Senior Resident";
+    if(clears>=4)  return "Resident";
+    if(clears>=2)  return "Intern";
+    return "Medical Student";
+  }
+  if(clears>=60) return "PU-PH — intouchable";
+  if(clears>=40) return "Chef de service";
+  if(clears>=26) return "Professeur (PU-PH)";
+  if(clears>=19) return "Maître de conférences (MCU-PH)";
+  if(clears>=14) return "Praticien hospitalier";
+  if(clears>=10) return "Chef de clinique";
+  if(clears>=7)  return "Interne senior";
+  if(clears>=4)  return "Interne confirmé";
+  if(clears>=2)  return "Interne";
+  return "Externe";
+}
+function medalFor(clears){
+  if(clears>=40) return "🏆"; if(clears>=19) return "🥇"; if(clears>=10) return "🎖️"; if(clears>=4) return "🩺"; return "📋";
+}
+
+/* ---------- game over ---------- */
+function gameOver(){
+  stopTimer();
+  var acc = state.total? Math.round(state.correct/state.total*100) : 0;
+  var EN=(LANG==='en');
+  $("overTitle").textContent = state.mode==="daily" ? (EN?"Daily shift complete":"Garde du jour terminée") : (EN?"Shift over":"Garde terminée");
+  $("overSub").textContent = state.mode==="daily" ? (dateLabel()+(EN?" · everyone got these same plans":" · mêmes plans pour tout le monde")) : (EN?"Three strikes — the desk is closed.":"Trois erreurs — le bureau ferme.");
+  $("ovScore").textContent = state.score.toLocaleString();
+  $("ovCleared").textContent = state.correct;
+  $("ovAcc").textContent = acc+"%";
+  $("ovStreak").textContent = state.bestStreak;
+  $("overRank").textContent = rankFor(state.correct);
+  $("overMedal").textContent = medalFor(state.correct);
+
+  if(state.mode==="daily"){
+    $("shareBox").classList.remove("hidden");
+    $("shareGrid").textContent = state.results.map(function(r){return r?"🟩":"🟥";}).join("");
+    $("shareCap").textContent = "Plan, Please — "+dateLabel();
+  } else {
+    $("shareBox").classList.add("hidden");
+  }
+  saveScore(acc);
+  show("game"); // keep game underneath
+  showOverlay("over");
+}
+
+/* ---------- persistence & leaderboard ---------- */
+async function saveScore(acc){
+  // personal best (endless)
+  if(state.mode==="endless"){
+    var pb = parseInt(await storeGet("pp_best_endless")||"0",10);
+    if(state.score>pb){ await storeSet("pp_best_endless", String(state.score)); }
+    refreshBestTag();
+  }
+  // leaderboard
+  if(!state.playerName){ state.playerName = window.oaAskName ? (await window.oaAskName("")) : ""; if(!state.playerName) return; }
+  var key = state.mode==="daily" ? ("pp_lb_daily_"+todayKey()) : "pp_lb_endless";
+  var uid = await getUID();
+  var entry = {uid:uid, name:state.playerName, score:state.score, acc:acc, streak:state.bestStreak, ts:Date.now()};
+  // remote backend first (if configured); fall back to local/cloud storage
+  var remote = await apiSubmit(key, entry);
+  if(remote){ return; }
+  var arr = await lbGet(key);
+  var found=false;
+  for(var i=0;i<arr.length;i++){ if(arr[i].uid===uid){ if(state.score>arr[i].score) arr[i]=entry; found=true; break; } }
+  if(!found) arr.push(entry);
+  arr.sort(function(a,b){ return b.score-a.score; });
+  arr = arr.slice(0,100);
+  await lbSet(key, arr);
+}
+var _uid=null;
+async function getUID(){
+  if(_uid) return _uid;
+  var u = await storeGet("pp_uid");
+  if(!u){ u = "u"+Date.now().toString(36)+Math.random().toString(36).slice(2,7); await storeSet("pp_uid", u); }
+  _uid=u; return u;
+}
+
+var lbView="daily";
+async function renderLeaderboard(){
+  var EN=(LANG==='en');
+  var listEl=$("lbList");
+  listEl.innerHTML='<div class="lb-empty">'+(EN?"Loading…":"Chargement…")+'</div>';
+  var key = lbView==="daily" ? ("pp_lb_daily_"+todayKey()) : "pp_lb_endless";
+  var remote = await apiTop(key);
+  var arr = remote!=null ? remote : await lbGet(key);
+  var uid = await getUID();
+  if(!arr.length){
+    listEl.innerHTML='<div class="lb-empty">'+(EN?"No scores yet.":"Aucun score pour l\'instant.")+'<br>'+(lbView==="daily"?(EN?"Be the first to post today's shift.":"Soyez le premier à publier la garde du jour."):(EN?"Play an endless shift to get on the board.":"Jouez une garde infinie pour entrer au classement."))+'</div>';
+  } else {
+    var h="";
+    arr.slice(0,20).forEach(function(e,i){
+      h+='<div class="score-row'+(e.uid===uid?" me":"")+'"><span class="rank">'+String(i+1).padStart(2,"0")+'</span>'+
+         '<span class="player"><strong>'+escapeHTML(e.name)+'</strong><span>'+e.acc+'% · '+(EN?"accuracy":"précision")+'</span></span>'+
+         '<span class="points">'+e.score.toLocaleString()+'</span></div>';
+    });
+    // if player not in top 20, append their row
+    var meIdx = arr.findIndex(function(e){return e.uid===uid;});
+    if(meIdx>=20){
+      var me=arr[meIdx];
+      h+='<div class="score-row me"><span class="rank">'+(meIdx+1)+'</span><span class="player"><strong>'+escapeHTML(me.name)+'</strong><span>'+me.acc+'% · '+(EN?"accuracy":"précision")+'</span></span><span class="points">'+me.score.toLocaleString()+'</span></div>';
+    }
+    listEl.innerHTML=h;
+  }
+  var noteEN, noteFR;
+  if(remote!=null){ noteEN="Shared Onco Arcade leaderboard (OVH)."; noteFR="Classement partagé Onco Arcade (OVH)."; }
+  else if(hasCloud){ noteEN="Scores are shared with everyone playing this build."; noteFR="Les scores sont partagés avec tous les joueurs de cette version."; }
+  else { noteEN="Offline — scores are stored on this device only."; noteFR="Hors-ligne — les scores sont enregistrés uniquement sur cet appareil."; }
+  $("cloudNote").textContent = (LANG==='en')?noteEN:noteFR;
+}
+function escapeHTML(s){ return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
+
+/* ---------- share ---------- */
+function shareText(){
+  var acc = state.total? Math.round(state.correct/state.total*100):0;
+  var EN=(LANG==='en');
+  if(state.mode==="daily"){
+    return "Plan, Please — "+(EN?"Daily Shift ":"Garde du jour ")+dateLabel()+"\n"+
+      state.results.map(function(r){return r?"🟩":"🟥";}).join("")+"\n"+
+      "Score "+state.score.toLocaleString()+" · "+state.correct+"/"+state.total+" · "+(EN?"streak ":"série ")+state.bestStreak+" · "+rankFor(state.correct);
+  }
+  return "Plan, Please — "+(EN?"Endless Shift":"Garde infinie")+"\nScore "+state.score.toLocaleString()+" · "+state.correct+(EN?" plans cleared · ":" plans validés · ")+acc+(EN?"% · rank ":"% · rang ")+rankFor(state.correct);
+}
+function copyShare(){
+  var txt=shareText();
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(function(){ toastMenu(tr('copyOk')); }, fallbackCopy.bind(null,txt));
+  } else fallbackCopy(txt);
+}
+function fallbackCopy(txt){
+  var ta=document.createElement("textarea"); ta.value=txt; ta.style.position="fixed"; ta.style.opacity="0";
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand("copy"); toastMenu(tr('copyOk')); }catch(e){ toastMenu(tr('copyFail')); }
+  document.body.removeChild(ta);
+}
+function toastMenu(msg){ toast(msg,true); }
+
+/* ---------- screens & overlays ---------- */
+function show(id){
+  ["menu","game"].forEach(function(s){ $(s).classList.toggle("hidden", s!==id); });
+}
+function showOverlay(id){ $(id).classList.remove("hidden"); }
+function hideOverlay(id){ $(id).classList.add("hidden"); }
+function hideAllOverlays(){ ["incidentOv","protoOv","howOv","over","lbOv"].forEach(hideOverlay); }
+
+/* ---------- protocol drawer content ---------- */
+function buildProtocol(){
+  var groups = (LANG==='en') ? [
+    {h:"Prostate", rows:[["Definitive","60/20 · 70/28 · 78–80/39–40"],["SBRT","36.25 Gy / 5"],["Rectum V60 / Bladder V65","≤35% / ≤50%"]]},
+    {h:"Breast (check the side!)", rows:[["Whole breast","40.05/15 · 42.56/16 · 26/5"],["Conventional","50 Gy / 25"],["Heart mean / ipsi-lung V20","≤4 Gy / ≤20%"]]},
+    {h:"Lung", rows:[["NSCLC definitive","60–66 Gy / 2 Gy"],["SBRT (peripheral)","54/3 · 50/5 · 48/4"],["Cord D0.1cc / lung V20","≤45 Gy / ≤35%"]]},
+    {h:"Brain", rows:[["Whole brain","30/10 · 20/5 · 37.5/15"],["Glioblastoma","60/30 (or 40.05/15)"],["Brainstem / chiasm","≤54 Gy"]]},
+    {h:"Head & neck", rows:[["Definitive","70/35 · 69.96/33 · 66/30"],["Cord / contra parotid","≤45 Gy / mean ≤26 Gy"]]},
+    {h:"Pelvis & other", rows:[["Rectum","50.4/28 or 25/5"],["Cervix EBRT","45/25 + brachytherapy"],["Oesophagus","50–50.4 Gy"],["Bone metastasis","8/1 · 20/5 · 30/10"]]},
+    {h:"Energy & technique", rows:[["Deep targets","MV photons (6–18 MV), not electrons"],["Paediatrics","avoid high-energy photons (neutrons)"],["SBRT","conformal VMAT/SBRT + IGRT"]]},
+    {h:"Re-irradiation", rows:[["Cumulative cord","≤ ~50 Gy (EQD2, partial recovery)"],["Principle","always sum prior courses"]]}
+  ] : [
+    {h:"Prostate", rows:[["Définitif","60/20 · 70/28 · 78–80/39–40"],["SBRT","36.25 Gy / 5"],["Rectum V60 / Vessie V65","≤35% / ≤50%"]]},
+    {h:"Sein (vérifier le côté !)", rows:[["Sein en totalité","40.05/15 · 42.56/16 · 26/5"],["Conventionnel","50 Gy / 25"],["Cœur moyenne / poumon homolat. V20","≤4 Gy / ≤20%"]]},
+    {h:"Poumon", rows:[["CBNPC définitif","60–66 Gy / 2 Gy"],["SBRT (périphérique)","54/3 · 50/5 · 48/4"],["Moelle D0.1cc / poumon V20","≤45 Gy / ≤35%"]]},
+    {h:"Encéphale", rows:[["Encéphale in toto","30/10 · 20/5 · 37.5/15"],["Glioblastome","60/30 (ou 40.05/15)"],["Tronc / chiasma","≤54 Gy"]]},
+    {h:"ORL", rows:[["Définitif","70/35 · 69.96/33 · 66/30"],["Moelle / parotide controlat.","≤45 Gy / moyenne ≤26 Gy"]]},
+    {h:"Pelvis & autres", rows:[["Rectum","50.4/28 ou 25/5"],["Col utérin EBRT","45/25 + curiethérapie"],["Œsophage","50–50.4 Gy"],["Métastase osseuse","8/1 · 20/5 · 30/10"]]},
+    {h:"Énergie & technique", rows:[["Cibles profondes","photons MV (6–18 MV), pas d'électrons"],["Pédiatrie","éviter les photons de haute énergie (neutrons)"],["SBRT","VMAT/SBRT conformationnelle + IGRT"]]},
+    {h:"Réirradiation", rows:[["Moelle cumulée","≤ ~50 Gy (EQD2, récup. partielle)"],["Principe","toujours sommer les cours antérieurs"]]}
+  ];
+  var h="";
+  groups.forEach(function(g){
+    h+='<h3>'+g.h+'</h3>';
+    g.rows.forEach(function(r){ h+='<div class="ptab"><span>'+r[0]+'</span><span class="d">'+r[1]+'</span></div>'; });
+  });
+  $("protoBody").innerHTML=h;
+}
+
+/* ---------- language application ---------- */
+function setTxt(id,t){ var el=$(id); if(el) el.textContent=t; }
+function setHTML(id,t){ var el=$(id); if(el) el.innerHTML=t; }
+function pickL(fr,en){ return (LANG==='en')?en:fr; }
+
+function applyLang(){
+  SITES   = (LANG==='fr')?SITES_FR:SITES_EN;
+  REIRRAD = (LANG==='fr')?REIRRAD_FR:REIRRAD_EN;
+  try{ document.documentElement.lang = LANG; }catch(e){}
+
+  // menu
+  setTxt("uiTagline", pickL(
+    "Le bureau de validation est ouvert. Validez les plans conformes, refusez les plans dangereux. Loupez-en un et c'est un rapport d'incident à la garde suivante.",
+    "The review desk is open. Approve the clean plans, return the dangerous ones. Miss one and it's an incident report next shift."));
+  setTxt("uiDailyLabel", pickL("Garde du jour","Daily Shift"));
+  setTxt("dailyTag", pickL("15 plans · identiques pour tous","15 plans · same for everyone"));
+  setTxt("uiEndlessLabel", pickL("Garde infinie","Endless Shift"));
+  setTxt("uiEndlessSub", pickL("survivre · 3 erreurs","survive · 3 strikes"));
+  setTxt("uiLbLabel", pickL("Classement","Leaderboard"));
+  setTxt("uiHowLabel", pickL("Comment jouer","How to play"));
+  setTxt("uiNameLabel", pickL("Nom du validateur (affiché au classement)","Reviewer name (shown on the leaderboard)"));
+  setTxt("uiSoundLabel", pickL("Son","Sound"));
+
+  // game controls
+  var bp=$("btnProto"); if(bp) bp.title=pickL("Référence des protocoles","Protocol reference");
+  var bs=$("btnSound2"); if(bs) bs.title=pickL("Son","Sound");
+  var bq=$("btnQuit"); if(bq) bq.title=pickL("Terminer la garde","End shift");
+  setTxt("uiRejectLabel", pickL("REFUSER","SEND BACK"));
+  setTxt("uiRejectSub", pickL("rejeter le plan","return the plan"));
+  setTxt("uiApproveLabel", pickL("VALIDER","APPROVE"));
+  setTxt("uiApproveSub", pickL("signer","sign off"));
+
+  // protocol overlay
+  setTxt("uiProtoTitle", pickL("Référence des protocoles","Protocol reference"));
+  setTxt("uiProtoSub", pickL("Prescriptions standard & principales limites OAR. Recoupez tout ce qui vous paraît suspect.","Standard prescriptions & key OAR limits. Cross-check anything that looks off."));
+
+  // how-to overlay
+  setTxt("uiHowTitle", pickL("Comment jouer","How to play"));
+  setTxt("uiHowSub", pickL("Vous êtes le médecin validateur.","You are the reviewing physician."));
+  setHTML("uiHow1", pickL(
+    "Les plans arrivent un par un sur votre bureau. Lisez chacun d'eux, puis <b style=\"color:#6fdcac\">VALIDEZ</b> ou <b style=\"color:#ff9a9d\">REFUSEZ</b> pour correction.",
+    "Plans arrive one at a time. Read each, then <b style=\"color:#6fdcac\">APPROVE</b> or <b style=\"color:#ff9a9d\">SEND BACK</b> for correction."));
+  setHTML("uiHow2", pickL(
+    "Certains plans sont conformes. D'autres cachent une erreur — une latéralité inversée, un fractionnement impossible, un isocentre dans la mauvaise région, une dose qui dépasse une limite OAR. Tout ce qu'il faut pour la repérer est écrit sur le plan.",
+    "Some plans are fine. Others hide an error — a flipped side, impossible fractionation, an isocenter in the wrong region, a dose over an OAR limit. Everything you need to catch it is on the plan."));
+  setHTML("uiHow3", pickL(
+    "<b>Valider un plan dangereux</b> ou <b>refuser un plan conforme</b> vous vaut une erreur. <b>Trois erreurs terminent la garde.</b>",
+    "<b>Approving a dangerous plan</b> or <b>returning a clean one</b> costs a strike. <b>Three strikes end the shift.</b>"));
+  setHTML("uiHow4", pickL(
+    "Les décisions rapides et justes font monter un multiplicateur de série. Touchez <b>📋</b> à tout moment pour la référence des protocoles.",
+    "Fast, correct calls build a streak multiplier. Tap <b>📋</b> anytime for the protocol reference."));
+  setTxt("uiHow5", pickL(
+    "La garde du jour donne à tout le monde les 15 mêmes plans — comparez vos scores au classement.",
+    "The daily shift gives everyone the same 15 plans — compare scores on the leaderboard."));
+  setTxt("uiHowBtn", pickL("Compris","Got it"));
+
+  // game-over overlay
+  setTxt("uiRankLbl", pickL("Rang atteint","Rank reached"));
+  setTxt("uiOsScore", pickL("Score final","Final score"));
+  setTxt("uiOsCleared", pickL("Plans validés","Plans cleared"));
+  setTxt("uiOsAcc", pickL("Précision","Accuracy"));
+  setTxt("uiOsStreak", pickL("Meilleure série","Best streak"));
+  setTxt("uiCopyLabel", pickL("Copier le résultat à partager","Copy result to share"));
+  setTxt("btnAgain", pickL("Rejouer","Play again"));
+  setTxt("btnOverLb", pickL("Voir le classement","View leaderboard"));
+  setTxt("btnMenu", pickL("Menu principal","Main menu"));
+
+  // leaderboard overlay
+  setTxt("uiLbTitle", pickL("Classement","Leaderboard"));
+  setTxt("uiLbSub", pickL("Les meilleurs validateurs du bureau.","The desk's best reviewers."));
+  setTxt("lbTabDaily", pickL("Aujourd'hui","Today"));
+  setTxt("lbTabEndless", pickL("Garde infinie — général","Endless — all-time"));
+
+  // collection Onco Arcade + à propos
+  setTxt("uiHubLabel", pickL("Tous les jeux","All games"));
+  setTxt("uiAboutLabel", pickL("À propos","About"));
+  setTxt("uiAboutTitle", pickL("À propos","About"));
+  setTxt("uiAboutSub", pickL("Plan, Please fait partie d'Onco Arcade.","Plan, Please is part of Onco Arcade."));
+  setHTML("uiAbout1", pickL(
+    "<b>Plan, Please</b> est un mini-jeu de la collection <b>Onco Arcade</b> : validez les plans de radiothérapie conformes, refusez les plans dangereux. Imaginé, conçu et développé par&nbsp;:",
+    "<b>Plan, Please</b> is a mini-game from the <b>Onco Arcade</b> collection: approve the safe radiotherapy plans, return the dangerous ones. Imagined, designed and built by:"));
+  setTxt("uiAboutRole", pickL(
+    "Professeur de radiothérapie · créateur d'Onco Arcade",
+    "Professor of radiation oncology · creator of Onco Arcade"));
+  setHTML("uiAboutDisc", pickL(
+    "<b>Note importante.</b> Jeu pédagogique et expérimental. Ce n'est pas un dispositif médical : il ne remplace pas une formation clinique et ne doit jamais servir à orienter une prise en charge réelle.",
+    "<b>Important note.</b> Educational, experimental game. It is not a medical device: it does not replace clinical training and must never be used to guide real patient care."));
+  setTxt("uiAboutTag1", pickL("Pédagogie","Education"));
+  setTxt("uiAboutTag2", "Onco Arcade");
+  setTxt("uiAboutTag3", pickL("Classement OVH","OVH leaderboard"));
+  setTxt("uiAboutBtn", pickL("Fermer","Close"));
+  setTxt("uiEyebrow", pickL("Onco Arcade · radiothérapie","Onco Arcade · radiation oncology"));
+  setTxt("uiAboutT2", pickL("Mention importante","Important note"));
+
+  // toggle highlight
+  var lf=$("langFr"), le=$("langEn");
+  if(lf) lf.classList.toggle("on", LANG==='fr');
+  if(le) le.classList.toggle("on", LANG==='en');
+
+  buildProtocol();
+}
+async function setLang(l){
+  if(l!=='fr'&&l!=='en') return;
+  LANG=l;
+  try{ localStorage.setItem("pp_lang", LANG); }catch(e){}
+  storeSet("pp_lang", LANG);
+  applyLang();
+  refreshBestTag();
+}
+
+/* ---------- bindings ---------- */
+function bind(){
+  $("langFr").onclick=function(){ setLang('fr'); };
+  $("langEn").onclick=function(){ setLang('en'); };
+  $("btnDaily").onclick=function(){ armAudio(); startGame("daily"); };
+  $("btnEndless").onclick=function(){ armAudio(); startGame("endless"); };
+  $("btnLb").onclick=function(){ lbView="daily"; setLbTabs(); renderLeaderboard(); showOverlay("lbOv"); };
+  $("btnHow").onclick=function(){ showOverlay("howOv"); };
+  $("btnAbout").onclick=function(){ var s=$("about"); if(s){ show("menu"); s.scrollIntoView({behavior:"smooth"}); } };
+
+  elApprove.onclick=function(){ decide(true,false); };
+  elReject.onclick=function(){ decide(false,false); };
+
+  $("btnIncNext").onclick=function(){ hideOverlay("incidentOv"); if(state.strikes>=3 || (state.mode==="daily" && state.planN>=state.dailyN)) gameOver(); else advance(); };
+  $("btnProto").onclick=function(){ showOverlay("protoOv"); };
+  $("btnQuit").onclick=function(){ if(state.total>0){ gameOver(); } else { show("menu"); } };
+
+  $("btnAgain").onclick=function(){ hideOverlay("over"); startGame(state.mode); };
+  $("btnMenu").onclick=function(){ hideAllOverlays(); show("menu"); refreshBestTag(); };
+  $("btnOverLb").onclick=function(){ lbView=state.mode; setLbTabs(); renderLeaderboard(); showOverlay("lbOv"); };
+  $("btnCopy").onclick=copyShare;
+
+  $("lbTabDaily").onclick=function(){ lbView="daily"; setLbTabs(); renderLeaderboard(); };
+  $("lbTabEndless").onclick=function(){ lbView="endless"; setLbTabs(); renderLeaderboard(); };
+
+  // close buttons
+  document.querySelectorAll("[data-close]").forEach(function(b){ b.onclick=function(){ hideOverlay(b.getAttribute("data-close")); }; });
+
+  // name
+  var ni=$("nameInput");
+  ni.value = state.playerName;
+  ni.oninput=function(){ state.playerName=ni.value.trim(); storeSet("pp_name", state.playerName); };
+
+  // sound
+  $("btnSound").onclick=toggleSound; $("btnSound2").onclick=toggleSound;
+
+  // keyboard (desktop deploy)
+  document.addEventListener("keydown",function(e){
+    if($("game").classList.contains("hidden")) return;
+    if(!$("incidentOv").classList.contains("hidden")){ if(e.key==="Enter"||e.key===" "){ $("btnIncNext").click(); } return; }
+    if(state.deciding) return;
+    if(e.key==="a"||e.key==="A"||e.key==="ArrowRight") decide(true,false);
+    if(e.key==="r"||e.key==="R"||e.key==="ArrowLeft") decide(false,false);
+  });
+}
+function setLbTabs(){ $("lbTabDaily").classList.toggle("on", lbView==="daily"); $("lbTabEndless").classList.toggle("on", lbView==="endless"); }
+
+function toggleSound(){
+  state.muted=!state.muted;
+  storeSet("pp_muted", state.muted?"1":"0");
+  var ico = state.muted?"🔇":"🔊";
+  $("soundIco").textContent=ico; $("btnSound2").textContent=ico;
+  if(!state.muted) armAudio();
+}
+function armAudio(){ if(!state.muted){ ac(); } }
+
+async function refreshBestTag(){
+  var pb = parseInt(await storeGet("pp_best_endless")||"0",10);
+  $("bestTag").textContent = pb>0 ? (tr('bestEndless')+pb.toLocaleString()) : "";
+}
+
+/* ---------- init ---------- */
+(async function init(){
+  bind();
+  renderStrikes();
+  applyLang(); // synchronous language from detectLang() (localStorage / navigator)
+  // refine from cloud-stored preference (e.g. set on another device inside Claude)
+  var savedLang = await storeGet("pp_lang"); if((savedLang==="fr"||savedLang==="en") && savedLang!==LANG){ LANG=savedLang; applyLang(); }
+  var savedName = await storeGet("pp_name"); if(savedName){ state.playerName=savedName; $("nameInput").value=savedName; }
+  var m = await storeGet("pp_muted"); if(m==="1"){ state.muted=true; $("soundIco").textContent="🔇"; $("btnSound2").textContent="🔇"; }
+  await getUID();
+  refreshBestTag();
+})();
+
+</script>
+<style id="oa-swipe-style">
+  #planScroll{ touch-action: pan-y; }
+  #plan{ will-change: transform; }
+  .plan-scroll.oa-swiping, .stage.oa-swiping{ overflow: visible !important; }
+  .oa-swipe-stamp{
+    position:absolute; top:26px; left:50%; z-index:40; pointer-events:none;
+    font-weight:560; font-size:32px; letter-spacing:.04em; padding:6px 18px;
+    border:4px solid currentColor; border-radius:12px; opacity:0; white-space:nowrap;
+    transform:translateX(-50%) rotate(-9deg); transition:opacity .08s linear;
+    text-transform:uppercase;
+  }
+  .oa-swipe-stamp.approve{ color:#12a150; transform:translateX(-50%) rotate(-11deg); }
+  .oa-swipe-stamp.reject{ color:#e0424a; transform:translateX(-50%) rotate(11deg); }
+</style>
+<script id="oa-swipe-script">
+(function(){
+  function init(){
+    var card=document.getElementById('plan');
+    var zone=document.getElementById('planScroll');
+    var stage=card?card.closest('.stage'):null;
+    if(!card||!zone||!stage){ return setTimeout(init,300); }
+    if(zone.dataset.oaSwipe) return; zone.dataset.oaSwipe='1';
+
+    var stamp=document.createElement('div'); stamp.className='oa-swipe-stamp'; stage.appendChild(stamp);
+    var apLbl=document.getElementById('uiApproveLabel'), rjLbl=document.getElementById('uiRejectLabel');
+    var sx=0,sy=0,drag=false,on=false,pid=null;
+    var W=function(){return Math.max(window.innerWidth||360,320);};
+    var TH=88;
+
+    function busy(){ return (typeof window.state!=='undefined' && window.state && window.state.deciding); }
+    function reset(anim){
+      card.style.transition=anim?'transform .2s ease, opacity .2s ease':'none';
+      card.style.transform=''; card.style.opacity='';
+      stamp.style.opacity='0';
+      zone.classList.remove('oa-swiping'); stage.classList.remove('oa-swiping');
+    }
+    zone.addEventListener('pointerdown',function(e){
+      if(busy()||e.pointerType==='mouse'&&e.button!==0) return;
+      sx=e.clientX; sy=e.clientY; on=true; drag=false; pid=e.pointerId; card.style.transition='none';
+    });
+    zone.addEventListener('pointermove',function(e){
+      if(!on||e.pointerId!==pid) return;
+      var dx=e.clientX-sx, dy=e.clientY-sy;
+      if(!drag){
+        if(Math.abs(dx)>12 && Math.abs(dx)>Math.abs(dy)){ drag=true; zone.classList.add('oa-swiping'); stage.classList.add('oa-swiping'); try{zone.setPointerCapture(pid);}catch(_){}}
+        else if(Math.abs(dy)>12){ on=false; return; }
+        else return;
+      }
+      if(e.cancelable) e.preventDefault();
+      card.style.transform='translateX('+dx+'px) rotate('+(dx/22)+'deg)';
+      var k=Math.min(1,Math.abs(dx)/TH); stamp.style.opacity=k;
+      if(dx>0){ stamp.className='oa-swipe-stamp approve'; stamp.textContent=(apLbl&&apLbl.textContent)||'Valider'; }
+      else{ stamp.className='oa-swipe-stamp reject'; stamp.textContent=(rjLbl&&rjLbl.textContent)||'Refuser'; }
+    });
+    function end(e){
+      if(!on) return; on=false;
+      var dx=(e.clientX||sx)-sx;
+      if(drag && Math.abs(dx)>=TH && !busy() && typeof decide==='function'){
+        var ap=dx>0;
+        card.style.transition='transform .26s ease, opacity .26s ease';
+        card.style.transform='translateX('+(ap?W():-W())+'px) rotate('+(ap?15:-15)+'deg)'; card.style.opacity='0';
+        stamp.style.opacity='0';
+        setTimeout(function(){ try{decide(ap,false);}catch(_){} },150);
+        setTimeout(function(){ reset(false); },340);
+      } else { reset(true); }
+      drag=false;
+    }
+    zone.addEventListener('pointerup',end);
+    zone.addEventListener('pointercancel',function(){ if(on){on=false; reset(true);} });
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+})();
+</script>
+<div id="oaNameAsk" style="display:none;position:fixed;inset:0;z-index:2147483000;background:rgba(3,8,18,.74);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif">
+  <div style="width:min(360px,94vw);background:#0f1626;color:#f8fafc;border:1px solid rgba(255,255,255,.14);border-radius:18px;padding:22px;box-shadow:0 30px 80px rgba(0,0,0,.55)">
+    <div id="oaNameAskTitle" style="font-size:18px;font-weight:560;letter-spacing:-.01em;margin-bottom:4px">Ton pseudo</div>
+    <div id="oaNameAskSub" style="font-size:13px;color:#a7b0c2;line-height:1.4;margin-bottom:14px">Pour enregistrer ton score au classement.</div>
+    <input id="oaNameAskInput" maxlength="18" placeholder="Dr …" autocomplete="off" spellcheck="false" style="width:100%;box-sizing:border-box;font:inherit;font-size:15px;font-weight:520;color:#f8fafc;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:12px 14px;outline:none">
+    <div id="oaTeamLabel" style="font-size:12px;color:#a7b0c2;margin:12px 0 5px">Équipe (optionnel)</div>
+    <div id="oaTeamWrap" style="position:relative">
+    <input id="oaNameAskTeam" maxlength="24" placeholder="Ton équipe…" autocomplete="off" spellcheck="false" style="width:100%;box-sizing:border-box;font:inherit;font-size:15px;font-weight:520;color:#f8fafc;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:12px 14px;outline:none">
+    <div id="oaTeamMenu" style="position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:6;background:#0f1626;border:1px solid rgba(255,255,255,.16);border-radius:12px;box-shadow:0 22px 55px rgba(0,0,0,.55);max-height:172px;overflow:auto;display:none"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
+      <button id="oaNameAskSkip" type="button" style="font:inherit;font-weight:520;color:#a7b0c2;background:none;border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:9px 14px;cursor:pointer">Passer</button>
+      <button id="oaNameAskOk" type="button" style="font:inherit;font-weight:560;color:#fff;background:linear-gradient(135deg,#2557d6,#0891b2);border:none;border-radius:999px;padding:9px 16px;cursor:pointer">Enregistrer</button>
+    </div>
+  </div>
+</div>
+<script id="oa-namegate">
+(function(){
+  var DEFAULTS = ['','—','-','dr','dr …','dr...','anonyme','anonymous','ninja','joueur','player','name','nom','pseudo'];
+  function isDefault(n){ return DEFAULTS.indexOf((n||'').trim().toLowerCase()) >= 0; }
+  function isEn(){ var l=(document.documentElement.getAttribute('lang')||document.documentElement.lang||navigator.language||'fr'); return String(l).slice(0,2).toLowerCase()==='en'; }
+  function lget(k){ try{ return localStorage.getItem(k)||''; }catch(e){ return ''; } }
+  function lset(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+
+  var teamsLoaded=false;
+  function loadTeams(){
+    if(teamsLoaded) return; teamsLoaded=true;
+    try{
+      fetch('../../api/teams.php',{cache:'no-store'}).then(function(r){return r.ok?r.json():null;}).then(function(d){
+        if(d&&d.ok&&Array.isArray(d.teams)){ window.__oaTeams=d.teams.map(function(t){return String(t);}); }
+      }).catch(function(){});
+    }catch(e){}
+  }
+
+  function oaRenderTeamMenu(){
+    var tinp=document.getElementById('oaNameAskTeam'), menu=document.getElementById('oaTeamMenu');
+    if(!tinp||!menu) return;
+    var q=(tinp.value||'').toLowerCase();
+    var list=(window.__oaTeams||[]).filter(function(t){return t && t.toLowerCase().indexOf(q)>=0;}).slice(0,8);
+    if(!list.length){ menu.style.display='none'; menu.innerHTML=''; return; }
+    menu.innerHTML=list.map(function(t){return '<div style="padding:11px 14px;font-size:14px;color:#f8fafc;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.07)">'+String(t).replace(/</g,'&lt;')+'</div>';}).join('');
+    Array.prototype.forEach.call(menu.children,function(el){
+      el.onmousedown=function(e){ e.preventDefault(); tinp.value=el.textContent; menu.style.display='none'; };
+      el.ontouchstart=function(e){ e.preventDefault(); tinp.value=el.textContent; menu.style.display='none'; };
+    });
+    menu.style.display='block';
+  }
+  function oaWireTeam(){
+    var tinp=document.getElementById('oaNameAskTeam'), menu=document.getElementById('oaTeamMenu');
+    if(!tinp||tinp._oaWired) return; tinp._oaWired=true;
+    tinp.addEventListener('focus', oaRenderTeamMenu);
+    tinp.addEventListener('input', oaRenderTeamMenu);
+    tinp.addEventListener('blur', function(){ setTimeout(function(){ if(menu) menu.style.display='none'; }, 180); });
+  }
+
+  // Renvoie une Promise<{name, team}>. Demande une seule fois (pseudo + équipe), puis réutilise.
+  window.oaEnsureIdentity = function(bodyName){
+    return new Promise(function(resolve){
+      var sName=lget('oa-name').trim(), sTeam=lget('oa-team').trim(), asked=lget('oa-id2')==='1';
+      var haveName = (bodyName && !isDefault(bodyName)) ? String(bodyName).trim() : sName;
+      if(asked && haveName){ resolve({name:haveName, team:sTeam}); return; }
+      var el=document.getElementById('oaNameAsk');
+      if(!el){ resolve({name:haveName||(isEn()?'Anonymous':'Anonyme'), team:sTeam}); return; }
+      loadTeams(); oaWireTeam();
+      var inp=document.getElementById('oaNameAskInput'), tinp=document.getElementById('oaNameAskTeam');
+      var ok=document.getElementById('oaNameAskOk'), skip=document.getElementById('oaNameAskSkip');
+      var en=isEn();
+      document.getElementById('oaNameAskTitle').textContent = en?'Your name':'Ton pseudo';
+      document.getElementById('oaNameAskSub').textContent   = en?'To save your score on the leaderboard.':'Pour enregistrer ton score au classement.';
+      document.getElementById('oaTeamLabel').textContent    = en?'Team (optional)':'Équipe (optionnel)';
+      tinp.placeholder = en?'Your team…':'Ton équipe…';
+      ok.textContent = en?'Save':'Enregistrer'; skip.textContent = en?'Skip':'Passer';
+      inp.value=haveName||''; tinp.value=sTeam||'';
+      el.style.display='flex'; setTimeout(function(){ try{(inp.value?tinp:inp).focus();}catch(e){} },60);
+      function done(nm,tm,persist){
+        el.style.display='none'; ok.onclick=null; skip.onclick=null; inp.onkeydown=null; tinp.onkeydown=null;
+        if(persist){ lset('oa-name',nm); lset('oa-team',tm); lset('oa-identity','1'); lset('oa-id2','1'); }
+        resolve({name:nm, team:tm});
+      }
+      ok.onclick=function(){ done(inp.value.trim()||(en?'Anonymous':'Anonyme'), tinp.value.trim(), true); };
+      skip.onclick=function(){ done(haveName||(en?'Anonymous':'Anonyme'), sTeam||'', false); };
+      inp.onkeydown=function(e){ if(e.key==='Enter'){ e.preventDefault(); tinp.focus(); } };
+      tinp.onkeydown=function(e){ if(e.key==='Enter'){ e.preventDefault(); ok.onclick(); } };
+    });
+  };
+  // Compat : oaAskName -> renvoie juste le pseudo
+  window.oaAskName = function(cur){ return window.oaEnsureIdentity(cur).then(function(id){ return id.name; }); };
+  /* oa-pregame-ask : demander pseudo+equipe a l'arrivee si pas encore renseigne */
+  setTimeout(function(){ try{ if(lget('oa-id2')!=='1') window.oaEnsureIdentity(''); }catch(e){} }, 500);
+
+  // Interception : tout POST vers submit.php -> injecte pseudo + équipe (demande si première fois)
+  if(window.fetch && !window.__oaNameGate){
+    window.__oaNameGate = true;
+    var orig = window.fetch;
+    window.fetch = function(url, opts){
+      try{
+        var u = (typeof url==='string') ? url : (url && url.url) || '';
+        if(u.indexOf('submit.php')>=0 && opts && opts.method && String(opts.method).toUpperCase()==='POST' && typeof opts.body==='string'){
+          var body = JSON.parse(opts.body);
+          if(body && ('name' in body)){
+            return window.oaEnsureIdentity(body.name).then(function(id){
+              body.name = id.name; body.team = id.team || '';
+              var o2 = {}; for(var k in opts){ o2[k]=opts[k]; } o2.body = JSON.stringify(body);
+              return orig.call(window, url, o2);
+            });
+          }
+        }
+      }catch(e){}
+      return orig.apply(window, arguments);
+    };
+  }
+})();
+</script>
+<button id="oaReportBtn" type="button" aria-label="Signaler un problème" style="position:fixed;left:12px;bottom:12px;z-index:2147482000;width:38px;height:38px;border-radius:50%;border:1px solid rgba(148,163,184,.35);background:rgba(15,22,38,.55);color:#e5e9f0;font-size:17px;line-height:1;cursor:pointer;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);opacity:.55;transition:opacity .15s;font-family:ui-sans-serif,system-ui,sans-serif" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.55" title="Signaler un problème">⚠</button>
+<div id="oaReport" style="display:none;position:fixed;inset:0;z-index:2147483100;background:rgba(3,8,18,.74);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif">
+  <div style="width:min(420px,94vw);background:#0f1626;color:#f8fafc;border:1px solid rgba(255,255,255,.14);border-radius:18px;padding:22px;box-shadow:0 30px 80px rgba(0,0,0,.55)">
+    <div id="oaReportTitle" style="font-size:18px;font-weight:560;letter-spacing:-.01em;margin-bottom:4px">Signaler un problème</div>
+    <div id="oaReportSub" style="font-size:13px;color:#a7b0c2;line-height:1.4;margin-bottom:14px">Décrivez le souci ; il me sera envoyé par e-mail. Aucune adresse n’est affichée.</div>
+    <div id="oaReportForm">
+      <label id="oaReportGameLbl" style="font-size:12px;color:#a7b0c2;display:block;margin-bottom:5px">Jeu concerné</label>
+      <select id="oaReportGame" style="width:100%;box-sizing:border-box;font:inherit;font-size:14px;font-weight:500;color:#f8fafc;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:11px 12px;outline:none;margin-bottom:12px"></select>
+      <label id="oaReportMsgLbl" style="font-size:12px;color:#a7b0c2;display:block;margin-bottom:5px">Description</label>
+      <textarea id="oaReportMsg" rows="5" maxlength="4000" placeholder="Que s’est-il passé ?" style="width:100%;box-sizing:border-box;font:inherit;font-size:14px;color:#f8fafc;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:11px 12px;outline:none;resize:vertical"></textarea>
+      <div id="oaReportErr" style="display:none;font-size:12px;color:#fb7185;margin-top:8px"></div>
+      <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
+        <button id="oaReportCancel" type="button" style="font:inherit;font-weight:520;color:#a7b0c2;background:none;border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:9px 14px;cursor:pointer">Annuler</button>
+        <button id="oaReportSend" type="button" style="font:inherit;font-weight:560;color:#fff;background:linear-gradient(135deg,#2557d6,#0891b2);border:none;border-radius:999px;padding:9px 16px;cursor:pointer">Envoyer</button>
+      </div>
+    </div>
+    <div id="oaReportDone" style="display:none;text-align:center;padding:10px 0">
+      <div style="font-size:34px;line-height:1">✅</div>
+      <div id="oaReportDoneTxt" style="font-size:15px;font-weight:520;margin-top:8px">Merci, c’est envoyé.</div>
+      <button id="oaReportClose2" type="button" style="margin-top:16px;font:inherit;font-weight:560;color:#fff;background:linear-gradient(135deg,#2557d6,#0891b2);border:none;border-radius:999px;padding:9px 18px;cursor:pointer">Fermer</button>
+    </div>
+  </div>
+</div>
+<script id="oa-report">
+(function(){
+  var GAMES=[['plan-please','Plan, Please'],['ok-chimio','OK Chimio'],['arc-racer','Arc Racer'],['beamlet','Beamlet'],['bragg-peak','Bragg Peak'],['fraction-hero','Fraction Hero'],['seed-master','Seed Master'],['mlc-ninja','MLC Ninja'],['tumor-board','Tumor Board'],['radcraft','RadCraft']];
+  function isEn(){ var l=(document.documentElement.getAttribute('lang')||document.documentElement.lang||navigator.language||'fr'); return String(l).slice(0,2).toLowerCase()==='en'; }
+  function API(){ return /\/games\/[^/]+\//.test(location.pathname) ? '../../api' : 'api'; }
+  function curGame(){ var m=location.pathname.match(/\/games\/([a-z0-9-]+)\//i); return m?m[1]:''; }
+  var el=document.getElementById('oaReport');
+  var sel=document.getElementById('oaReportGame'), msg=document.getElementById('oaReportMsg'), err=document.getElementById('oaReportErr');
+  var form=document.getElementById('oaReportForm'), done=document.getElementById('oaReportDone');
+  function labels(){
+    var en=isEn();
+    document.getElementById('oaReportTitle').textContent=en?'Report a problem':'Signaler un problème';
+    document.getElementById('oaReportSub').textContent=en?'Describe the issue; it will be emailed to me. No address is shown.':'Décrivez le souci ; il me sera envoyé par e-mail. Aucune adresse n’est affichée.';
+    document.getElementById('oaReportGameLbl').textContent=en?'Game concerned':'Jeu concerné';
+    document.getElementById('oaReportMsgLbl').textContent=en?'Description':'Description';
+    msg.placeholder=en?'What happened?':'Que s’est-il passé ?';
+    document.getElementById('oaReportCancel').textContent=en?'Cancel':'Annuler';
+    document.getElementById('oaReportSend').textContent=en?'Send':'Envoyer';
+    document.getElementById('oaReportDoneTxt').textContent=en?'Thanks, it’s been sent.':'Merci, c’est envoyé.';
+    document.getElementById('oaReportClose2').textContent=en?'Close':'Fermer';
+    document.getElementById('oaReportBtn').setAttribute('aria-label',en?'Report a problem':'Signaler un problème');
+    document.getElementById('oaReportBtn').title=en?'Report a problem':'Signaler un problème';
+  }
+  function fillSelect(){
+    var en=isEn(), cur=curGame();
+    var html='<option value="">'+(en?'The site / hub':'Le site / le hub')+'</option>';
+    GAMES.forEach(function(g){ html+='<option value="'+g[0]+'">'+g[1]+'</option>'; });
+    html+='<option value="other">'+(en?'Other':'Autre')+'</option>';
+    sel.innerHTML=html; sel.value=cur||'';
+  }
+  window.oaReport=function(){
+    labels(); fillSelect();
+    err.style.display='none'; msg.value=''; form.style.display='block'; done.style.display='none';
+    el.style.display='flex'; setTimeout(function(){ try{msg.focus();}catch(e){} },60);
+  };
+  function close(){ el.style.display='none'; }
+  document.getElementById('oaReportBtn').onclick=window.oaReport;
+  document.getElementById('oaReportCancel').onclick=close;
+  document.getElementById('oaReportClose2').onclick=close;
+  el.addEventListener('click',function(e){ if(e.target===el) close(); });
+  document.getElementById('oaReportSend').onclick=function(){
+    var en=isEn(); var text=(msg.value||'').trim();
+    if(text.length<3){ err.textContent=en?'Please describe the problem.':'Merci de décrire le problème.'; err.style.display='block'; return; }
+    var btn=this; btn.disabled=true; btn.style.opacity=.6;
+    fetch(API()+'/report.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({game:sel.value,message:text,page:location.href})})
+      .then(function(r){return r.ok?r.json():null;}).then(function(d){
+        btn.disabled=false; btn.style.opacity=1;
+        if(d&&d.ok){ form.style.display='none'; done.style.display='block'; }
+        else { err.textContent=en?'Sending failed. Please try again later.':'Envoi impossible. Réessayez plus tard.'; err.style.display='block'; }
+      }).catch(function(){ btn.disabled=false; btn.style.opacity=1; err.textContent=en?'Network error.':'Erreur réseau.'; err.style.display='block'; });
+  };
+})();
+</script>
+</body>
+
+</html>

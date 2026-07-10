@@ -1,0 +1,1703 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Beamlet — Radiation Physics Puzzler</title>
+  <style>
+    :root{
+      --bg0:#070a12;
+      --bg1:#0d1323;
+      --panel:rgba(15,23,42,.82);
+      --panel2:rgba(255,255,255,.06);
+      --stroke:rgba(255,255,255,.12);
+      --strokeStrong:rgba(255,255,255,.2);
+      --text:#f8fafc;
+      --muted:#a7b0c2;
+      --soft:#7d8798;
+      --accent:#64e7ff;
+      --accent2:#b891ff;
+      --good:#59ffb7;
+      --warn:#ffd36d;
+      --bad:#ff6d8a;
+      --dose:#ff5d72;
+      --target:#75ffae;
+      --oar:#78a7ff;
+      --shadow:0 24px 72px rgba(0,0,0,.38);
+      --radius:18px;
+    }
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+    html,body{margin:0;min-height:100%;background:radial-gradient(circle at 15% -5%,#10192b 0,#070a12 44%,#05070e 100%);color:var(--text);font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;overflow-x:hidden;}
+    body:before{content:"";position:fixed;inset:-20%;background:
+      radial-gradient(circle at 80% 15%, rgba(100,231,255,.20), transparent 22%),
+      radial-gradient(circle at 20% 85%, rgba(184,145,255,.16), transparent 28%),
+      linear-gradient(115deg, transparent, rgba(255,255,255,.04), transparent);
+      pointer-events:none;filter:blur(2px);}
+
+    .miniBtn{min-height:38px;padding:8px 11px;border-radius:999px;font-weight:560;letter-spacing:.02em;}
+    .nameInput{width:120px;min-height:38px;border-radius:999px;padding:8px 12px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);color:var(--text);outline:none;}
+    .nameInput::placeholder{color:rgba(234,243,255,.45)}
+    .leaderMode{display:flex;align-items:center;gap:7px;}
+    .statusDot{width:9px;height:9px;border-radius:50%;display:inline-block;background:var(--bad);box-shadow:0 0 12px currentColor;}
+    .statusDot.online{background:var(--good);color:var(--good)}
+    .statusDot.offline{background:var(--warn);color:var(--warn)}
+    .stageWrap:after{content:"";position:absolute;inset:1px;border-radius:inherit;pointer-events:none;background:linear-gradient(135deg,rgba(255,255,255,.10),transparent 24%,transparent 70%,rgba(100,231,255,.10));mix-blend-mode:screen;}
+    .caseBadge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 8px;background:rgba(100,231,255,.10);border:1px solid rgba(100,231,255,.18);color:var(--text);font-size:11px;font-weight:560;}
+    .leader small{display:block;color:var(--muted);font-weight:500;margin-top:2px;}
+
+    .app{position:relative;min-height:100dvh;display:grid;grid-template-rows:auto 1fr auto;gap:12px;padding:14px;max-width:1320px;margin:0 auto;}
+    header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+    .brand{display:flex;align-items:center;gap:12px;}
+    .logo{width:44px;height:44px;border-radius:15px;background:conic-gradient(from 180deg, #64e7ff, #b891ff, #ff6d8a, #ffd36d, #59ffb7, #64e7ff);box-shadow:0 0 24px rgba(100,231,255,.42);position:relative;}
+    .logo:after{content:"";position:absolute;inset:7px;border-radius:11px;background:rgba(7,16,29,.85);box-shadow:inset 0 0 15px rgba(255,255,255,.08);}
+    h1{margin:0;font-size:clamp(24px,4vw,42px);letter-spacing:-.05em;line-height:.95;}
+    .tagline{color:var(--muted);font-size:13px;margin-top:3px;}
+    .topStats{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+    .pill{border:1px solid var(--stroke);background:rgba(255,255,255,.07);border-radius:999px;padding:9px 12px;box-shadow:inset 0 1px 0 rgba(255,255,255,.06);font-size:13px;color:var(--muted);}
+    .pill strong{color:var(--text);font-weight:560;}
+    .main{display:grid;grid-template-columns:minmax(280px, 1fr) 360px;gap:12px;min-height:0;}
+    .stageWrap,.side,.controlDock{background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.045));border:1px solid var(--stroke);border-radius:var(--radius);box-shadow:var(--shadow);backdrop-filter:blur(20px);}
+    .stageWrap{position:relative;overflow:hidden;min-height:460px;display:grid;place-items:center;padding:12px;}
+    #gameCanvas{width:min(100%, calc(100dvh - 215px));max-width:760px;aspect-ratio:1/1;border-radius:22px;background:radial-gradient(circle at 48% 48%,rgba(38,74,104,.45),rgba(4,9,18,.92) 66%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.10), 0 10px 45px rgba(0,0,0,.25);touch-action:none;}
+    .hudOverlay{pointer-events:none;position:absolute;left:20px;top:20px;right:20px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
+    .levelTitle{background:rgba(0,0,0,.26);border:1px solid rgba(255,255,255,.10);border-radius:18px;padding:10px 12px;max-width:min(470px,70%);}
+    .levelTitle b{display:block;font-size:15px;}
+    .levelTitle span{display:block;color:var(--muted);font-size:12px;margin-top:2px;line-height:1.3;}
+    .stars{font-size:28px;letter-spacing:1px;text-shadow:0 4px 20px rgba(255,211,109,.55);white-space:nowrap;}
+    .toast{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);background:rgba(3,10,20,.78);border:1px solid rgba(255,255,255,.14);border-radius:999px;padding:10px 16px;color:var(--text);font-size:13px;box-shadow:0 16px 40px rgba(0,0,0,.35);opacity:0;transition:.25s ease;pointer-events:none;max-width:90%;text-align:center;}
+    .toast.show{opacity:1;bottom:34px;}
+    .side{padding:14px;display:flex;flex-direction:column;gap:12px;min-height:0;}
+    .card{background:rgba(6,13,26,.38);border:1px solid rgba(255,255,255,.10);border-radius:18px;padding:12px;}
+    .card h2{font-size:13px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin:0 0 10px;}
+    .dvhCanvas{width:100%;height:190px;border-radius:14px;background:linear-gradient(180deg,rgba(0,0,0,.26),rgba(0,0,0,.12));border:1px solid rgba(255,255,255,.08);}
+    .metrics{display:grid;gap:8px;}
+    .metric{display:grid;grid-template-columns:1.2fr .8fr auto;gap:8px;align-items:center;font-size:12px;color:var(--muted);}
+    .bar{height:7px;border-radius:99px;background:rgba(255,255,255,.10);overflow:hidden;}
+    .bar i{display:block;height:100%;width:0%;border-radius:inherit;background:linear-gradient(90deg,var(--good),var(--warn),var(--bad));transition:width .35s ease;}
+    .status{font-weight:560;font-size:11px;border-radius:999px;padding:4px 7px;background:rgba(255,255,255,.08);color:var(--muted);}
+    .status.ok{color:#07101d;background:var(--good);}
+    .status.warn{color:#07101d;background:var(--warn);}
+    .status.bad{color:white;background:var(--bad);}
+    .leaderRows{display:grid;gap:7px;max-height:165px;overflow:auto;padding-right:2px;}
+    .leader{display:grid;grid-template-columns:26px 1fr auto;gap:8px;align-items:center;padding:8px 9px;border-radius:12px;background:rgba(255,255,255,.055);font-size:12px;color:var(--muted);}
+    .leader strong{color:var(--text);font-size:13px;}
+    .controlDock{padding:12px;display:grid;grid-template-columns:1.2fr 1fr 1.2fr;gap:12px;align-items:stretch;}
+    .toolbar,.beamPanel,.sliders{display:flex;gap:8px;flex-wrap:wrap;align-content:flex-start;}
+    button,select,input{font:inherit;}
+    button,.selectWrap select{border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);color:var(--text);border-radius:14px;padding:11px 12px;box-shadow:inset 0 1px 0 rgba(255,255,255,.05);cursor:pointer;min-height:42px;}
+    button{transition:transform .08s ease, background .2s ease, border-color .2s ease;}
+    button:active{transform:scale(.98);}
+    button.primary{background:linear-gradient(135deg,rgba(100,231,255,.22),rgba(184,145,255,.20));border-color:rgba(100,231,255,.44);}
+    button.good{background:linear-gradient(135deg,rgba(89,255,183,.20),rgba(100,231,255,.12));border-color:rgba(89,255,183,.42);}
+    button.danger{background:rgba(255,109,138,.13);border-color:rgba(255,109,138,.30);}
+    button.locked{opacity:.45;filter:grayscale(.3);}
+    .selectWrap{position:relative;min-width:190px;flex:1;}
+    .selectWrap select option{background:#081222;color:#eaf3ff;}
+    .selectWrap select{width:100%;appearance:none;padding-right:34px;background-color:rgba(255,255,255,.08);}
+    .selectWrap:after{content:"▾";position:absolute;right:12px;top:10px;color:var(--muted);pointer-events:none;}
+    .beamChips{display:flex;gap:7px;flex-wrap:wrap;max-height:96px;overflow:auto;align-content:flex-start;}
+    .chip{display:flex;align-items:center;gap:6px;min-height:34px;border-radius:999px;padding:8px 10px;font-size:12px;color:var(--muted);background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.10);cursor:pointer;}
+    .chip.selected{color:var(--text);border-color:rgba(100,231,255,.55);box-shadow:0 0 0 2px rgba(100,231,255,.10);}
+    .chip i{width:8px;height:8px;border-radius:99px;background:var(--accent);box-shadow:0 0 14px currentColor;}
+    .sliderGroup{display:grid;grid-template-columns:92px 1fr 44px;gap:8px;align-items:center;width:100%;min-width:270px;padding:7px 9px;border-radius:14px;background:rgba(255,255,255,.055);}
+    .sliderGroup label{font-size:12px;color:var(--muted);}
+    .sliderGroup output{text-align:right;font-size:12px;color:var(--text);font-weight:560;}
+    input[type=range]{width:100%;accent-color:#64e7ff;}
+    .help{font-size:12px;color:var(--muted);line-height:1.4;padding:0 2px;}
+    .legend{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;font-size:11px;color:var(--muted);}
+    .dot{width:9px;height:9px;border-radius:99px;display:inline-block;margin-right:5px;background:var(--accent);box-shadow:0 0 11px currentColor;}
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,.58);display:grid;place-items:center;padding:18px;z-index:10;opacity:0;pointer-events:none;transition:.2s ease;}
+    .modal.show{opacity:1;pointer-events:auto;}
+    .modalBox{width:min(520px,100%);background:linear-gradient(180deg,rgba(20,39,72,.96),rgba(9,16,30,.96));border:1px solid rgba(255,255,255,.18);border-radius:26px;box-shadow:0 28px 90px rgba(0,0,0,.56);padding:22px;}
+    .modalBox h3{margin:0 0 8px;font-size:28px;letter-spacing:-.03em;}
+    .modalBox p{color:var(--muted);line-height:1.45;margin:8px 0 16px;}
+    .modalGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0;}
+    .modalGrid div{padding:12px;border-radius:16px;background:rgba(255,255,255,.07);text-align:center;}
+    .modalGrid b{display:block;font-size:20px;color:var(--text);}
+    .modalGrid span{display:block;font-size:11px;color:var(--muted);margin-top:2px;}
+    .confetti{position:absolute;inset:0;pointer-events:none;overflow:hidden;border-radius:var(--radius);}
+    .confetti i{position:absolute;width:7px;height:12px;border-radius:2px;background:var(--accent);opacity:0;animation:fall 850ms ease-out forwards;}
+    @keyframes fall{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(210px) rotate(440deg);opacity:0}}
+    @media (max-width:980px){
+      .app{padding:10px;gap:10px;}
+      .main{grid-template-columns:1fr;}
+      .side{order:2;}
+      .stageWrap{min-height:auto;padding:8px;}
+      #gameCanvas{width:100%;max-width:none;}
+      .controlDock{grid-template-columns:1fr;}
+      .toolbar,.beamPanel,.sliders{width:100%;}
+      .selectWrap{min-width:100%;}
+      button{flex:1;}
+      .hudOverlay{left:14px;right:14px;top:14px;}
+      .stars{font-size:22px;}
+      .levelTitle{max-width:72%;}
+    }
+    @media (max-width:560px){
+      .topStats{width:100%;}
+      .pill{flex:1;text-align:center;padding:8px 9px;}
+      h1{font-size:28px;}
+      .tagline{font-size:12px;}
+      .levelTitle span{display:none;}
+      .sliderGroup{min-width:100%;grid-template-columns:78px 1fr 42px;}
+      .modalGrid{grid-template-columns:1fr;}
+    }
+    /* ---- Identité Onco Arcade (charte) ---- */
+    .oa-eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:560;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;}
+    .oa-eyebrow i{width:7px;height:7px;border-radius:999px;background:#34d399;box-shadow:0 0 0 5px rgba(52,211,153,.13);}
+    h1.oa-title{background:linear-gradient(120deg,var(--text),#7aa2ff 42%,#f472b6);-webkit-background-clip:text;background-clip:text;color:transparent;}
+    .oa-nav{display:flex;gap:7px;align-items:center;}
+    a.miniBtn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;color:var(--text);}
+    .aboutCard{padding:16px;border:1px solid var(--stroke);border-radius:16px;background:rgba(255,255,255,.05);margin-bottom:12px;}
+    .aboutCard:last-of-type{margin-bottom:0;}
+    .aboutCard h4{margin:0 0 8px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--warn);}
+    .aboutCard p{margin:0;color:var(--text);line-height:1.55;font-size:14px;}
+    .aboutSig{display:flex;align-items:center;gap:12px;}
+    .aboutSig .mk{width:34px;height:34px;border-radius:11px;flex:0 0 auto;background:conic-gradient(from 180deg,#64e7ff,#b891ff,#ff6d8a,#ffd36d,#59ffb7,#64e7ff);}
+    .aboutSig b{display:block;font-size:15px;}.aboutSig span{display:block;font-size:12px;color:var(--muted);}
+    .aboutTags{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px;}
+    /* ---- Mode clair (charte) — l'aire de jeu et le DVH restent sombres ---- */
+    html[data-theme="light"]{
+      --bg0:#f7f8fb; --bg1:#ffffff;
+      --panel:rgba(255,255,255,.86); --panel2:rgba(17,24,39,.05);
+      --stroke:rgba(17,24,39,.11); --strokeStrong:rgba(17,24,39,.18);
+      --text:#111827; --muted:#667085; --soft:#98a2b3;
+      --shadow:0 16px 42px rgba(15,23,42,.08);
+    }
+    html[data-theme="light"] body{background:radial-gradient(circle at 15% -5%,#eef2f9 0,#f7f8fb 44%,#eceff6 100%);}
+    html[data-theme="light"] body:before{opacity:.45;}
+    html[data-theme="light"] .stageWrap,
+    html[data-theme="light"] .side,
+    html[data-theme="light"] .controlDock{background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(255,255,255,.72));border-color:var(--stroke);}
+    html[data-theme="light"] .card{background:rgba(255,255,255,.72);border-color:var(--stroke);}
+    html[data-theme="light"] button,
+    html[data-theme="light"] .selectWrap select{background:rgba(17,24,39,.05);border-color:rgba(17,24,39,.14);color:var(--text);}
+    html[data-theme="light"] button.primary{background:linear-gradient(135deg,rgba(37,87,214,.16),rgba(109,40,217,.14));border-color:rgba(37,87,214,.4);}
+    html[data-theme="light"] button.good{background:linear-gradient(135deg,rgba(4,120,87,.16),rgba(8,145,178,.12));border-color:rgba(4,120,87,.4);}
+    html[data-theme="light"] button.danger{background:rgba(194,65,75,.12);border-color:rgba(194,65,75,.34);}
+    html[data-theme="light"] .pill{background:rgba(17,24,39,.05);border-color:var(--stroke);}
+    html[data-theme="light"] .nameInput,
+    html[data-theme="light"] .chip,
+    html[data-theme="light"] .leader,
+    html[data-theme="light"] .sliderGroup{background:rgba(17,24,39,.04);border-color:var(--stroke);}
+    html[data-theme="light"] .bar{background:rgba(17,24,39,.10);}
+    html[data-theme="light"] .status{background:rgba(17,24,39,.06);}
+    html[data-theme="light"] .modalBox{background:linear-gradient(180deg,#ffffff,#f4f6fb);border-color:var(--stroke);}
+    html[data-theme="light"] .aboutCard{background:rgba(17,24,39,.04);border-color:var(--stroke);}
+    html[data-theme="light"] .oa-eyebrow i{box-shadow:0 0 0 5px rgba(4,120,87,.13);}
+    /* ---- Menu d'arrivée (homogène collection) ---- */
+    .landing{position:fixed;inset:0;z-index:40;display:grid;place-items:center;padding:20px;
+      background:radial-gradient(circle at 50% 18%, color-mix(in srgb,var(--bg1) 55%,transparent), var(--bg0) 70%);backdrop-filter:blur(7px);}
+    .landing.hidden{display:none;}
+    .landing-card{position:relative;width:min(440px,94vw);text-align:center;padding:32px 26px;border:1px solid var(--stroke);
+      border-radius:22px;background:var(--panel);box-shadow:var(--shadow);backdrop-filter:blur(16px);}
+    .landing-ctl{position:absolute;top:14px;right:14px;display:flex;gap:6px;}
+    .landing-ctl button{font-size:11px;font-weight:560;color:var(--muted);background:none;border:1px solid var(--stroke);
+      border-radius:999px;padding:6px 9px;min-height:0;cursor:pointer;}
+    .landing-ctl button:hover{color:var(--text);border-color:var(--strokeStrong);}
+    .landing-card .oa-eyebrow{justify-content:center;margin-bottom:12px;}
+    .landing-card h1.oa-title{font-size:46px;margin:0 0 6px;letter-spacing:-.04em;}
+    .landing-tag{color:var(--muted);font-size:14.5px;line-height:1.55;margin:0 auto 22px;max-width:340px;}
+    .landing-cta{width:100%;font-size:15px;padding:15px;border-radius:14px;font-weight:560;letter-spacing:.02em;}
+    .landing-row{display:flex;gap:9px;justify-content:center;flex-wrap:wrap;margin-top:14px;}
+    .landing-row button,.landing-row a{font-size:12.5px;color:var(--muted);text-decoration:none;background:none;
+      border:1px solid var(--stroke);border-radius:999px;padding:9px 13px;cursor:pointer;min-height:0;}
+    .landing-row button:hover,.landing-row a:hover{color:var(--text);border-color:var(--strokeStrong);}
+    .landing-how{margin-top:14px;text-align:left;border:1px solid var(--stroke);border-radius:14px;background:var(--panel2);padding:14px 16px;}
+    .landing-how h4{margin:0 0 8px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);}
+    .landing-how ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:7px;}
+    .landing-how li{font-size:13px;line-height:1.5;color:var(--muted);}
+  
+/* Onco Arcade patch: mission card moved out of the dosimetry image */
+.hudOverlay{justify-content:flex-end;}
+.levelInfoCard{padding:12px 14px;}
+.levelInfoCard .levelTitle{max-width:none;background:rgba(255,255,255,.055);border:1px solid var(--stroke);border-radius:14px;padding:11px 12px;}
+.levelInfoCard .levelTitle b{font-size:15px;}
+.levelInfoCard .levelTitle span{font-size:12.5px;line-height:1.4;}
+html[data-theme="light"] .levelInfoCard .levelTitle{background:rgba(255,255,255,.72);border-color:rgba(17,24,39,.11);}
+
+</style>
+<script id="onco-arcade-query-sync">
+(function(){
+  try{
+    var p=new URLSearchParams(location.search);
+    var theme=(p.get('theme')||'').toLowerCase();
+    if(theme==='dark'||theme==='light'){document.documentElement.setAttribute('data-theme',theme);localStorage.setItem('oa-theme',theme);}
+    var lang=(p.get('lang')||'').toLowerCase();
+    if(lang==='fr'||lang==='en'){document.documentElement.lang=lang;localStorage.setItem('oa-lang',lang);localStorage.setItem('vrt_lang',lang);}
+  }catch(e){}
+})();
+</script>
+<style id="oa-charte-conformance">
+/* Conformité charte : pas de capitales forcées, poids légers, police système sur le chrome du menu */
+.oa-eyebrow{ text-transform:none !important; letter-spacing:.01em !important; font-weight:500 !important; font-size:13px !important; }
+.oa-title{ font-weight:500 !important; }
+</style>
+<style id="oa-vh-fill">
+/* Plein ecran mobile : le fond remplit tout le viewport, y compris sous la Dynamic Island */
+html{ background:var(--bg, #070a12) !important; min-height:100dvh; }
+html[data-theme="light"]{ background:var(--bg, #f7f8fb) !important; }
+</style>
+<style id="oa-charter-weights">b,strong{font-weight:560}</style>
+</head>
+<body>
+  <div class="landing" id="landing">
+    <div class="landing-card">
+      <div class="landing-ctl"><button id="landingLang" type="button">FR</button><button id="landingTheme" type="button" aria-label="Light / dark">☾</button></div>
+      <div class="oa-eyebrow"><i></i><span id="landingEyebrow">Onco Arcade · radiation oncology</span></div>
+      <h1 class="oa-title" id="landingTitle">Beamlet</h1>
+      <p class="landing-tag" id="landingTag">—</p>
+      <button class="primary landing-cta" id="landingStart" type="button">Start</button>
+      <div class="landing-row">
+        <button id="landingHow" type="button">How to play</button>
+        <a id="landingAll" href="../../index.html">All games</a>
+        <button id="landingAbout" type="button">About</button>
+      </div>
+      <div class="landing-how" id="landingHowBox" hidden>
+        <h4 id="howTitle">How to play</h4>
+        <ol><li id="how1"></li><li id="how2"></li><li id="how3"></li></ol>
+      </div>
+    </div>
+  </div>
+  <div class="app">
+    <header>
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <div class="oa-eyebrow"><i></i><span id="oaEyebrow">Onco Arcade · radiation oncology</span></div>
+          <h1 class="oa-title">Beamlet</h1>
+          <div class="tagline" id="tagline">A radiation physics puzzler: cover the target, spare what matters.</div>
+        </div>
+      </div>
+      <div class="topStats">
+        <div class="pill"><span id="levelLabel">Level</span> <strong id="levelNum">1</strong>/<strong id="levelTotal">8</strong></div>
+        <div class="pill"><span id="scoreLabel">Score</span> <strong id="scorePill">0</strong></div>
+        <div class="pill"><span id="bestLabel">Best</span> <strong id="bestPill">—</strong></div>
+        <div class="pill leaderMode" id="leaderMode"><span class="statusDot offline"></span><span id="leaderModeText">Local scores</span></div>
+        <input class="nameInput" id="playerName" maxlength="18" aria-label="Player name" placeholder="Planner" />
+        <button id="langToggle" class="miniBtn" type="button">FR</button>
+        <button id="doseToggle" class="miniBtn" type="button">Dose ON</button>
+        <a class="miniBtn" id="allGames" href="../../index.html">All games</a>
+        <button id="aboutBtn" class="miniBtn" type="button">About</button>
+        <button id="themeToggle" class="miniBtn" type="button" aria-label="Light / dark theme">☾</button>
+      </div>
+    </header>
+
+    <main class="main">
+      <section class="stageWrap" aria-label="Beamlet play field">
+        <canvas id="gameCanvas" width="900" height="900"></canvas>
+        <div class="hudOverlay">
+          <div class="stars" id="starHud" aria-label="Stars">☆☆☆</div>
+        </div>
+        <div class="toast" id="toast">Tap around the patient to rotate the selected beam.</div>
+        <div class="confetti" id="confetti"></div>
+      </section>
+
+      <aside class="side">
+        <div class="card levelInfoCard">
+          <div class="levelTitle">
+            <b id="levelName">Level</b>
+            <span id="levelHint">Hint</span>
+          </div>
+        </div>
+        <div class="card">
+          <h2 id="dvhTitle">Dose-volume histogram</h2>
+          <canvas id="dvhCanvas" class="dvhCanvas" width="640" height="360"></canvas>
+          <div class="legend" id="legend"></div>
+        </div>
+        <div class="card">
+          <h2 id="planEvalTitle">Plan evaluation</h2>
+          <div class="metrics" id="metrics"></div>
+        </div>
+        <div class="card">
+          <h2 id="leaderTitle">Leaderboard</h2>
+          <div class="leaderRows" id="leaderRows"></div>
+        </div>
+      </aside>
+    </main>
+
+    <section class="controlDock" aria-label="Beam controls">
+      <div class="toolbar">
+        <div class="selectWrap"><select id="levelSelect" aria-label="Select level"></select></div>
+        <button class="primary" id="addBeam">+ Photon</button>
+        <button class="primary" id="addArc">+ Arc</button>
+        <button class="primary" id="addProton">+ Proton</button>
+        <button class="danger" id="removeBeam">Remove</button>
+        <button id="resetLevel">Reset</button>
+        <button class="good" id="deliver">Deliver plan</button>
+      </div>
+      <div class="beamPanel">
+        <div class="help" id="selectedBeamLabel">Selected beam</div>
+        <div class="beamChips" id="beamChips"></div>
+      </div>
+      <div class="sliders">
+        <div class="sliderGroup" id="angleGroup">
+          <label id="angleLabel" for="angleSlider">Angle</label>
+          <input id="angleSlider" type="range" min="0" max="359" value="0" />
+          <output id="angleOut">0°</output>
+        </div>
+        <div class="sliderGroup" id="spanGroup">
+          <label id="spanLabel" for="spanSlider">Arc span</label>
+          <input id="spanSlider" type="range" min="20" max="220" value="70" />
+          <output id="spanOut">70°</output>
+        </div>
+        <div class="sliderGroup">
+          <label id="widthLabel" for="widthSlider">Width</label>
+          <input id="widthSlider" type="range" min="3" max="24" value="10" />
+          <output id="widthOut">10</output>
+        </div>
+        <div class="sliderGroup">
+          <label id="weightLabel" for="weightSlider">Weight</label>
+          <input id="weightSlider" type="range" min="10" max="180" value="80" />
+          <output id="weightOut">0.80</output>
+        </div>
+        <div class="sliderGroup" id="rangeGroup">
+          <label id="rangeLabel" for="rangeSlider">Range</label>
+          <input id="rangeSlider" type="range" min="18" max="82" value="50" />
+          <output id="rangeOut">50</output>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="modal" id="resultModal" role="dialog" aria-modal="true" aria-labelledby="resultTitle">
+    <div class="modalBox">
+      <h3 id="resultTitle">Plan delivered</h3>
+      <div class="stars" id="modalStars">☆☆☆</div>
+      <p id="resultText">Dose calculated.</p>
+      <div class="modalGrid">
+        <div><b id="modalCoverage">—</b><span>PTV D95</span></div>
+        <div><b id="modalOar">—</b><span id="worstOarLabel">Worst OAR</span></div>
+        <div><b id="modalScore">—</b><span id="modalScoreLabel">Score</span></div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="good" id="nextLevel">Next level</button>
+        <button id="retryLevel">Tune plan</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="aboutModal" role="dialog" aria-modal="true" aria-labelledby="aboutTitle">
+    <div class="modalBox">
+      <div class="oa-eyebrow"><i></i><span id="aboutEyebrow">Onco Arcade · radiation oncology</span></div>
+      <h3 id="aboutTitle" class="oa-title">About</h3>
+      <div class="aboutCard">
+        <p id="aboutLede">—</p>
+        <div class="aboutSig" style="margin-top:14px">
+          <span class="mk" aria-hidden="true"></span>
+          <div><b>Pr Jean-Emmanuel Bibault</b><span id="aboutRole">—</span></div>
+        </div>
+        <div class="aboutTags"><span class="pill" id="aboutTag1">Education</span><span class="pill" id="aboutTag2">DVH</span><span class="pill" id="aboutTag3">OVH leaderboard</span></div>
+      </div>
+      <div class="aboutCard">
+        <h4 id="aboutDiscTitle">Important note</h4>
+        <p id="aboutDisc">—</p>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px">
+        <button class="primary" id="aboutClose">Close</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  "use strict";
+
+  const TAU = Math.PI * 2;
+  const RX = 100;
+  const patient = { cx: .5, cy: .5, r: .43 };
+  const palette = {
+    target: '#75ffae',
+    doseA: '#ffd36d',
+    doseB: '#ff6d8a',
+    doseC: '#b891ff',
+    photon: '#64e7ff',
+    arc: '#b891ff',
+    proton: '#59ffb7',
+
+    oars: ['#78a7ff','#ff9cc0','#ffd36d','#acffef','#c8a7ff','#ffbd8f']
+  };
+
+  const I18N = {
+    en: {
+      tagline:'A radiation physics puzzler: cover the target, spare what matters.',
+      level:'Level', score:'Score', best:'Best', localScores:'Local scores', serverScores:'Server leaderboard', connecting:'Leaderboard: checking…', offline:'Local scores',
+      dvh:'Dose-volume histogram', planEval:'Plan evaluation', leaderboard:'Leaderboard', selectedBeam:'Selected beam',
+      addPhoton:'+ Photon', addArc:'+ Arc', addProton:'+ Proton', remove:'Remove', reset:'Reset', deliver:'Deliver plan', next:'Next level', retry:'Tune plan',
+      angle:'Angle', span:'Arc span', width:'Width', weight:'Weight', range:'Range', worstOar:'Worst OAR',
+      doseOn:'Dose ON', doseOff:'Dose OFF', playerPlaceholder:'Planner',
+      noPlans:'No plans yet. Deliver a plan to enter the leaderboard.',
+      rotate:'Tap or drag around the patient to rotate the selected beam. Press Deliver to score.',
+      keepOne:'Keep at least one beamlet.', arcLocked:'Arcs unlock in level 5.', protonLocked:'Protons unlock in level 6.',
+      protonAdded:'Proton added. Tune range to place the Bragg peak.', arcAdded:'Arc added. Control sweep with arc span.', photonAdded:'Photon beam added.',
+      deliverHint:'Deliver the plan to see DVH curves', doseAxis:'Dose', volumeAxis:'Volume',
+      targetUnder:'The target is undercovered. Add weight, widen the field, or aim another beamlet through the PTV.',
+      oarOver:'exceeds its constraint. Rotate away, narrow the field, reduce arc span, or use a proton range stop.',
+      hot:'Hotspot too high. Reduce overlapping beam weight or spread the dose with another angle.',
+      ci:'The plan passes, but the prescription cloud is too generous. Tighten width or reduce low-value arcs.',
+      gorgeous:'Beautifully conformal. The target is covered and the OARs are comfortably spared.',
+      good:'Good plan. A little more conformity or OAR clearance may unlock 3 stars.',
+      accepted:'Acceptable plan. Now try to make it elegant.',
+      title3:'Clinically gorgeous', title2:'Solid plan', title1:'Plan accepted', title0:'Plan rejected',
+      ok:'OK', fail:'Fail', tune:'Tune', ptv:'PTV', ptvD95:'PTV D95', ptvV95:'PTV V95', beamWord:'beams',
+      allGames:'All games', about:'About', aboutEyebrow:'Onco Arcade · radiation oncology', aboutTitle:'About', aboutClose:'Close',
+      aboutLede:'Beamlet is a mini-game from the Onco Arcade collection: place beams, arcs and protons to cover the target and spare the organs at risk — the DVH scores your plan. Imagined, designed and built by:',
+      aboutRole:'Professor of radiation oncology · creator of Onco Arcade',
+      aboutDiscTitle:'Important note',
+      aboutDisc:'Educational, experimental game. It is not a medical device: it does not replace clinical training and must never be used to guide real patient care.',
+      aboutTag1:'Education', aboutTag2:'DVH', aboutTag3:'OVH leaderboard',
+      landingTag:'A radiation-physics puzzle: place beams, arcs and protons to cover the target and spare the organs at risk. The DVH scores your plan.',
+      landingStart:'Start planning', landingHow:'How to play', howTitle:'How to play',
+      how1:'Add beams (Photon, Arc, Proton), then rotate them around the patient by tapping or dragging.',
+      how2:'Tune angle, width and weight to cover the target (PTV) without overdosing the organs at risk.',
+      how3:'Press “Deliver plan”: the dose-volume histogram scores your plan and awards stars.'
+    },
+    fr: {
+      tagline:'Un puzzle de physique en radiothérapie : couvrir la cible, épargner ce qui compte.',
+      level:'Niveau', score:'Score', best:'Meilleur', localScores:'Scores locaux', serverScores:'Classement serveur', connecting:'Classement : vérification…', offline:'Scores locaux',
+      dvh:'Histogramme dose-volume', planEval:'Évaluation du plan', leaderboard:'Classement', selectedBeam:'Faisceau sélectionné',
+      addPhoton:'+ Photon', addArc:'+ Arc', addProton:'+ Proton', remove:'Retirer', reset:'Réinitialiser', deliver:'Irradier', next:'Niveau suivant', retry:'Ajuster le plan',
+      angle:'Angle', span:'Ouverture arc', width:'Largeur', weight:'Poids', range:'Portée', worstOar:'OAR limitant',
+      doseOn:'Dose ON', doseOff:'Dose OFF', playerPlaceholder:'Planificateur',
+      noPlans:'Aucun plan pour l’instant. Irradie un plan pour entrer dans le classement.',
+      rotate:'Tape ou glisse autour du patient pour faire tourner le faisceau sélectionné. Appuie sur Irradier pour scorer.',
+      keepOne:'Garde au moins un beamlet.', arcLocked:'Les arcs se débloquent au niveau 5.', protonLocked:'Les protons se débloquent au niveau 6.',
+      protonAdded:'Proton ajouté. Ajuste la portée pour placer le pic de Bragg.', arcAdded:'Arc ajouté. Contrôle le balayage avec l’ouverture de l’arc.', photonAdded:'Faisceau photon ajouté.',
+      deliverHint:'Irradie le plan pour voir les courbes DVH', doseAxis:'Dose', volumeAxis:'Volume',
+      targetUnder:'La cible est sous-dosée. Augmente le poids, élargis le champ ou ajoute un beamlet dans le PTV.',
+      oarOver:'dépasse sa contrainte. Change l’angle, réduis la largeur, limite l’arc ou arrête le proton avant l’OAR.',
+      hot:'Point chaud trop élevé. Réduis le poids des faisceaux qui se chevauchent ou répartis la dose.',
+      ci:'Le plan passe, mais le nuage de prescription est trop large. Resserre les champs ou réduis les arcs à faible valeur.',
+      gorgeous:'Très beau plan conformé. La cible est couverte et les OAR sont bien épargnés.',
+      good:'Bon plan. Un peu plus de conformité ou d’épargne OAR peut débloquer 3 étoiles.',
+      accepted:'Plan acceptable. Maintenant, rends-le élégant.',
+      title3:'Plan magnifique', title2:'Plan solide', title1:'Plan accepté', title0:'Plan rejeté',
+      ok:'OK', fail:'Échec', tune:'À régler', ptv:'PTV', ptvD95:'PTV D95', ptvV95:'PTV V95', beamWord:'faisceaux',
+      allGames:'Tous les jeux', about:'À propos', aboutEyebrow:'Onco Arcade · radiothérapie', aboutTitle:'À propos', aboutClose:'Fermer',
+      aboutLede:'Beamlet est un mini-jeu de la collection Onco Arcade : place faisceaux, arcs et protons pour couvrir la cible et épargner les organes à risque — le DVH note ton plan. Imaginé, conçu et développé par :',
+      aboutRole:'Professeur de radiothérapie · créateur d’Onco Arcade',
+      aboutDiscTitle:'Mention importante',
+      aboutDisc:'Jeu pédagogique et expérimental. Ce n’est pas un dispositif médical : il ne remplace pas une formation clinique et ne doit jamais servir à orienter une prise en charge réelle.',
+      aboutTag1:'Pédagogie', aboutTag2:'DVH', aboutTag3:'Classement OVH',
+      landingTag:'Un puzzle de physique des faisceaux : place faisceaux, arcs et protons pour couvrir la cible et épargner les organes à risque. Le DVH note ton plan.',
+      landingStart:'Commencer', landingHow:'Comment jouer', howTitle:'Comment jouer',
+      how1:'Ajoute des faisceaux (Photon, Arc, Proton), puis fais-les tourner autour du patient (tape ou glisse).',
+      how2:'Règle l’angle, la largeur et le poids pour couvrir la cible (PTV) sans surdoser les organes à risque.',
+      how3:'Appuie sur « Irradier » : l’histogramme dose-volume note ton plan et attribue des étoiles.'
+    }
+  };
+  const _urlLang=(new URLSearchParams(location.search).get('lang')||'').toLowerCase();
+  let lang = (_urlLang==='fr'||_urlLang==='en') ? _urlLang
+           : (safeStorageGet('beamlet-lang-v2') || ((navigator.language||'en').toLowerCase().startsWith('fr') ? 'fr' : 'en'));
+  if(_urlLang==='fr'||_urlLang==='en') safeStorageSet('beamlet-lang-v2', lang);
+  let showDose = safeStorageGet('beamlet-dose-v2') !== 'off';
+  let backendOnline = false;
+  let backendChecked = false;
+  const API_ROOT = '../../api';   // API Onco Arcade (OVH — PHP + MySQL) ; "" = 100% local
+  const GAME_SLUG = 'beamlet';
+
+  function tr(key){return (I18N[lang] && I18N[lang][key]) || I18N.en[key] || key;}
+  function loc(value){return typeof value === 'string' ? value : (value?.[lang] || value?.en || '');}
+  function safeStorageGet(key){try{return localStorage.getItem(key);}catch(e){return null;}}
+  function safeStorageSet(key,val){try{localStorage.setItem(key,val);}catch(e){}}
+
+
+  const levels = [
+    {
+      id:'open-field', site:'Basics', difficulty:1,
+      name:{en:'Warm-up: open field',fr:'Échauffement : champ ouvert'},
+      hint:{en:'Cover the glowing target. A broad single photon beam can pass, but two neat beams score better.',fr:'Couvre la cible lumineuse. Un photon large peut passer, mais deux faisceaux propres scorent mieux.'},
+      unlock:{photon:true,arc:false,proton:false},
+      target:[{cx:.50,cy:.50,rx:.095,ry:.075,rot:0}],
+      oars:[{name:'Skin ring', cx:.50,cy:.14,rx:.13,ry:.045,rot:0, max:72}],
+      start:[beam('photon', 0, .22, 1.40)]
+    },
+    {
+      id:'cord-avoidance', site:'Spine', difficulty:2,
+      name:{en:'Cord avoidance',fr:'Épargne médullaire'},
+      hint:{en:'The spinal cord dislikes direct beams. Try oblique or lateral entries.',fr:'La moelle n’aime pas les faisceaux directs. Essaie des entrées obliques ou latérales.'},
+      unlock:{photon:true,arc:false,proton:false},
+      target:[{cx:.49,cy:.56,rx:.12,ry:.08,rot:-8}],
+      oars:[{name:'Cord', cx:.50,cy:.34,rx:.038,ry:.16,rot:0, max:42},{name:'Lung',cx:.28,cy:.58,rx:.07,ry:.11,rot:9,max:58}],
+      start:[beam('photon', 25, .10, .75),beam('photon', 155, .10, .75)]
+    },
+    {
+      id:'parotid-sparing', site:'Head & neck', difficulty:2,
+      name:{en:'Parotid sparing',fr:'Épargne parotidienne'},
+      hint:{en:'Do not fry both glands. Narrower fields and asymmetric weights help.',fr:'Ne crame pas les deux glandes. Des champs plus fins et des poids asymétriques aident.'},
+      unlock:{photon:true,arc:false,proton:false},
+      target:[{cx:.50,cy:.47,rx:.10,ry:.12,rot:0}],
+      oars:[{name:'Left parotid',cx:.31,cy:.45,rx:.075,ry:.10,rot:10,mean:32,max:64},{name:'Right parotid',cx:.69,cy:.45,rx:.075,ry:.10,rot:-10,mean:32,max:64},{name:'Cord',cx:.50,cy:.73,rx:.04,ry:.10,rot:0,max:45}],
+      start:[beam('photon', 90, .095, .7),beam('photon', 270, .095, .7)]
+    },
+    {
+      id:'concavity', site:'Brain', difficulty:3,
+      name:{en:'Concavity',fr:'Concavité'},
+      hint:{en:'The OAR sits inside the bite. Use several slim beamlets to wrap dose around it.',fr:'L’OAR est dans la morsure. Utilise plusieurs beamlets fins pour enrouler la dose autour.'},
+      unlock:{photon:true,arc:false,proton:false},
+      target:[{cx:.43,cy:.50,rx:.10,ry:.11,rot:0},{cx:.57,cy:.50,rx:.10,ry:.11,rot:0},{cx:.50,cy:.59,rx:.12,ry:.07,rot:0}],
+      oars:[{name:'Optic chiasm',cx:.50,cy:.49,rx:.052,ry:.052,rot:0,max:38},{name:'Brainstem',cx:.50,cy:.29,rx:.075,ry:.08,rot:0,max:54}],
+      start:[beam('photon', 40, .075, .55),beam('photon', 140, .075, .55),beam('photon', 240, .075, .55)]
+    },
+    {
+      id:'first-arc', site:'Abdomen', difficulty:3,
+      name:{en:'First arc',fr:'Premier arc'},
+      hint:{en:'Arcs are powerful, but they spread low dose. Keep the sweep away from sensitive structures.',fr:'Les arcs sont puissants, mais diffusent de la faible dose. Garde le balayage loin des structures sensibles.'},
+      unlock:{photon:true,arc:true,proton:false},
+      target:[{cx:.55,cy:.56,rx:.10,ry:.10,rot:0}],
+      oars:[{name:'Kidney',cx:.32,cy:.49,rx:.095,ry:.16,rot:-10,mean:24,max:46},{name:'Bowel loop',cx:.59,cy:.35,rx:.10,ry:.055,rot:20,max:50}],
+      start:[arc(200, 75, .075, .75),beam('photon', 35, .08, .55)]
+    },
+    {
+      id:'proton-range-school', site:'Base of skull', difficulty:3,
+      name:{en:'Proton range school',fr:'École de portée proton'},
+      hint:{en:'Now land the Bragg peak inside the target. Too shallow misses; too deep hits the cord.',fr:'Place le pic de Bragg dans la cible. Trop court : tu rates. Trop long : tu touches la moelle.'},
+      unlock:{photon:true,arc:true,proton:true},
+      target:[{cx:.50,cy:.34,rx:.085,ry:.075,rot:0}],
+      oars:[{name:'Cord',cx:.50,cy:.55,rx:.045,ry:.19,rot:0,max:33},{name:'Mandible',cx:.50,cy:.76,rx:.17,ry:.05,rot:0,max:52}],
+      start:[proton(270, .075, .85, 36),beam('photon', 95, .075, .38)]
+    },
+    {
+      id:'bragg-pearl', site:'Ocular', difficulty:4,
+      name:{en:'Bragg pearl',fr:'Perle de Bragg'},
+      hint:{en:'A tiny ocular target. Protons shine, but range uncertainty punishes greed.',fr:'Petite cible oculaire. Les protons brillent, mais l’incertitude de portée punit la gourmandise.'},
+      unlock:{photon:true,arc:false,proton:true},
+      target:[{cx:.66,cy:.42,rx:.055,ry:.047,rot:-12}],
+      oars:[{name:'Lens',cx:.71,cy:.38,rx:.032,ry:.026,rot:0,max:18},{name:'Optic nerve',cx:.58,cy:.47,rx:.035,ry:.115,rot:-38,max:38},{name:'Brain',cx:.46,cy:.50,rx:.14,ry:.18,rot:0,mean:18,max:46}],
+      start:[proton(165, .052, .95, 36),proton(220, .052, .52, 42)]
+    },
+    {
+      id:'left-breast-heart', site:'Breast', difficulty:3,
+      name:{en:'Left breast: heart whisper',fr:'Sein gauche : murmure cardiaque'},
+      hint:{en:'Tangents only. Cover the crescent while keeping the heart and lung quiet.',fr:'Tangentielles seulement. Couvre le croissant en gardant cœur et poumon silencieux.'},
+      unlock:{photon:true,arc:false,proton:false},
+      target:[{cx:.39,cy:.57,rx:.075,ry:.20,rot:-16},{cx:.44,cy:.52,rx:.05,ry:.16,rot:-18}],
+      oars:[{name:'Heart',cx:.54,cy:.61,rx:.09,ry:.10,rot:8,mean:12,max:36},{name:'Lung',cx:.43,cy:.48,rx:.105,ry:.16,rot:-12,mean:18,max:48}],
+      start:[beam('photon', 330, .07, .68),beam('photon', 145, .07, .65)]
+    },
+    {
+      id:'prostate-rectum', site:'Pelvis', difficulty:4,
+      name:{en:'Prostate: rectum wall',fr:'Prostate : paroi rectale'},
+      hint:{en:'High coverage, tight posterior falloff. Arcs can help, but the rectum remembers.',fr:'Forte couverture, chute postérieure serrée. Les arcs aident, mais le rectum se souvient.'},
+      unlock:{photon:true,arc:true,proton:false},
+      target:[{cx:.50,cy:.57,rx:.105,ry:.085,rot:0}],
+      oars:[{name:'Rectum',cx:.50,cy:.70,rx:.072,ry:.13,rot:0,mean:42,max:72},{name:'Bladder',cx:.50,cy:.40,rx:.12,ry:.095,rot:0,mean:45,max:74},{name:'Left femoral head',cx:.31,cy:.64,rx:.07,ry:.08,rot:0,max:46},{name:'Right femoral head',cx:.69,cy:.64,rx:.07,ry:.08,rot:0,max:46}],
+      start:[arc(210, 85, .06, .55),arc(330, 70, .06, .50),beam('photon', 90, .07, .35)]
+    },
+    {
+      id:'pancreas-duodenum', site:'Pancreas', difficulty:4,
+      name:{en:'Pancreas: duodenum trap',fr:'Pancréas : piège duodénal'},
+      hint:{en:'The duodenum hugs the target. Use obliques and avoid broad anterior paths.',fr:'Le duodénum colle à la cible. Utilise des obliques et évite les grands faisceaux antérieurs.'},
+      unlock:{photon:true,arc:true,proton:false},
+      target:[{cx:.53,cy:.50,rx:.10,ry:.075,rot:-8}],
+      oars:[{name:'Duodenum',cx:.60,cy:.47,rx:.065,ry:.12,rot:18,max:38,mean:22},{name:'Stomach',cx:.42,cy:.39,rx:.13,ry:.07,rot:-8,max:42,mean:25},{name:'Kidney',cx:.28,cy:.56,rx:.075,ry:.15,rot:-4,mean:18,max:40},{name:'Liver',cx:.66,cy:.36,rx:.11,ry:.11,rot:0,mean:26,max:48}],
+      start:[beam('photon', 35, .06, .55),beam('photon', 145, .055, .52),arc(250, 50, .05, .35)]
+    },
+    {
+      id:'lung-sbrt-rib', site:'Lung SBRT', difficulty:4,
+      name:{en:'Lung SBRT: rib line',fr:'SBRT poumon : ligne costale'},
+      hint:{en:'A small peripheral target with chest wall nearby. Fewer beams earn complexity bonus.',fr:'Petite cible périphérique, paroi thoracique proche. Moins de faisceaux = bonus de complexité.'},
+      unlock:{photon:true,arc:true,proton:false},
+      target:[{cx:.67,cy:.38,rx:.055,ry:.052,rot:0}],
+      oars:[{name:'Chest wall',cx:.77,cy:.36,rx:.045,ry:.18,rot:-5,max:44,mean:20},{name:'Central airway',cx:.50,cy:.50,rx:.05,ry:.08,rot:0,max:40},{name:'Lung',cx:.57,cy:.47,rx:.22,ry:.25,rot:8,mean:18,max:58}],
+      start:[beam('photon', 205, .045, .75),beam('photon', 250, .045, .55),arc(165, 45, .04, .35)]
+    },
+    {
+      id:'reirradiation-island', site:'Re-irradiation', difficulty:5,
+      name:{en:'Re-irradiation island',fr:'Îlot de ré-irradiation'},
+      hint:{en:'The previous-dose island is unforgiving. Use narrow paths and do not chase conformity with wide arcs.',fr:'L’îlot de dose antérieure ne pardonne pas. Faisceaux fins, pas d’arcs larges pour chasser la conformité.'},
+      unlock:{photon:true,arc:true,proton:true},
+      target:[{cx:.43,cy:.55,rx:.075,ry:.095,rot:18},{cx:.51,cy:.52,rx:.055,ry:.055,rot:0}],
+      oars:[{name:'Previous dose',cx:.52,cy:.56,rx:.08,ry:.10,rot:12,max:30,mean:18},{name:'Cord',cx:.50,cy:.31,rx:.035,ry:.13,rot:0,max:32},{name:'Bowel',cx:.38,cy:.69,rx:.12,ry:.055,rot:-8,max:38}],
+      start:[proton(25, .045, .72, 44),beam('photon', 145, .05, .45),arc(245, 42, .045, .28)]
+    },
+    {
+      id:'pediatric-cranio', site:'Pediatric', difficulty:5,
+      name:{en:'Pediatric cranio: integral dose',fr:'Crânien pédiatrique : dose intégrale'},
+      hint:{en:'The target is forgiving; integral dose is not. Protons reduce bath, but range must be exact.',fr:'La cible pardonne ; la dose intégrale non. Les protons réduisent le bain, mais la portée doit être exacte.'},
+      unlock:{photon:true,arc:true,proton:true},
+      target:[{cx:.51,cy:.42,rx:.095,ry:.085,rot:14}],
+      oars:[{name:'Hippocampus',cx:.40,cy:.43,rx:.055,ry:.035,rot:-20,mean:16,max:32},{name:'Cochlea',cx:.67,cy:.51,rx:.026,ry:.026,rot:0,max:24},{name:'Brainstem',cx:.52,cy:.66,rx:.065,ry:.10,rot:0,max:42},{name:'Brain',cx:.50,cy:.50,rx:.26,ry:.30,rot:0,mean:20,max:54}],
+      start:[proton(250, .052, .68, 37),proton(315, .052, .55, 44),beam('photon', 80, .05, .28)]
+    },
+    {
+      id:'head-neck-bilateral', site:'Head & neck', difficulty:5,
+      name:{en:'Bilateral neck: xerostomia boss',fr:'Cou bilatéral : boss xérostomie'},
+      hint:{en:'Coverage is easy; salivary sparing is the puzzle. Avoid symmetric brute force.',fr:'La couverture est facile ; l’épargne salivaire est le puzzle. Évite la force brute symétrique.'},
+      unlock:{photon:true,arc:true,proton:true},
+      target:[{cx:.50,cy:.43,rx:.075,ry:.10,rot:0},{cx:.42,cy:.57,rx:.055,ry:.14,rot:10},{cx:.58,cy:.57,rx:.055,ry:.14,rot:-10}],
+      oars:[{name:'Left parotid',cx:.31,cy:.47,rx:.07,ry:.10,rot:8,mean:24,max:50},{name:'Right parotid',cx:.69,cy:.47,rx:.07,ry:.10,rot:-8,mean:24,max:50},{name:'Cord',cx:.50,cy:.73,rx:.035,ry:.12,rot:0,max:39},{name:'Larynx',cx:.50,cy:.60,rx:.06,ry:.055,rot:0,mean:32,max:50}],
+      start:[arc(225, 70, .05, .45),arc(315, 70, .05, .45),proton(90, .05, .45, 55)]
+    },
+    {
+      id:'liver-dome', site:'Liver', difficulty:5,
+      name:{en:'Liver dome: stomach edge',fr:'Dôme hépatique : bord gastrique'},
+      hint:{en:'A dome lesion under respiratory blur. Avoid the stomach and keep mean liver low.',fr:'Lésion du dôme avec flou respiratoire. Évite l’estomac et garde basse la dose moyenne hépatique.'},
+      unlock:{photon:true,arc:true,proton:true},
+      target:[{cx:.61,cy:.37,rx:.07,ry:.055,rot:8},{cx:.61,cy:.40,rx:.08,ry:.04,rot:8}],
+      oars:[{name:'Stomach',cx:.47,cy:.38,rx:.10,ry:.07,rot:-10,max:34,mean:18},{name:'Liver',cx:.58,cy:.48,rx:.24,ry:.24,rot:0,mean:22,max:55},{name:'Cord',cx:.50,cy:.77,rx:.035,ry:.10,rot:0,max:28}],
+      start:[beam('photon', 210, .045, .48),beam('photon', 300, .045, .55),proton(165, .045, .60, 39)]
+    },
+    {
+      id:'moving-target', site:'Motion', difficulty:5,
+      name:{en:'Moving target: blurred margin',fr:'Cible mobile : marge floue'},
+      hint:{en:'The ITV is elongated. Wide beams cover motion but punish bowel and kidney.',fr:'L’ITV est allongé. Les champs larges couvrent le mouvement, mais punissent intestin et rein.'},
+      unlock:{photon:true,arc:true,proton:true},
+      target:[{cx:.48,cy:.52,rx:.12,ry:.06,rot:0},{cx:.55,cy:.52,rx:.09,ry:.055,rot:0}],
+      oars:[{name:'Bowel',cx:.51,cy:.64,rx:.13,ry:.055,rot:0,max:36,mean:20},{name:'Kidney',cx:.32,cy:.53,rx:.075,ry:.16,rot:0,mean:18,max:38},{name:'Cord',cx:.50,cy:.28,rx:.035,ry:.11,rot:0,max:32}],
+      start:[arc(205, 55, .055, .42),beam('photon', 35, .06, .45),proton(330, .05, .62, 50)]
+    },
+    {
+      id:'adaptive-finale', site:'Finale', difficulty:6,
+      name:{en:'Adaptive finale',fr:'Finale adaptative'},
+      hint:{en:'Complex anatomy, previous dose, photons and protons. Elegant plans win the leaderboard.',fr:'Anatomie complexe, dose antérieure, photons et protons. Les plans élégants gagnent le classement.'},
+      unlock:{photon:true,arc:true,proton:true},
+      target:[{cx:.47,cy:.52,rx:.105,ry:.078,rot:22},{cx:.56,cy:.58,rx:.07,ry:.06,rot:-20}],
+      oars:[{name:'Previous dose',cx:.60,cy:.45,rx:.09,ry:.11,rot:25,max:35,mean:22},{name:'Bowel',cx:.40,cy:.66,rx:.12,ry:.055,rot:-18,max:48},{name:'Cord',cx:.50,cy:.29,rx:.04,ry:.12,rot:0,max:40},{name:'Kidney',cx:.27,cy:.46,rx:.08,ry:.14,rot:-10,mean:23,max:45}],
+      start:[arc(205, 65, .062, .46),proton(30, .06, .64, 49),beam('photon', 320, .07, .42)]
+    }
+  ];
+
+  function beam(type, angle, width, weight){return {id:uid(), type, angle, width, weight, span:70, range:50};}
+  function arc(angle, span, width, weight){return {id:uid(), type:'arc', angle, width, weight, span, range:50};}
+  function proton(angle, width, weight, range){return {id:uid(), type:'proton', angle, width, weight, span:70, range};}
+  function uid(){return Math.random().toString(36).slice(2,9);}
+
+  const $ = (id)=>document.getElementById(id);
+  const canvas = $('gameCanvas');
+  const ctx = canvas.getContext('2d', { alpha:false });
+  const dvhCanvas = $('dvhCanvas');
+  const dvh = dvhCanvas.getContext('2d');
+
+  let levelIndex = 0;
+  let beams = [];
+  let selectedId = null;
+  let doseGrid = null;
+  let metrics = null;
+  let delivered = false;
+  let animationT = 0;
+  let toastTimer = 0;
+
+  const state = {
+    dragging:false,
+    audioStarted:false
+  };
+
+  const storageKey = 'beamlet-leaderboard-v2';
+  let leaderboard = loadLeaderboard();
+  let playerName = safeStorageGet('beamlet-player-v2') || '';
+  let lastFetchToken = 0;
+
+  function loadLeaderboard(){
+    try{return JSON.parse(safeStorageGet(storageKey)) || {};}
+    catch(e){return {};}
+  }
+  function saveLeaderboard(){
+    safeStorageSet(storageKey, JSON.stringify(leaderboard));
+  }
+
+  function applyTheme(mode){
+    document.documentElement.dataset.theme = mode;
+    try{ localStorage.setItem('oa-theme', mode); }catch(e){}
+    const b=$('themeToggle'); if(b) b.textContent = mode==='light' ? '☀' : '☾';
+    const lb=$('landingTheme'); if(lb) lb.textContent = mode==='light' ? '☀' : '☾';
+  }
+  function init(){
+    applyTheme((function(){try{return localStorage.getItem('oa-theme')}catch(e){return null}})() || 'dark');
+    $('levelTotal').textContent = levels.length;
+    $('playerName').value = playerName;
+    bindUI();
+    rebuildLevelSelect();
+    updateLanguage();
+    loadLevel(0);
+    checkBackend();
+    requestAnimationFrame(loop);
+  }
+
+
+  function rebuildLevelSelect(){
+    const sel = $('levelSelect');
+    const current = sel.value || String(levelIndex || 0);
+    sel.innerHTML = '';
+    levels.forEach((lv,i)=>{
+      const opt=document.createElement('option');
+      opt.value=i; opt.textContent=`${i+1}. ${loc(lv.name)} · ${lv.site}`;
+      sel.appendChild(opt);
+    });
+    sel.value = current;
+  }
+
+  function updateLanguage(){
+    document.documentElement.lang = lang;
+    $('tagline').textContent = tr('tagline');
+    $('levelLabel').textContent = tr('level'); $('scoreLabel').textContent = tr('score'); $('bestLabel').textContent = tr('best');
+    $('dvhTitle').textContent = tr('dvh'); $('planEvalTitle').textContent = tr('planEval'); $('leaderTitle').textContent = tr('leaderboard');
+    $('selectedBeamLabel').textContent = tr('selectedBeam');
+    $('addBeam').textContent = tr('addPhoton'); $('addArc').textContent = tr('addArc'); $('addProton').textContent = tr('addProton');
+    $('removeBeam').textContent = tr('remove'); $('resetLevel').textContent = tr('reset'); $('deliver').textContent = tr('deliver');
+    $('nextLevel').textContent = tr('next'); $('retryLevel').textContent = tr('retry');
+    $('angleLabel').textContent = tr('angle'); $('spanLabel').textContent = tr('span'); $('widthLabel').textContent = tr('width'); $('weightLabel').textContent = tr('weight'); $('rangeLabel').textContent = tr('range');
+    $('worstOarLabel').textContent = tr('worstOar'); $('modalScoreLabel').textContent = tr('score');
+    $('playerName').placeholder = tr('playerPlaceholder');
+    $('oaEyebrow').textContent = tr('aboutEyebrow'); $('aboutEyebrow').textContent = tr('aboutEyebrow');
+    $('allGames').textContent = tr('allGames'); $('aboutBtn').textContent = tr('about');
+    $('aboutTitle').textContent = tr('aboutTitle'); $('aboutClose').textContent = tr('aboutClose');
+    $('aboutLede').textContent = tr('aboutLede'); $('aboutRole').textContent = tr('aboutRole');
+    $('aboutDiscTitle').textContent = tr('aboutDiscTitle'); $('aboutDisc').textContent = tr('aboutDisc');
+    $('aboutTag1').textContent = tr('aboutTag1'); $('aboutTag2').textContent = tr('aboutTag2'); $('aboutTag3').textContent = tr('aboutTag3');
+    $('landingEyebrow').textContent = tr('aboutEyebrow'); $('landingTag').textContent = tr('landingTag');
+    $('landingStart').textContent = tr('landingStart'); $('landingHow').textContent = tr('landingHow');
+    $('howTitle').textContent = tr('howTitle'); $('how1').textContent = tr('how1'); $('how2').textContent = tr('how2'); $('how3').textContent = tr('how3');
+    $('landingAll').textContent = tr('allGames'); $('landingAbout').textContent = tr('about');
+    $('landingLang').textContent = lang === 'en' ? 'FR' : 'EN';
+    $('langToggle').textContent = lang === 'en' ? 'FR' : 'EN';
+    $('doseToggle').textContent = showDose ? tr('doseOn') : tr('doseOff');
+    updateBackendPill();
+    rebuildLevelSelect();
+    const lv = levels[levelIndex];
+    if(lv){$('levelName').textContent = loc(lv.name); $('levelHint').textContent = loc(lv.hint);}
+    updateBeamChips(); updatePanels(!metrics); renderDvh();
+  }
+
+  function updateBackendPill(){
+    const dot = $('leaderMode').querySelector('.statusDot');
+    dot.classList.toggle('online', backendOnline); dot.classList.toggle('offline', !backendOnline);
+    $('leaderModeText').textContent = backendOnline ? tr('serverScores') : (backendChecked ? tr('offline') : tr('connecting'));
+  }
+
+  function bindUI(){
+    $('levelSelect').addEventListener('change', e=>loadLevel(+e.target.value));
+    $('addBeam').addEventListener('click', ()=>addBeam('photon'));
+    $('addArc').addEventListener('click', ()=>addBeam('arc'));
+    $('addProton').addEventListener('click', ()=>addBeam('proton'));
+    $('removeBeam').addEventListener('click', removeSelected);
+    $('resetLevel').addEventListener('click', ()=>loadLevel(levelIndex));
+    $('deliver').addEventListener('click', deliverPlan);
+    $('langToggle').addEventListener('click', ()=>{lang = lang==='en' ? 'fr' : 'en'; safeStorageSet('beamlet-lang-v2', lang); updateLanguage(); showToast(tr('rotate'));});
+    $('themeToggle').addEventListener('click', ()=>{ applyTheme(document.documentElement.dataset.theme==='light' ? 'dark' : 'light'); });
+    $('landingStart').addEventListener('click', ()=>{ $('landing').classList.add('hidden'); });
+    $('landingHow').addEventListener('click', ()=>{ const b=$('landingHowBox'); b.hidden=!b.hidden; });
+    $('landingAbout').addEventListener('click', ()=>{ $('landing').classList.add('hidden'); $('aboutModal').classList.add('show'); });
+    $('landingLang').addEventListener('click', ()=>{ lang = lang==='en' ? 'fr' : 'en'; safeStorageSet('beamlet-lang-v2', lang); updateLanguage(); });
+    $('landingTheme').addEventListener('click', ()=>{ applyTheme(document.documentElement.dataset.theme==='light' ? 'dark' : 'light'); });
+    $('doseToggle').addEventListener('click', ()=>{showDose = !showDose; safeStorageSet('beamlet-dose-v2', showDose ? 'on' : 'off'); $('doseToggle').textContent = showDose ? tr('doseOn') : tr('doseOff');});
+    $('playerName').addEventListener('input', e=>{playerName = e.target.value.trim(); safeStorageSet('beamlet-player-v2', playerName);});
+    $('nextLevel').addEventListener('click', ()=>{hideModal(); loadLevel(Math.min(levelIndex+1, levels.length-1));});
+    $('retryLevel').addEventListener('click', hideModal);
+    $('aboutBtn').addEventListener('click', ()=>$('aboutModal').classList.add('show'));
+    $('aboutClose').addEventListener('click', ()=>$('aboutModal').classList.remove('show'));
+    $('aboutModal').addEventListener('click', e=>{ if(e.target===$('aboutModal')) $('aboutModal').classList.remove('show'); });
+    const sliders = ['angle','span','width','weight','range'];
+    sliders.forEach(name=>$(name+'Slider').addEventListener('input', updateSelectedFromSliders));
+    canvas.addEventListener('pointerdown', pointerDown);
+    canvas.addEventListener('pointermove', pointerMove);
+    window.addEventListener('pointerup', ()=>state.dragging=false);
+    window.addEventListener('resize', resizeDvh);
+    resizeDvh();
+  }
+
+  function loadLevel(i){
+    levelIndex = i;
+    const lv = levels[i];
+    beams = lv.start.map(b=>({...b,id:uid()}));
+    selectedId = beams[0]?.id || null;
+    doseGrid = null; metrics = null; delivered=false;
+    $('levelSelect').value = i;
+    $('levelNum').textContent = i+1;
+    $('levelName').textContent = loc(lv.name);
+    $('levelHint').textContent = loc(lv.hint);
+    $('scorePill').textContent = '0';
+    $('starHud').textContent = '☆☆☆';
+    const best = getBest(i);
+    $('bestPill').textContent = best ? best.score : '—';
+    updateUnlockButtons();
+    updateBeamChips();
+    syncSliders();
+    updatePanels(true);
+    fetchLeaderboard(i);
+    showToast(tr('rotate'));
+  }
+
+  function updateUnlockButtons(){
+    const unlock = levels[levelIndex].unlock;
+    setLocked($('addArc'), !unlock.arc);
+    setLocked($('addProton'), !unlock.proton);
+  }
+  function setLocked(btn, locked){
+    btn.disabled = locked;
+    btn.classList.toggle('locked', locked);
+    btn.title = locked ? (btn.id==='addArc'?tr('arcLocked'):tr('protonLocked')) : '';
+  }
+
+  function addBeam(type){
+    const unlock = levels[levelIndex].unlock;
+    if(type==='arc' && !unlock.arc) return showToast(tr('arcLocked'));
+    if(type==='proton' && !unlock.proton) return showToast(tr('protonLocked'));
+    const defaults = type==='arc' ? arc(210,70,.075,.55) : type==='proton' ? proton(180,.06,.7,42) : beam('photon', 180, .08, .65);
+    beams.push(defaults); selectedId = defaults.id;
+    delivered=false; doseGrid=null; metrics=null;
+    updateBeamChips(); syncSliders(); updatePanels(true);
+    showToast(type==='proton' ? tr('protonAdded') : type==='arc' ? tr('arcAdded') : tr('photonAdded'));
+  }
+
+  function removeSelected(){
+    if(!selectedId || beams.length<=1){showToast(tr('keepOne')); return;}
+    beams = beams.filter(b=>b.id!==selectedId);
+    selectedId = beams[0]?.id || null;
+    delivered=false; doseGrid=null; metrics=null;
+    updateBeamChips(); syncSliders(); updatePanels(true);
+  }
+
+  function getSelected(){return beams.find(b=>b.id===selectedId) || beams[0];}
+
+  function updateBeamChips(){
+    const wrap = $('beamChips'); wrap.innerHTML='';
+    beams.forEach((b,idx)=>{
+      const chip=document.createElement('div'); chip.className='chip'+(b.id===selectedId?' selected':'');
+      chip.innerHTML=`<i style="background:${beamColor(b)}"></i><span>${idx+1} ${labelFor(b)}</span>`;
+      chip.addEventListener('click',()=>{selectedId=b.id; updateBeamChips(); syncSliders();});
+      wrap.appendChild(chip);
+    });
+  }
+  function labelFor(b){return b.type==='photon'?'Photon':b.type==='arc'?'Arc':'Proton';}
+  function beamColor(b){return b.type==='photon'?palette.photon:b.type==='arc'?palette.arc:palette.proton;}
+
+  function syncSliders(){
+    const b = getSelected(); if(!b) return;
+    $('angleSlider').value = Math.round(normAngle(b.angle));
+    $('spanSlider').value = Math.round(b.span || 70);
+    $('widthSlider').value = Math.round(b.width*100);
+    $('weightSlider').value = Math.round(b.weight*100);
+    $('rangeSlider').value = Math.round(b.range || 50);
+    $('spanGroup').style.display = b.type==='arc' ? 'grid' : 'none';
+    $('rangeGroup').style.display = b.type==='proton' ? 'grid' : 'none';
+    updateOutputs();
+  }
+
+  function updateOutputs(){
+    $('angleOut').textContent = `${$('angleSlider').value}°`;
+    $('spanOut').textContent = `${$('spanSlider').value}°`;
+    $('widthOut').textContent = $('widthSlider').value;
+    $('weightOut').textContent = (+$('weightSlider').value/100).toFixed(2);
+    $('rangeOut').textContent = $('rangeSlider').value;
+  }
+
+  function updateSelectedFromSliders(){
+    const b = getSelected(); if(!b) return;
+    b.angle = +$('angleSlider').value;
+    b.span = +$('spanSlider').value;
+    b.width = +$('widthSlider').value / 100;
+    b.weight = +$('weightSlider').value / 100;
+    b.range = +$('rangeSlider').value;
+    delivered=false; doseGrid=null; metrics=null;
+    updateOutputs(); updateBeamChips(); updatePanels(true);
+  }
+
+  function pointerDown(e){
+    startAudio();
+    state.dragging=true;
+    rotateSelectedToPointer(e);
+  }
+  function pointerMove(e){if(state.dragging) rotateSelectedToPointer(e);}
+
+  function rotateSelectedToPointer(e){
+    const b = getSelected(); if(!b) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.clientX-rect.left)/rect.width;
+    const y = (e.clientY-rect.top)/rect.height;
+    const dx = patient.cx - x;
+    const dy = patient.cy - y;
+    let angle = Math.atan2(dy, dx) * 180 / Math.PI;
+    b.angle = normAngle(angle);
+    $('angleSlider').value = Math.round(b.angle);
+    updateOutputs(); updateBeamChips();
+    delivered=false; doseGrid=null; metrics=null;
+    updatePanels(true);
+  }
+
+  function normAngle(a){return ((a%360)+360)%360;}
+
+  function deliverPlan(){
+    startAudio();
+    const result = calculateDoseAndMetrics();
+    doseGrid = result.grid; metrics = result.metrics; delivered=true;
+    const evalResult = evaluatePlan(metrics);
+    $('scorePill').textContent = evalResult.score;
+    $('starHud').textContent = starString(evalResult.stars);
+    updatePanels(false);
+    maybeStoreScore(evalResult);
+    showResult(evalResult);
+    pulseSound(evalResult.stars);
+    if(evalResult.stars>0) burstConfetti(evalResult.stars);
+  }
+
+  function calculateDoseAndMetrics(){
+    const N = 150;
+    const grid = new Float32Array(N*N);
+    const lv = levels[levelIndex];
+    for(let j=0;j<N;j++){
+      const y = (j+.5)/N;
+      for(let i=0;i<N;i++){
+        const x = (i+.5)/N;
+        const idx = j*N+i;
+        if(dist(x,y,patient.cx,patient.cy)>patient.r){grid[idx]=NaN; continue;}
+        let d = 0;
+        for(const b of beams){
+          if(b.type==='arc'){
+            const samples = Math.max(7, Math.ceil((b.span||70)/10));
+            const start = b.angle - (b.span||70)/2;
+            for(let k=0;k<samples;k++){
+              const a = start + (samples===1?0:k*(b.span||70)/(samples-1));
+              d += photonDoseAt(x,y,{...b,type:'photon', angle:a, weight:b.weight/samples*1.05});
+            }
+          } else if(b.type==='proton') {
+            d += protonDoseAt(x,y,b);
+          } else {
+            d += photonDoseAt(x,y,b);
+          }
+        }
+        grid[idx]=d;
+      }
+    }
+    const metrics = computeMetrics(grid,N,lv);
+    return {grid,N,metrics};
+  }
+
+  function photonDoseAt(x,y,b){
+    const geom = beamGeom(b.angle);
+    const vx = x - geom.entry.x;
+    const vy = y - geom.entry.y;
+    const depth = vx*geom.u.x + vy*geom.u.y;
+    if(depth < 0 || depth > geom.len) return 0;
+    const lateral = Math.abs(vx*geom.u.y - vy*geom.u.x);
+    const half = Math.max(.018,b.width*.50);
+    const profile = Math.exp(-0.5 * Math.pow(lateral/half, 4));
+    if(profile < .004) return 0;
+    const buildUp = 0.82 + 0.18*Math.sin(Math.min(1,depth/geom.len)*Math.PI);
+    const attenuation = 1 - .18*(depth/geom.len);
+    return b.weight * 82 * profile * buildUp * attenuation;
+  }
+
+  function protonDoseAt(x,y,b){
+    const geom = beamGeom(b.angle);
+    const vx = x - geom.entry.x;
+    const vy = y - geom.entry.y;
+    const depth = vx*geom.u.x + vy*geom.u.y;
+    if(depth < 0 || depth > geom.len) return 0;
+    const lateral = Math.abs(vx*geom.u.y - vy*geom.u.x);
+    const half = Math.max(.012,b.width*.44);
+    const latProfile = Math.exp(-0.5 * Math.pow(lateral/half, 4));
+    if(latProfile < .003) return 0;
+    const peakDepth = geom.len * ((b.range || 50)/100);
+    const sigma = .028 + b.width*.10;
+    const bragg = Math.exp(-0.5*Math.pow((depth-peakDepth)/sigma,2));
+    const entrance = depth < peakDepth ? .19 + .10*(depth/Math.max(.001,peakDepth)) : .03*Math.exp(-(depth-peakDepth)/.08);
+    const distalPenalty = depth > peakDepth ? Math.exp(-(depth-peakDepth)/.025) : 1;
+    return b.weight * 112 * latProfile * (entrance + 1.05*bragg) * distalPenalty;
+  }
+
+  function beamGeom(angleDeg){
+    const a = angleDeg * Math.PI / 180;
+    const u = {x:Math.cos(a), y:Math.sin(a)}; // travel direction from entry into patient
+    const entry = {x:patient.cx - u.x*patient.r, y:patient.cy - u.y*patient.r};
+    return {u,entry,len:patient.r*2};
+  }
+
+  function computeMetrics(grid,N,lv){
+    const structures = [{name:'PTV', type:'target', color:palette.target, shapes:lv.target, rx:RX}]
+      .concat(lv.oars.map((o,i)=>({name:o.name,type:'oar',color:palette.oars[i%palette.oars.length],shapes:[o],max:o.max,mean:o.mean})));
+    const out = [];
+    for(const s of structures){
+      const vals=[];
+      for(let j=0;j<N;j++){
+        const y=(j+.5)/N;
+        for(let i=0;i<N;i++){
+          const x=(i+.5)/N;
+          const d=grid[j*N+i];
+          if(Number.isNaN(d)) continue;
+          if(inAnyShape(x,y,s.shapes)) vals.push(d);
+        }
+      }
+      vals.sort((a,b)=>a-b);
+      const mean = vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : 0;
+      const max = vals.length ? vals[vals.length-1] : 0;
+      const min = vals.length ? vals[0] : 0;
+      const d95 = vals.length ? vals[Math.max(0,Math.floor(vals.length*.05))] : 0;
+      const d98 = vals.length ? vals[Math.max(0,Math.floor(vals.length*.02))] : 0;
+      const v95 = vals.length ? vals.filter(v=>v>=RX*.95).length/vals.length*100 : 0;
+      const dvhPoints = [];
+      for(let dose=0; dose<=150; dose+=2){
+        const idx = lowerBound(vals,dose);
+        const vol = vals.length ? (vals.length-idx)/vals.length*100 : 0;
+        dvhPoints.push([dose,vol]);
+      }
+      out.push({...s, valsCount:vals.length, mean, max, min, d95, d98, v95, dvhPoints});
+    }
+    return out;
+  }
+
+  function lowerBound(arr,x){let l=0,r=arr.length;while(l<r){const m=(l+r)>>1;if(arr[m]<x)l=m+1;else r=m;}return l;}
+
+  function evaluatePlan(mets){
+    const ptv = mets.find(m=>m.type==='target');
+    const oars = mets.filter(m=>m.type==='oar');
+    const coverage = ptv.d95 / RX;
+    const v95 = ptv.v95;
+    const hotRatio = ptv.max / RX;
+    let worstRatio = 0, worstName = 'None', worstDoseLabel = '—';
+    // Constraints are stored in the level definition; computed metrics use the same
+    // names (max/mean) for actual dose values, so we look up the original OAR here.
+    oars.forEach(o=>{
+      const source = levels[levelIndex].oars.find(x=>x.name===o.name) || {};
+      if(source.max){
+        const r = o.max / source.max;
+        if(r>worstRatio){worstRatio=r; worstName=o.name; worstDoseLabel=`Dmax ${o.max.toFixed(0)}/${source.max}`;}
+      }
+      if(source.mean){
+        const r = o.mean / source.mean;
+        if(r>worstRatio){worstRatio=r; worstName=o.name; worstDoseLabel=`Mean ${o.mean.toFixed(0)}/${source.mean}`;}
+      }
+    });
+    const targetArea = mets.find(m=>m.type==='target')?.valsCount || 1;
+    const patientRxArea = estimateRxArea(doseGrid || calculateDoseAndMetrics().grid, 150);
+    const ci = patientRxArea ? patientRxArea / targetArea : 9;
+    const ciPenalty = Math.max(0, ci - 1.18);
+    const complexityPenalty = beams.reduce((s,b)=>s + (b.type==='arc'?1.35:b.type==='proton'?1.12:1),0) * 26;
+    const coverageScore = clamp((coverage-.85)/.18,0,1) * 3600;
+    const v95Score = clamp(v95/100,0,1) * 1600;
+    const oarScore = clamp((1.25-worstRatio)/.75,0,1) * 3200;
+    const hotScore = clamp((1.22-hotRatio)/.22,0,1) * 1200;
+    const ciScore = clamp((2.2-ci)/1.2,0,1) * 1100;
+    let score = Math.round(Math.max(0, coverageScore + v95Score + oarScore + hotScore + ciScore - complexityPenalty));
+    let stars = 0;
+    if(coverage >= .95 && v95 >= 93 && worstRatio <= 1.00 && hotRatio <= 1.22) stars = 1;
+    if(coverage >= .98 && v95 >= 96 && worstRatio <= .90 && hotRatio <= 1.16 && ci <= 1.95) stars = 2;
+    if(coverage >= .995 && v95 >= 98 && worstRatio <= .78 && hotRatio <= 1.11 && ci <= 1.55) stars = 3;
+    // Avoid frustrating early levels by allowing strong OAR sparing / coverage to count.
+    if(levelIndex===0 && coverage>=.95 && hotRatio<=1.23) stars = Math.max(stars,1);
+    return {stars, score, coverage, v95, hotRatio, worstRatio, worstName, worstDoseLabel, ci};
+  }
+
+  function estimateRxArea(grid,N){
+    let count=0;
+    for(let i=0;i<grid.length;i++) if(!Number.isNaN(grid[i]) && grid[i]>=RX*.95) count++;
+    return count;
+  }
+
+  window._bmSubmittedBest = window._bmSubmittedBest || {};
+  function maybeStoreScore(ev){
+    const item = {score:ev.score, stars:ev.stars, date:new Date().toLocaleDateString(), beams:beams.length, name:playerName || tr('playerPlaceholder'), levelId:levels[levelIndex].id};
+    storeLocalScore(levelIndex, item);
+    const _lid = (levels[levelIndex] && levels[levelIndex].id) || String(levelIndex);
+    // N'envoyer au classement que si ce plan bat le meilleur deja soumis pour ce niveau (evite un envoi par clic).
+    if(backendOnline && ev.score > (window._bmSubmittedBest[_lid] || 0)){
+      window._bmSubmittedBest[_lid] = ev.score;
+      postScore(levelIndex, item).catch(()=>{backendOnline=false; backendChecked=true; updateBackendPill(); renderLeaderboard();});
+    }
+    const best=getBest(levelIndex);
+    $('bestPill').textContent = best ? best.score : '—';
+    renderLeaderboard();
+  }
+
+  function storeLocalScore(idx,item){
+    const list = leaderboard[idx] || [];
+    list.push(item);
+    list.sort((a,b)=>b.score-a.score || b.stars-a.stars || a.beams-b.beams);
+    leaderboard[idx] = list.slice(0,10);
+    saveLeaderboard();
+  }
+
+  async function checkBackend(){
+    backendChecked = false; updateBackendPill();
+    if(!API_ROOT){ backendOnline=false; backendChecked=true; updateBackendPill(); fetchLeaderboard(levelIndex); return; }
+    try{
+      const id = levels[levelIndex] ? levels[levelIndex].id : '';
+      const res = await fetch(`${API_ROOT}/top.php?game=${GAME_SLUG}&board=${encodeURIComponent(id)}&period=all&limit=1`, {cache:'no-store'});
+      const data = res.ok ? await res.json() : null;
+      backendOnline = !!(data && data.ok);
+    }catch(e){ backendOnline = false; }
+    backendChecked = true; updateBackendPill();
+    fetchLeaderboard(levelIndex);
+  }
+
+  async function fetchLeaderboard(idx){
+    if(!backendOnline){ renderLeaderboard(); return; }
+    const token = ++lastFetchToken;
+    try{
+      const id = levels[idx].id;
+      const res = await fetch(`${API_ROOT}/top.php?game=${GAME_SLUG}&board=${encodeURIComponent(id)}&period=all&limit=10`, {cache:'no-store'});
+      if(!res.ok) throw new Error('bad status');
+      const data = await res.json();
+      if(!data || !data.ok) throw new Error('bad payload');
+      if(token !== lastFetchToken) return;
+      leaderboard[idx] = (data.rows || []).map(r=>{
+        const m = String(r.meta||'').split('|');
+        return { name:r.name, score:r.score, stars:parseInt(m[0]||'0',10)||0, beams:parseInt(m[1]||'0',10)||0 };
+      }).slice(0,10);
+      const best=getBest(idx); $('bestPill').textContent = best ? best.score : '—';
+      renderLeaderboard();
+    }catch(e){ backendOnline = false; backendChecked = true; updateBackendPill(); renderLeaderboard(); }
+  }
+
+  async function postScore(idx,item){
+    const payload = { game:GAME_SLUG, board:levels[idx].id, name:item.name, score:item.score, ts:Date.now(), meta:`${item.stars}|${item.beams}` };
+    const res = await fetch(`${API_ROOT}/submit.php`, {
+      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)
+    });
+    if(!res.ok) throw new Error('score rejected');
+    const data = await res.json();
+    if(!data || !data.ok) throw new Error('score rejected');
+    await fetchLeaderboard(idx);
+  }
+
+  function getBest(i){return (leaderboard[i]||[])[0];}
+
+  function starString(n){return '★'.repeat(n)+'☆'.repeat(3-n);}
+
+  function showResult(ev){
+    $('resultTitle').textContent = ev.stars===3 ? tr('title3') : ev.stars===2 ? tr('title2') : ev.stars===1 ? tr('title1') : tr('title0');
+    $('modalStars').textContent = starString(ev.stars);
+    const advice = adviceFor(ev);
+    $('resultText').textContent = advice;
+    $('modalCoverage').textContent = `${Math.round(ev.coverage*100)}%`;
+    $('modalOar').textContent = ev.worstName==='None'?'—':`${ev.worstName} ${Math.round(ev.worstRatio*100)}%`;
+    $('modalScore').textContent = ev.score;
+    $('nextLevel').style.display = ev.stars>0 && levelIndex<levels.length-1 ? 'block' : 'none';
+    $('resultModal').classList.add('show');
+  }
+
+  function adviceFor(ev){
+    if(ev.coverage < .95) return tr('targetUnder');
+    if(ev.worstRatio > 1) return `${ev.worstName} ${tr('oarOver')}`;
+    if(ev.hotRatio > 1.22) return tr('hot');
+    if(ev.ci > 1.95) return tr('ci');
+    if(ev.stars===3) return tr('gorgeous');
+    if(ev.stars===2) return tr('good');
+    return tr('accepted');
+  }
+
+  function hideModal(){$('resultModal').classList.remove('show');}
+
+  function updatePanels(empty){
+    renderMetrics();
+    renderDvh();
+    renderLeaderboard();
+  }
+
+  function renderMetrics(){
+    const wrap=$('metrics'); wrap.innerHTML='';
+    if(!metrics){
+      addMetricRow(wrap,tr('ptvD95'),tr('deliverHint'),'',0,'warn');
+      levels[levelIndex].oars.forEach(o=>addMetricRow(wrap,o.name, constraintLabel(o), '', 0, 'warn'));
+      return;
+    }
+    const ptv=metrics.find(m=>m.type==='target');
+    const targetOk=ptv.d95>=95 && ptv.v95>=93;
+    addMetricRow(wrap,tr('ptvD95'),`${ptv.d95.toFixed(1)} Gy`, '≥95', clamp(ptv.d95/105,0,1), targetOk?'ok':'bad');
+    addMetricRow(wrap,tr('ptvV95'),`${ptv.v95.toFixed(0)}%`, '≥93%', clamp(ptv.v95/100,0,1), ptv.v95>=93?'ok':'bad');
+    metrics.filter(m=>m.type==='oar').forEach(m=>{
+      const c=levels[levelIndex].oars.find(o=>o.name===m.name)||{};
+      if(c.max){
+        const r=m.max/c.max;
+        addMetricRow(wrap,`${m.name} Dmax`,`${m.max.toFixed(1)} Gy`,`≤${c.max}`,clamp(r,0,1.25),r<=1?'ok':r<=1.08?'warn':'bad');
+      }
+      if(c.mean){
+        const r=m.mean/c.mean;
+        addMetricRow(wrap,`${m.name} mean`,`${m.mean.toFixed(1)} Gy`,`≤${c.mean}`,clamp(r,0,1.25),r<=1?'ok':r<=1.08?'warn':'bad');
+      }
+    });
+  }
+
+  function addMetricRow(wrap,name,val,goal,pct,status){
+    const row=document.createElement('div'); row.className='metric';
+    const statusText = status==='ok'?tr('ok'):status==='bad'?tr('fail'):tr('tune');
+    row.innerHTML=`<div><strong style="color:var(--text)">${name}</strong><br><span>${val}${goal?' / '+goal:''}</span></div><div class="bar"><i style="width:${Math.min(100,pct*100)}%"></i></div><div class="status ${status}">${statusText}</div>`;
+    wrap.appendChild(row);
+  }
+  function constraintLabel(o){
+    const parts=[]; if(o.max) parts.push(`Dmax ≤ ${o.max}`); if(o.mean) parts.push(`Mean ≤ ${o.mean}`); return parts.join(', ');
+  }
+
+  function renderLeaderboard(){
+    const rows=$('leaderRows'); rows.innerHTML='';
+    const list=leaderboard[levelIndex]||[];
+    if(!list.length){rows.innerHTML=`<div class="help">${tr('noPlans')}</div>`;return;}
+    list.forEach((r,i)=>{
+      const el=document.createElement('div'); el.className='leader';
+      const safeName = escapeHtml(r.name || tr('playerPlaceholder'));
+      el.innerHTML=`<span>#${i+1}</span><strong>${r.score}<small>${safeName}</small></strong><span>${starString(r.stars)} · ${r.beams} ${tr('beamWord')}</span>`;
+      rows.appendChild(el);
+    });
+  }
+
+  function escapeHtml(s){return String(s).replace(/[&<>"']/g, ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
+
+  function renderDvh(){
+    const w=dvhCanvas.width, h=dvhCanvas.height;
+    dvh.clearRect(0,0,w,h);
+    const grd=dvh.createLinearGradient(0,0,0,h); grd.addColorStop(0,'rgba(255,255,255,.05)'); grd.addColorStop(1,'rgba(255,255,255,.015)');
+    dvh.fillStyle=grd; dvh.fillRect(0,0,w,h);
+    const pad={l:42,r:12,t:16,b:32};
+    dvh.strokeStyle='rgba(255,255,255,.12)'; dvh.lineWidth=1;
+    for(let x=0;x<=150;x+=25){const px=map(x,0,150,pad.l,w-pad.r); line(dvh,px,pad.t,px,h-pad.b);}
+    for(let y=0;y<=100;y+=25){const py=map(y,0,100,h-pad.b,pad.t); line(dvh,pad.l,py,w-pad.r,py);}
+    dvh.fillStyle='rgba(234,243,255,.55)'; dvh.font='22px system-ui'; dvh.fillText(tr('doseAxis'), w-70, h-10); dvh.save(); dvh.translate(14,35); dvh.rotate(-Math.PI/2); dvh.fillText(tr('volumeAxis'), -70, 0); dvh.restore();
+    // Rx and coverage target lines
+    dvh.strokeStyle='rgba(255,211,109,.48)'; dvh.setLineDash([8,8]);
+    const rx=map(95,0,150,pad.l,w-pad.r); line(dvh,rx,pad.t,rx,h-pad.b); dvh.setLineDash([]);
+    if(!metrics){
+      dvh.fillStyle='rgba(159,178,200,.82)'; dvh.font='24px system-ui'; dvh.textAlign='center'; dvh.fillText(tr('deliverHint'), w/2,h/2); dvh.textAlign='left';
+      renderLegend(null); return;
+    }
+    metrics.forEach(m=>{
+      dvh.beginPath();
+      m.dvhPoints.forEach(([dose,vol],idx)=>{
+        const x=map(dose,0,150,pad.l,w-pad.r), y=map(vol,0,100,h-pad.b,pad.t);
+        if(idx===0)dvh.moveTo(x,y); else dvh.lineTo(x,y);
+      });
+      dvh.strokeStyle=m.color; dvh.lineWidth=m.type==='target'?4:3; dvh.shadowBlur=12; dvh.shadowColor=m.color; dvh.stroke(); dvh.shadowBlur=0;
+    });
+    renderLegend(metrics);
+  }
+
+  function renderLegend(mets){
+    const legend=$('legend'); legend.innerHTML='';
+    const items = mets || [{name:'PTV',color:palette.target}].concat(levels[levelIndex].oars.map((o,i)=>({name:o.name,color:palette.oars[i%palette.oars.length]})));
+    items.forEach(it=>{const span=document.createElement('span');span.innerHTML=`<i class="dot" style="background:${it.color}"></i>${it.name}`;legend.appendChild(span);});
+  }
+
+  function loop(t){
+    animationT = t/1000;
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  function draw(){
+    const w=canvas.width,h=canvas.height;
+    ctx.clearRect(0,0,w,h);
+    const bg=ctx.createRadialGradient(w*.5,h*.45,10,w*.5,h*.5,w*.58);
+    bg.addColorStop(0,'#19365a'); bg.addColorStop(.62,'#081222'); bg.addColorStop(1,'#040711');
+    ctx.fillStyle=bg; ctx.fillRect(0,0,w,h);
+    drawGrid(w,h);
+    drawPatient(w,h);
+    drawAnatomyTexture(w,h);
+    if(doseGrid && showDose) drawDoseMap(doseGrid,150,w,h);
+    drawBeams(w,h);
+    drawStructures(w,h);
+    drawIso(w,h);
+  }
+
+  function drawGrid(w,h){
+    ctx.save(); ctx.strokeStyle='rgba(255,255,255,.045)'; ctx.lineWidth=1;
+    for(let i=0;i<=10;i++){const p=i/10*w; line(ctx,p,0,p,h); line(ctx,0,p,w,p);}
+    ctx.restore();
+  }
+
+  function drawPatient(w,h){
+    const x=patient.cx*w,y=patient.cy*h,r=patient.r*w;
+    ctx.save();
+    ctx.beginPath(); ctx.arc(x,y,r,0,TAU);
+    ctx.fillStyle='rgba(100,231,255,.035)'; ctx.fill();
+    ctx.strokeStyle='rgba(205,238,255,.28)'; ctx.lineWidth=2; ctx.stroke();
+    ctx.beginPath(); ctx.arc(x,y,r*.78,0,TAU); ctx.strokeStyle='rgba(255,255,255,.055)'; ctx.stroke();
+    ctx.restore();
+  }
+
+
+
+  function drawAnatomyTexture(w,h){
+    const cx=patient.cx*w, cy=patient.cy*h, r=patient.r*w;
+    ctx.save();
+    ctx.globalAlpha=.28;
+    // soft inner anatomy rings
+    for(let k=0;k<5;k++){
+      ctx.beginPath(); ctx.ellipse(cx + Math.sin(k*1.7)*r*.04, cy + Math.cos(k*1.1)*r*.03, r*(.22+k*.095), r*(.18+k*.075), k*.18, 0, TAU);
+      ctx.strokeStyle=`rgba(180,220,255,${.05+k*.015})`; ctx.lineWidth=1.4; ctx.stroke();
+    }
+    // a stylized vertebral shadow / midline reference
+    ctx.globalAlpha=.45;
+    ctx.beginPath(); ctx.ellipse(cx, cy+r*.18, r*.052, r*.31, 0, 0, TAU); ctx.fillStyle='rgba(255,255,255,.035)'; ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,.07)'; ctx.stroke();
+    // subtle scan sweep
+    const sweep = (Math.sin(animationT*.8)+1)/2;
+    const gy = cy-r + sweep*r*2;
+    const grad=ctx.createLinearGradient(cx-r,gy,cx+r,gy); grad.addColorStop(0,'rgba(100,231,255,0)'); grad.addColorStop(.5,'rgba(100,231,255,.16)'); grad.addColorStop(1,'rgba(100,231,255,0)');
+    ctx.strokeStyle=grad; ctx.lineWidth=2; line(ctx,cx-r*.85,gy,cx+r*.85,gy);
+    ctx.restore();
+  }
+
+  function drawDoseMap(grid,N,w,h){
+    const img = ctx.createImageData(N,N);
+    for(let i=0;i<grid.length;i++){
+      const d=grid[i];
+      const p=i*4;
+      if(Number.isNaN(d) || d<8){img.data[p+3]=0; continue;}
+      const v=clamp(d/130,0,1);
+      const c=doseColor(v);
+      img.data[p]=c[0]; img.data[p+1]=c[1]; img.data[p+2]=c[2]; img.data[p+3]=Math.round(45+155*v);
+    }
+    const off=document.createElement('canvas'); off.width=N; off.height=N;
+    off.getContext('2d').putImageData(img,0,0);
+    ctx.save();
+    ctx.globalCompositeOperation='screen';
+    ctx.imageSmoothingEnabled=true;
+    ctx.drawImage(off,0,0,w,h);
+    ctx.restore();
+    drawIsodose(grid,N,w,h,95,'rgba(255,211,109,.80)',2.2);
+    drawIsodose(grid,N,w,h,50,'rgba(100,231,255,.42)',1.4);
+    drawIsodose(grid,N,w,h,110,'rgba(255,109,138,.74)',1.7);
+  }
+
+  function doseColor(v){
+    // yellow -> rose -> violet
+    const stops=[[255,211,109],[255,109,138],[184,145,255]];
+    if(v<.55){return lerpColor(stops[0],stops[1],v/.55);} else return lerpColor(stops[1],stops[2],(v-.55)/.45);
+  }
+  function lerpColor(a,b,t){return a.map((x,i)=>Math.round(x+(b[i]-x)*clamp(t,0,1)));}
+
+  function drawIsodose(grid,N,w,h,thr,color,lw){
+    ctx.save(); ctx.strokeStyle=color; ctx.lineWidth=lw; ctx.beginPath();
+    for(let j=1;j<N-1;j++){
+      for(let i=1;i<N-1;i++){
+        const idx=j*N+i;
+        if(Number.isNaN(grid[idx]) || grid[idx]<thr) continue;
+        const edge = (grid[idx-1]<thr || grid[idx+1]<thr || grid[idx-N]<thr || grid[idx+N]<thr);
+        if(edge){
+          const x=i/N*w,y=j/N*h; ctx.rect(x,y,1.9,1.9);
+        }
+      }
+    }
+    ctx.stroke(); ctx.restore();
+  }
+
+  function drawStructures(w,h){
+    const lv=levels[levelIndex];
+    lv.target.forEach((s,idx)=>drawShape(s,w,h,palette.target,'rgba(117,255,174,.18)',3, idx===0?tr('ptv'):''));
+    lv.oars.forEach((o,i)=>drawShape(o,w,h,palette.oars[i%palette.oars.length],'rgba(120,167,255,.10)',2.4,o.name));
+  }
+
+  function drawShape(s,w,h,stroke,fill,lw,label){
+    ctx.save();
+    ctx.translate(s.cx*w,s.cy*h); ctx.rotate((s.rot||0)*Math.PI/180); ctx.scale(s.rx*w,s.ry*h);
+    ctx.beginPath(); ctx.arc(0,0,1,0,TAU); ctx.fillStyle=fill; ctx.fill(); ctx.strokeStyle=stroke; ctx.lineWidth=lw/Math.max(s.rx*w,s.ry*h); ctx.shadowBlur=14; ctx.shadowColor=stroke; ctx.stroke();
+    ctx.restore();
+    if(label){
+      ctx.save(); ctx.font='600 13px system-ui'; ctx.fillStyle='rgba(234,243,255,.75)'; ctx.textAlign='center'; ctx.fillText(label, s.cx*w, (s.cy+s.ry+0.025)*h); ctx.restore();
+    }
+  }
+
+  function drawBeams(w,h){
+    beams.forEach((b,idx)=>{
+      if(b.type==='arc') drawArcBeam(b,w,h,idx);
+      else drawStraightBeam(b,w,h,idx);
+    });
+  }
+
+  function drawStraightBeam(b,w,h,idx){
+    const geom=beamGeom(b.angle); const color=beamColor(b);
+    const sx=geom.entry.x*w, sy=geom.entry.y*h;
+    const ex=(geom.entry.x+geom.u.x*geom.len)*w, ey=(geom.entry.y+geom.u.y*geom.len)*h;
+    const nx=-geom.u.y, ny=geom.u.x;
+    const half=b.width*w/2;
+    const selected=b.id===selectedId;
+    ctx.save();
+    ctx.globalAlpha=selected?.92:.54;
+    ctx.beginPath();
+    ctx.moveTo(sx+nx*half,sy+ny*half); ctx.lineTo(ex+nx*half,ey+ny*half); ctx.lineTo(ex-nx*half,ey-ny*half); ctx.lineTo(sx-nx*half,sy-ny*half); ctx.closePath();
+    const grad=ctx.createLinearGradient(sx,sy,ex,ey); grad.addColorStop(0,color+'22'); grad.addColorStop(.45,color+'44'); grad.addColorStop(1,color+'08');
+    ctx.fillStyle=grad; ctx.fill();
+    ctx.strokeStyle=color; ctx.lineWidth=selected?3:1.5; ctx.shadowBlur=selected?18:8; ctx.shadowColor=color; line(ctx,sx,sy,ex,ey);
+    ctx.setLineDash([6,8]); ctx.globalAlpha=.42; line(ctx,sx+nx*half,sy+ny*half,ex+nx*half,ey+ny*half); line(ctx,sx-nx*half,sy-ny*half,ex-nx*half,ey-ny*half); ctx.setLineDash([]);
+    ctx.globalAlpha=1;
+    ctx.beginPath(); ctx.arc(sx,sy,selected?12:9,0,TAU); ctx.fillStyle=color; ctx.fill();
+    ctx.fillStyle='#07101d'; ctx.font='800 12px system-ui'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(idx+1,sx,sy);
+    if(b.type==='proton') drawBraggMarker(b,geom,w,h,color,selected);
+    ctx.restore();
+  }
+
+  function drawBraggMarker(b,geom,w,h,color,selected){
+    const depth=geom.len*((b.range||50)/100);
+    const x=(geom.entry.x+geom.u.x*depth)*w;
+    const y=(geom.entry.y+geom.u.y*depth)*h;
+    const pulse = 1 + .18*Math.sin(animationT*5);
+    ctx.save();
+    ctx.beginPath(); ctx.arc(x,y,(selected?17:14)*pulse,0,TAU); ctx.fillStyle=color+'22'; ctx.fill();
+    ctx.beginPath(); ctx.arc(x,y,(selected?7:5)*pulse,0,TAU); ctx.fillStyle=color; ctx.shadowBlur=22; ctx.shadowColor=color; ctx.fill();
+    ctx.fillStyle='rgba(234,243,255,.78)'; ctx.font='700 11px system-ui'; ctx.textAlign='center'; ctx.fillText('Bragg',x,y-22);
+    ctx.restore();
+  }
+
+  function drawArcBeam(b,w,h,idx){
+    const color=beamColor(b); const selected=b.id===selectedId;
+    const start=(b.angle-(b.span||70)/2)*Math.PI/180;
+    const end=(b.angle+(b.span||70)/2)*Math.PI/180;
+    const cx=patient.cx*w,cy=patient.cy*h,r=patient.r*w;
+    ctx.save();
+    ctx.globalAlpha=selected?.72:.43;
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,r,start,end); ctx.closePath();
+    ctx.fillStyle=color+'20'; ctx.fill();
+    ctx.beginPath(); ctx.arc(cx,cy,r,start,end); ctx.strokeStyle=color; ctx.lineWidth=selected?5:3; ctx.shadowBlur=selected?18:10; ctx.shadowColor=color; ctx.stroke();
+    const mid=b.angle*Math.PI/180; const sx=(patient.cx-Math.cos(mid)*patient.r)*w, sy=(patient.cy-Math.sin(mid)*patient.r)*h;
+    ctx.beginPath(); ctx.arc(sx,sy,selected?12:9,0,TAU); ctx.fillStyle=color; ctx.fill();
+    ctx.fillStyle='#07101d'; ctx.font='800 12px system-ui'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(idx+1,sx,sy);
+    ctx.restore();
+  }
+
+  function drawIso(w,h){
+    const x=patient.cx*w,y=patient.cy*h;
+    ctx.save(); ctx.strokeStyle='rgba(255,255,255,.45)'; ctx.lineWidth=1;
+    line(ctx,x-9,y,x+9,y); line(ctx,x,y-9,x,y+9);
+    ctx.beginPath(); ctx.arc(x,y,16,0,TAU); ctx.strokeStyle='rgba(255,255,255,.12)'; ctx.stroke();
+    ctx.restore();
+  }
+
+  function inAnyShape(x,y,shapes){return shapes.some(s=>inEllipse(x,y,s));}
+  function inEllipse(x,y,s){
+    const rot=-(s.rot||0)*Math.PI/180;
+    const dx=x-s.cx, dy=y-s.cy;
+    const xr=dx*Math.cos(rot)-dy*Math.sin(rot);
+    const yr=dx*Math.sin(rot)+dy*Math.cos(rot);
+    return (xr*xr)/(s.rx*s.rx)+(yr*yr)/(s.ry*s.ry) <= 1;
+  }
+  function dist(x1,y1,x2,y2){return Math.hypot(x1-x2,y1-y2);}
+  function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+  function map(v,a,b,c,d){return c+(v-a)*(d-c)/(b-a);}
+  function line(c,x1,y1,x2,y2){c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.stroke();}
+
+  function resizeDvh(){
+    const ratio = window.devicePixelRatio || 1;
+    const rect = dvhCanvas.getBoundingClientRect();
+    if(rect.width){dvhCanvas.width = Math.round(rect.width*ratio); dvhCanvas.height = Math.round(rect.height*ratio);}
+    renderDvh();
+  }
+
+  function showToast(msg){
+    const t=$('toast'); t.textContent=msg; t.classList.add('show');
+    clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),2600);
+  }
+
+  function burstConfetti(stars){
+    const wrap=$('confetti'); wrap.innerHTML='';
+    const count=stars*28;
+    for(let i=0;i<count;i++){
+      const p=document.createElement('i');
+      p.style.left=(15+Math.random()*70)+'%';
+      p.style.top=(6+Math.random()*18)+'%';
+      p.style.background=[palette.photon,palette.proton,palette.arc,palette.doseA,palette.doseB][i%5];
+      p.style.animationDelay=(Math.random()*260)+'ms';
+      p.style.transform=`rotate(${Math.random()*360}deg)`;
+      wrap.appendChild(p);
+    }
+    setTimeout(()=>wrap.innerHTML='',1200);
+  }
+
+  let audioCtx = null;
+  function startAudio(){
+    if(state.audioStarted) return;
+    try{audioCtx = new (window.AudioContext||window.webkitAudioContext)(); state.audioStarted=true;}catch(e){}
+  }
+  function pulseSound(stars){
+    if(!audioCtx) return;
+    const now=audioCtx.currentTime;
+    const notes=stars>0 ? [523,659,784].slice(0,stars) : [160,120];
+    notes.forEach((freq,i)=>{
+      const osc=audioCtx.createOscillator(); const gain=audioCtx.createGain();
+      osc.frequency.value=freq; osc.type='sine'; gain.gain.setValueAtTime(.001,now+i*.09); gain.gain.exponentialRampToValueAtTime(.05,now+i*.09+.02); gain.gain.exponentialRampToValueAtTime(.001,now+i*.09+.18);
+      osc.connect(gain).connect(audioCtx.destination); osc.start(now+i*.09); osc.stop(now+i*.09+.2);
+    });
+  }
+
+  // Initialize after helper declarations.
+  init();
+})();
+</script>
+<div id="oaNameAsk" style="display:none;position:fixed;inset:0;z-index:2147483000;background:rgba(3,8,18,.74);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif">
+  <div style="width:min(360px,94vw);background:#0f1626;color:#f8fafc;border:1px solid rgba(255,255,255,.14);border-radius:18px;padding:22px;box-shadow:0 30px 80px rgba(0,0,0,.55)">
+    <div id="oaNameAskTitle" style="font-size:18px;font-weight:560;letter-spacing:-.01em;margin-bottom:4px">Ton pseudo</div>
+    <div id="oaNameAskSub" style="font-size:13px;color:#a7b0c2;line-height:1.4;margin-bottom:14px">Pour enregistrer ton score au classement.</div>
+    <input id="oaNameAskInput" maxlength="18" placeholder="Dr …" autocomplete="off" spellcheck="false" style="width:100%;box-sizing:border-box;font:inherit;font-size:15px;font-weight:520;color:#f8fafc;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:12px 14px;outline:none">
+    <div id="oaTeamLabel" style="font-size:12px;color:#a7b0c2;margin:12px 0 5px">Équipe (optionnel)</div>
+    <div id="oaTeamWrap" style="position:relative">
+    <input id="oaNameAskTeam" maxlength="24" placeholder="Ton équipe…" autocomplete="off" spellcheck="false" style="width:100%;box-sizing:border-box;font:inherit;font-size:15px;font-weight:520;color:#f8fafc;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:12px 14px;outline:none">
+    <div id="oaTeamMenu" style="position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:6;background:#0f1626;border:1px solid rgba(255,255,255,.16);border-radius:12px;box-shadow:0 22px 55px rgba(0,0,0,.55);max-height:172px;overflow:auto;display:none"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
+      <button id="oaNameAskSkip" type="button" style="font:inherit;font-weight:520;color:#a7b0c2;background:none;border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:9px 14px;cursor:pointer">Passer</button>
+      <button id="oaNameAskOk" type="button" style="font:inherit;font-weight:560;color:#fff;background:linear-gradient(135deg,#2557d6,#0891b2);border:none;border-radius:999px;padding:9px 16px;cursor:pointer">Enregistrer</button>
+    </div>
+  </div>
+</div>
+<script id="oa-namegate">
+(function(){
+  var DEFAULTS = ['','—','-','dr','dr …','dr...','anonyme','anonymous','ninja','joueur','player','name','nom','pseudo'];
+  function isDefault(n){ return DEFAULTS.indexOf((n||'').trim().toLowerCase()) >= 0; }
+  function isEn(){ var l=(document.documentElement.getAttribute('lang')||document.documentElement.lang||navigator.language||'fr'); return String(l).slice(0,2).toLowerCase()==='en'; }
+  function lget(k){ try{ return localStorage.getItem(k)||''; }catch(e){ return ''; } }
+  function lset(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+
+  var teamsLoaded=false;
+  function loadTeams(){
+    if(teamsLoaded) return; teamsLoaded=true;
+    try{
+      fetch('../../api/teams.php',{cache:'no-store'}).then(function(r){return r.ok?r.json():null;}).then(function(d){
+        if(d&&d.ok&&Array.isArray(d.teams)){ window.__oaTeams=d.teams.map(function(t){return String(t);}); }
+      }).catch(function(){});
+    }catch(e){}
+  }
+
+  function oaRenderTeamMenu(){
+    var tinp=document.getElementById('oaNameAskTeam'), menu=document.getElementById('oaTeamMenu');
+    if(!tinp||!menu) return;
+    var q=(tinp.value||'').toLowerCase();
+    var list=(window.__oaTeams||[]).filter(function(t){return t && t.toLowerCase().indexOf(q)>=0;}).slice(0,8);
+    if(!list.length){ menu.style.display='none'; menu.innerHTML=''; return; }
+    menu.innerHTML=list.map(function(t){return '<div style="padding:11px 14px;font-size:14px;color:#f8fafc;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.07)">'+String(t).replace(/</g,'&lt;')+'</div>';}).join('');
+    Array.prototype.forEach.call(menu.children,function(el){
+      el.onmousedown=function(e){ e.preventDefault(); tinp.value=el.textContent; menu.style.display='none'; };
+      el.ontouchstart=function(e){ e.preventDefault(); tinp.value=el.textContent; menu.style.display='none'; };
+    });
+    menu.style.display='block';
+  }
+  function oaWireTeam(){
+    var tinp=document.getElementById('oaNameAskTeam'), menu=document.getElementById('oaTeamMenu');
+    if(!tinp||tinp._oaWired) return; tinp._oaWired=true;
+    tinp.addEventListener('focus', oaRenderTeamMenu);
+    tinp.addEventListener('input', oaRenderTeamMenu);
+    tinp.addEventListener('blur', function(){ setTimeout(function(){ if(menu) menu.style.display='none'; }, 180); });
+  }
+
+  // Renvoie une Promise<{name, team}>. Demande une seule fois (pseudo + équipe), puis réutilise.
+  window.oaEnsureIdentity = function(bodyName){
+    return new Promise(function(resolve){
+      var sName=lget('oa-name').trim(), sTeam=lget('oa-team').trim(), asked=lget('oa-id2')==='1';
+      var haveName = (bodyName && !isDefault(bodyName)) ? String(bodyName).trim() : sName;
+      if(asked && haveName){ resolve({name:haveName, team:sTeam}); return; }
+      var el=document.getElementById('oaNameAsk');
+      if(!el){ resolve({name:haveName||(isEn()?'Anonymous':'Anonyme'), team:sTeam}); return; }
+      loadTeams(); oaWireTeam();
+      var inp=document.getElementById('oaNameAskInput'), tinp=document.getElementById('oaNameAskTeam');
+      var ok=document.getElementById('oaNameAskOk'), skip=document.getElementById('oaNameAskSkip');
+      var en=isEn();
+      document.getElementById('oaNameAskTitle').textContent = en?'Your name':'Ton pseudo';
+      document.getElementById('oaNameAskSub').textContent   = en?'To save your score on the leaderboard.':'Pour enregistrer ton score au classement.';
+      document.getElementById('oaTeamLabel').textContent    = en?'Team (optional)':'Équipe (optionnel)';
+      tinp.placeholder = en?'Your team…':'Ton équipe…';
+      ok.textContent = en?'Save':'Enregistrer'; skip.textContent = en?'Skip':'Passer';
+      inp.value=haveName||''; tinp.value=sTeam||'';
+      el.style.display='flex'; setTimeout(function(){ try{(inp.value?tinp:inp).focus();}catch(e){} },60);
+      function done(nm,tm,persist){
+        el.style.display='none'; ok.onclick=null; skip.onclick=null; inp.onkeydown=null; tinp.onkeydown=null;
+        if(persist){ lset('oa-name',nm); lset('oa-team',tm); lset('oa-identity','1'); lset('oa-id2','1'); }
+        resolve({name:nm, team:tm});
+      }
+      ok.onclick=function(){ done(inp.value.trim()||(en?'Anonymous':'Anonyme'), tinp.value.trim(), true); };
+      skip.onclick=function(){ done(haveName||(en?'Anonymous':'Anonyme'), sTeam||'', false); };
+      inp.onkeydown=function(e){ if(e.key==='Enter'){ e.preventDefault(); tinp.focus(); } };
+      tinp.onkeydown=function(e){ if(e.key==='Enter'){ e.preventDefault(); ok.onclick(); } };
+    });
+  };
+  // Compat : oaAskName -> renvoie juste le pseudo
+  window.oaAskName = function(cur){ return window.oaEnsureIdentity(cur).then(function(id){ return id.name; }); };
+  /* oa-pregame-ask : demander pseudo+equipe a l'arrivee si pas encore renseigne */
+  setTimeout(function(){ try{ if(lget('oa-id2')!=='1') window.oaEnsureIdentity(''); }catch(e){} }, 500);
+
+  // Interception : tout POST vers submit.php -> injecte pseudo + équipe (demande si première fois)
+  if(window.fetch && !window.__oaNameGate){
+    window.__oaNameGate = true;
+    var orig = window.fetch;
+    window.fetch = function(url, opts){
+      try{
+        var u = (typeof url==='string') ? url : (url && url.url) || '';
+        if(u.indexOf('submit.php')>=0 && opts && opts.method && String(opts.method).toUpperCase()==='POST' && typeof opts.body==='string'){
+          var body = JSON.parse(opts.body);
+          if(body && ('name' in body)){
+            return window.oaEnsureIdentity(body.name).then(function(id){
+              body.name = id.name; body.team = id.team || '';
+              var o2 = {}; for(var k in opts){ o2[k]=opts[k]; } o2.body = JSON.stringify(body);
+              return orig.call(window, url, o2);
+            });
+          }
+        }
+      }catch(e){}
+      return orig.apply(window, arguments);
+    };
+  }
+})();
+</script>
+<button id="oaReportBtn" type="button" aria-label="Signaler un problème" style="position:fixed;left:12px;bottom:12px;z-index:2147482000;width:38px;height:38px;border-radius:50%;border:1px solid rgba(148,163,184,.35);background:rgba(15,22,38,.55);color:#e5e9f0;font-size:17px;line-height:1;cursor:pointer;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);opacity:.55;transition:opacity .15s;font-family:ui-sans-serif,system-ui,sans-serif" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.55" title="Signaler un problème">⚠</button>
+<div id="oaReport" style="display:none;position:fixed;inset:0;z-index:2147483100;background:rgba(3,8,18,.74);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif">
+  <div style="width:min(420px,94vw);background:#0f1626;color:#f8fafc;border:1px solid rgba(255,255,255,.14);border-radius:18px;padding:22px;box-shadow:0 30px 80px rgba(0,0,0,.55)">
+    <div id="oaReportTitle" style="font-size:18px;font-weight:560;letter-spacing:-.01em;margin-bottom:4px">Signaler un problème</div>
+    <div id="oaReportSub" style="font-size:13px;color:#a7b0c2;line-height:1.4;margin-bottom:14px">Décrivez le souci ; il me sera envoyé par e-mail. Aucune adresse n’est affichée.</div>
+    <div id="oaReportForm">
+      <label id="oaReportGameLbl" style="font-size:12px;color:#a7b0c2;display:block;margin-bottom:5px">Jeu concerné</label>
+      <select id="oaReportGame" style="width:100%;box-sizing:border-box;font:inherit;font-size:14px;font-weight:500;color:#f8fafc;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:11px 12px;outline:none;margin-bottom:12px"></select>
+      <label id="oaReportMsgLbl" style="font-size:12px;color:#a7b0c2;display:block;margin-bottom:5px">Description</label>
+      <textarea id="oaReportMsg" rows="5" maxlength="4000" placeholder="Que s’est-il passé ?" style="width:100%;box-sizing:border-box;font:inherit;font-size:14px;color:#f8fafc;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:11px 12px;outline:none;resize:vertical"></textarea>
+      <div id="oaReportErr" style="display:none;font-size:12px;color:#fb7185;margin-top:8px"></div>
+      <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
+        <button id="oaReportCancel" type="button" style="font:inherit;font-weight:520;color:#a7b0c2;background:none;border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:9px 14px;cursor:pointer">Annuler</button>
+        <button id="oaReportSend" type="button" style="font:inherit;font-weight:560;color:#fff;background:linear-gradient(135deg,#2557d6,#0891b2);border:none;border-radius:999px;padding:9px 16px;cursor:pointer">Envoyer</button>
+      </div>
+    </div>
+    <div id="oaReportDone" style="display:none;text-align:center;padding:10px 0">
+      <div style="font-size:34px;line-height:1">✅</div>
+      <div id="oaReportDoneTxt" style="font-size:15px;font-weight:520;margin-top:8px">Merci, c’est envoyé.</div>
+      <button id="oaReportClose2" type="button" style="margin-top:16px;font:inherit;font-weight:560;color:#fff;background:linear-gradient(135deg,#2557d6,#0891b2);border:none;border-radius:999px;padding:9px 18px;cursor:pointer">Fermer</button>
+    </div>
+  </div>
+</div>
+<script id="oa-report">
+(function(){
+  var GAMES=[['plan-please','Plan, Please'],['ok-chimio','OK Chimio'],['arc-racer','Arc Racer'],['beamlet','Beamlet'],['bragg-peak','Bragg Peak'],['fraction-hero','Fraction Hero'],['seed-master','Seed Master'],['mlc-ninja','MLC Ninja'],['tumor-board','Tumor Board'],['radcraft','RadCraft']];
+  function isEn(){ var l=(document.documentElement.getAttribute('lang')||document.documentElement.lang||navigator.language||'fr'); return String(l).slice(0,2).toLowerCase()==='en'; }
+  function API(){ return /\/games\/[^/]+\//.test(location.pathname) ? '../../api' : 'api'; }
+  function curGame(){ var m=location.pathname.match(/\/games\/([a-z0-9-]+)\//i); return m?m[1]:''; }
+  var el=document.getElementById('oaReport');
+  var sel=document.getElementById('oaReportGame'), msg=document.getElementById('oaReportMsg'), err=document.getElementById('oaReportErr');
+  var form=document.getElementById('oaReportForm'), done=document.getElementById('oaReportDone');
+  function labels(){
+    var en=isEn();
+    document.getElementById('oaReportTitle').textContent=en?'Report a problem':'Signaler un problème';
+    document.getElementById('oaReportSub').textContent=en?'Describe the issue; it will be emailed to me. No address is shown.':'Décrivez le souci ; il me sera envoyé par e-mail. Aucune adresse n’est affichée.';
+    document.getElementById('oaReportGameLbl').textContent=en?'Game concerned':'Jeu concerné';
+    document.getElementById('oaReportMsgLbl').textContent=en?'Description':'Description';
+    msg.placeholder=en?'What happened?':'Que s’est-il passé ?';
+    document.getElementById('oaReportCancel').textContent=en?'Cancel':'Annuler';
+    document.getElementById('oaReportSend').textContent=en?'Send':'Envoyer';
+    document.getElementById('oaReportDoneTxt').textContent=en?'Thanks, it’s been sent.':'Merci, c’est envoyé.';
+    document.getElementById('oaReportClose2').textContent=en?'Close':'Fermer';
+    document.getElementById('oaReportBtn').setAttribute('aria-label',en?'Report a problem':'Signaler un problème');
+    document.getElementById('oaReportBtn').title=en?'Report a problem':'Signaler un problème';
+  }
+  function fillSelect(){
+    var en=isEn(), cur=curGame();
+    var html='<option value="">'+(en?'The site / hub':'Le site / le hub')+'</option>';
+    GAMES.forEach(function(g){ html+='<option value="'+g[0]+'">'+g[1]+'</option>'; });
+    html+='<option value="other">'+(en?'Other':'Autre')+'</option>';
+    sel.innerHTML=html; sel.value=cur||'';
+  }
+  window.oaReport=function(){
+    labels(); fillSelect();
+    err.style.display='none'; msg.value=''; form.style.display='block'; done.style.display='none';
+    el.style.display='flex'; setTimeout(function(){ try{msg.focus();}catch(e){} },60);
+  };
+  function close(){ el.style.display='none'; }
+  document.getElementById('oaReportBtn').onclick=window.oaReport;
+  document.getElementById('oaReportCancel').onclick=close;
+  document.getElementById('oaReportClose2').onclick=close;
+  el.addEventListener('click',function(e){ if(e.target===el) close(); });
+  document.getElementById('oaReportSend').onclick=function(){
+    var en=isEn(); var text=(msg.value||'').trim();
+    if(text.length<3){ err.textContent=en?'Please describe the problem.':'Merci de décrire le problème.'; err.style.display='block'; return; }
+    var btn=this; btn.disabled=true; btn.style.opacity=.6;
+    fetch(API()+'/report.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({game:sel.value,message:text,page:location.href})})
+      .then(function(r){return r.ok?r.json():null;}).then(function(d){
+        btn.disabled=false; btn.style.opacity=1;
+        if(d&&d.ok){ form.style.display='none'; done.style.display='block'; }
+        else { err.textContent=en?'Sending failed. Please try again later.':'Envoi impossible. Réessayez plus tard.'; err.style.display='block'; }
+      }).catch(function(){ btn.disabled=false; btn.style.opacity=1; err.textContent=en?'Network error.':'Erreur réseau.'; err.style.display='block'; });
+  };
+})();
+</script>
+</body>
+</html>

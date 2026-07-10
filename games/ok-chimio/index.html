@@ -1,0 +1,2164 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="var(--bg)">
+<meta name="description" content="OK Chimio — un jeu de validation pharmaceutique des chimiothérapies. Validez les protocoles conformes, bloquez les prescriptions dangereuses.">
+<title>OK Chimio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chivo:wght@700;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0e0b14; --bg2:#131020; --desk:#1b1630; --desk2:#221b3a;
+  --line:rgba(168,140,220,.14); --line2:rgba(168,140,220,.30);
+  --paper:#efece6; --paper2:#e6e2da; --ink:#241b30; --ink-mut:#6a5f78;
+  --violet:#b06cff; --violet-d:#7c3aed; --violet-ink:#4c1d95;
+  --magenta:#e0489e; --cyan:#22c3e0;
+  --green:#22b07a; --green-d:#0f7a53; --green-ink:#0b3d2a;
+  --red:#e5484d; --red-d:#a01f22;
+  --amber:#f4b60a; --amber-d:#b8850a;
+  --text:#d5cde6; --muted:#948aa8; --muted2:#6a6284;
+  --ok:#22b07a; --bad:#e5484d;
+  --shadow:0 18px 40px -12px rgba(0,0,0,.72);
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%}
+body{
+  background:
+    radial-gradient(120% 80% at 50% -10%, #1a1230 0%, var(--bg) 55%, #08060d 100%);
+  color:var(--text);
+  font-family:"IBM Plex Mono",ui-monospace,monospace;
+  font-size:15px; line-height:1.45;
+  overscroll-behavior:none; -webkit-user-select:none; user-select:none;
+  overflow:hidden;
+}
+h1,h2,h3,.disp{font-family:"Chivo",sans-serif}
+button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:none}
+button:focus-visible,input:focus-visible{outline:2px solid var(--violet);outline-offset:2px}
+.hidden{display:none !important}
+
+/* ---------- App shell ---------- */
+#app{
+  position:fixed; inset:0; display:flex; flex-direction:column;
+  max-width:520px; margin:0 auto;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+.screen{position:absolute; inset:0; display:flex; flex-direction:column; overflow:hidden}
+
+/* ---------- Menu ---------- */
+#menu{padding:0 22px; justify-content:center; gap:0; text-align:center}
+.brand-iv{width:70px;height:82px;margin:0 auto 12px;display:block;filter:drop-shadow(0 6px 14px color-mix(in srgb, var(--violet) 32%, transparent))}
+#menu h1{
+  font-size:min(15vw,56px); line-height:.9; letter-spacing:-.02em; margin:0;
+  font-weight:560; color:#f3effa;
+}
+#menu h1 .p2{color:var(--violet); display:block; font-size:.9em; letter-spacing:.01em; margin-top:.05em}
+.tagline{color:var(--muted); font-size:13px; margin:16px auto 26px; max-width:340px; line-height:1.5}
+.menu-btns{display:flex;flex-direction:column;gap:11px;max-width:340px;margin:0 auto;width:100%}
+.btn{
+  border:1px solid var(--line2); background:var(--desk); color:var(--text);
+  padding:15px 18px; border-radius:12px; font-size:15px; font-weight:500;
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  transition:transform .06s ease, background .15s, border-color .15s;
+}
+.btn:active{transform:scale(.98)}
+.btn .k{font-size:11px;color:var(--muted);font-weight:400}
+.btn.primary{background:linear-gradient(180deg,var(--violet),var(--violet-d));border-color:var(--violet-d);color:#fff;font-weight:520}
+.btn.primary .k{color:rgba(255,255,255,.7)}
+.btn.ghost{background:transparent}
+.name-row{max-width:340px;margin:22px auto 0;width:100%;text-align:left}
+.name-row label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;display:block;margin:0 0 6px 2px}
+.name-row input{
+  width:100%;background:var(--bg2);border:1px solid var(--line2);color:var(--text);
+  padding:12px 14px;border-radius:10px;font-family:inherit;font-size:15px;
+}
+.name-row input:focus{outline:none;border-color:var(--violet-d)}
+.menu-foot{margin-top:22px;display:flex;gap:16px;justify-content:center;align-items:center;color:var(--muted);font-size:12px}
+.menu-foot button{color:var(--muted);text-decoration:underline;text-underline-offset:3px;font-size:12px}
+.sound-toggle{display:inline-flex;align-items:center;gap:6px}
+.lang-switch{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.lang-switch .lang-b{padding:3px 9px;font-size:11px;letter-spacing:.05em;color:var(--muted);background:transparent}
+.lang-switch .lang-b.on{background:var(--violet);color:#160a24;font-weight:520}
+
+/* ---------- HUD ---------- */
+#game{padding:0}
+.hud{padding:10px 14px 8px; border-bottom:1px solid var(--line); background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(255,255,255,0))}
+.hud-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.hud-mode{font-family:"Chivo";font-weight:560;font-size:12px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase}
+.hud-icons{display:flex;gap:4px}
+.iconbtn{width:34px;height:34px;border:1px solid var(--line);border-radius:9px;background:var(--desk);display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--text)}
+.iconbtn:active{background:var(--desk2)}
+.hud-stats{display:flex;align-items:baseline;justify-content:space-between;margin-top:9px;gap:8px}
+.score-wrap{display:flex;align-items:baseline;gap:8px}
+.score{font-family:"Chivo";font-weight:560;font-size:27px;color:#f3effa;line-height:1;font-variant-numeric:tabular-nums}
+.score-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+.combo{font-size:12px;color:var(--magenta);font-weight:500;opacity:0;transition:opacity .2s}
+.combo.on{opacity:1}
+.strikes{display:flex;gap:5px;align-items:center}
+.strike{width:15px;height:15px;border-radius:3px;border:1.5px solid var(--muted2);position:relative}
+.strike.x{border-color:var(--red);background:color-mix(in srgb, var(--red) 16%, transparent)}
+.strike.x::before,.strike.x::after{content:"";position:absolute;inset:2px 6px;background:var(--red);width:2px;border-radius:2px}
+.strike.x::before{transform:rotate(45deg)}.strike.x::after{transform:rotate(-45deg)}
+.timerbar{height:4px;border-radius:3px;background:rgba(255,255,255,.06);margin-top:9px;overflow:hidden}
+.timerfill{height:100%;width:100%;border-radius:3px;transform-origin:left;background:linear-gradient(90deg,var(--violet-d),var(--violet),var(--magenta),var(--cyan),var(--green));transition:none}
+
+/* ---------- Order card ---------- */
+.stage{flex:1;position:relative;overflow:hidden;display:flex;flex-direction:column}
+.plan-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px 6px}
+.queue-note{text-align:center;font-size:11px;color:var(--muted2);letter-spacing:.14em;text-transform:uppercase;margin:2px 0 10px}
+.plan{
+  position:relative;background:
+    repeating-linear-gradient(0deg,transparent,transparent 27px,rgba(36,27,48,.05) 27px,rgba(36,27,48,.05) 28px),
+    linear-gradient(180deg,var(--paper),var(--paper2));
+  color:var(--ink);border-radius:6px;box-shadow:var(--shadow);
+  border:1px solid #cbc6bd; overflow:hidden;
+}
+.plan::before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;
+  background:repeating-linear-gradient(-45deg,var(--violet-d),var(--violet-d) 6px,var(--magenta) 6px,var(--magenta) 12px);opacity:.9}
+.plan.deal{animation:dealIn .34s cubic-bezier(.2,.9,.25,1)}
+@keyframes dealIn{from{transform:translateY(26px) rotate(.6deg);opacity:0}to{transform:none;opacity:1}}
+.plan-tab{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  background:linear-gradient(180deg,#2a2140,#1f1830);color:#e7dff2;
+  padding:9px 13px 9px 16px;font-family:"Chivo";font-weight:560;font-size:11.5px;letter-spacing:.09em;
+}
+.plan-tab .pid{font-family:"IBM Plex Mono";font-weight:500;color:#a99cc4;letter-spacing:0}
+.isoswatch{height:7px;border-radius:2px;flex:0 0 46px;background:linear-gradient(90deg,var(--violet-d),var(--violet),var(--magenta),var(--cyan),var(--green))}
+.plan-body{padding:12px 13px 14px 16px}
+.row{display:flex;gap:10px;padding:7px 0;border-bottom:1px dashed rgba(36,27,48,.16)}
+.row:last-child{border-bottom:none}
+.row .lab{flex:0 0 92px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-mut);padding-top:2px}
+.row .val{flex:1;font-weight:500;font-size:14.5px;color:var(--ink)}
+.row .val .sub{color:var(--ink-mut);font-weight:400;font-size:12.5px}
+.pill{display:inline-block;padding:1px 7px;border-radius:20px;font-size:11px;font-weight:500;letter-spacing:.03em;border:1px solid rgba(36,27,48,.25)}
+.pill.intent{background:color-mix(in srgb, var(--violet-d) 10%, transparent);color:var(--violet-ink);border-color:color-mix(in srgb, var(--violet-d) 30%, transparent)}
+.pill.cyc{background:color-mix(in srgb, var(--magenta) 10%, transparent);color:#a01f6a;border-color:color-mix(in srgb, var(--magenta) 30%, transparent)}
+/* drug lines */
+.drugs{margin-top:1px}
+.drug{display:flex;align-items:baseline;gap:7px;font-size:13.5px;padding:3px 0}
+.drug .dn{flex:1;color:var(--ink);font-weight:500}
+.drug .dd{color:var(--ink-mut);font-size:12px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.drug .arr{color:#8a5bd0;font-weight:520}
+.drug .dtot{font-weight:520;font-variant-numeric:tabular-nums;color:#5b2c83;white-space:nowrap}
+.drug .drt{font-size:10.5px;color:var(--ink-mut);flex:0 0 auto;letter-spacing:.02em}
+.drug .drt.fatal{color:#c62a2f;font-weight:520}
+/* labs */
+.labs{margin-top:2px}
+.lab-line{display:flex;flex-wrap:wrap;gap:3px 12px;font-size:13px;padding:2px 0}
+.lab-line .li{font-variant-numeric:tabular-nums}
+.lab-line .li .k2{color:var(--ink-mut);font-size:11px;text-transform:uppercase;letter-spacing:.04em;margin-right:3px}
+.lab-line .li .lim{color:var(--ink-mut);font-size:11px}
+.cum{display:flex;align-items:center;gap:8px;font-size:13px;padding:3px 0}
+.cum .on{flex:1;color:var(--ink)}
+.cum .v{font-weight:520;font-variant-numeric:tabular-nums}
+.cum .lim{color:var(--ink-mut);font-size:11.5px}
+.cum .brk{color:var(--ink-mut);font-size:11.5px;font-weight:400}
+.plan-foot{padding:8px 13px 8px 16px;border-top:1px solid rgba(36,27,48,.14);font-size:10.5px;color:var(--ink-mut);display:flex;justify-content:space-between;background:rgba(36,27,48,.03)}
+
+/* stamp */
+.stamp{
+  position:absolute;top:36%;left:50%;transform:translate(-50%,-50%) rotate(-15deg);
+  font-family:"Chivo";font-weight:560;font-size:40px;letter-spacing:.03em;
+  padding:6px 20px;border:5px solid;border-radius:8px;text-transform:uppercase;
+  opacity:0;pointer-events:none;mix-blend-mode:multiply;
+  box-shadow:inset 0 0 0 3px currentColor;
+}
+.stamp.show{animation:stampIn .42s cubic-bezier(.2,1.2,.3,1) forwards}
+.stamp.approve{color:#0f8a5e;border-color:#0f8a5e}
+.stamp.reject{color:#c62a2f;border-color:#c62a2f}
+@keyframes stampIn{0%{opacity:0;transform:translate(-50%,-50%) rotate(-15deg) scale(2.6)}
+55%{opacity:.92;transform:translate(-50%,-50%) rotate(-15deg) scale(.92)}
+70%{transform:translate(-50%,-50%) rotate(-15deg) scale(1.04)}100%{opacity:.9;transform:translate(-50%,-50%) rotate(-15deg) scale(1)}}
+.shake{animation:shake .38s}
+@keyframes shake{10%,90%{transform:translateX(-2px)}20%,80%{transform:translateX(4px)}30%,50%,70%{transform:translateX(-7px)}40%,60%{transform:translateX(7px)}}
+.flash{position:absolute;inset:0;pointer-events:none;opacity:0;z-index:5}
+.flash.good{background:radial-gradient(circle at 50% 40%,color-mix(in srgb, var(--green) 45%, transparent),transparent 70%);animation:fl .5s}
+.flash.bad{background:radial-gradient(circle at 50% 40%,color-mix(in srgb, var(--red) 50%, transparent),transparent 70%);animation:fl .5s}
+@keyframes fl{0%{opacity:1}100%{opacity:0}}
+
+/* points popup */
+.popup{position:absolute;left:50%;top:30%;transform:translateX(-50%);font-family:"Chivo";font-weight:560;font-size:26px;color:var(--magenta);text-shadow:0 2px 8px rgba(0,0,0,.5);pointer-events:none;z-index:6;opacity:0}
+.popup.go{animation:pop 1s ease forwards}
+@keyframes pop{0%{opacity:0;transform:translate(-50%,6px)}18%{opacity:1}100%{opacity:0;transform:translate(-50%,-34px)}}
+
+/* toast */
+.toast{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);background:var(--desk2);border:1px solid var(--line2);border-radius:20px;padding:7px 16px;font-size:12.5px;color:var(--text);z-index:8;opacity:0;transition:opacity .2s;white-space:nowrap;max-width:92%;text-align:center;overflow:hidden;text-overflow:ellipsis}
+.toast.on{opacity:1}
+.toast.good{border-color:var(--green-d);color:#7be3b8}
+
+/* ---------- Action buttons ---------- */
+.actions{display:flex;gap:12px;padding:12px 14px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:linear-gradient(0deg,rgba(255,255,255,.96),rgba(255,255,255,0))}
+.act{
+  flex:1;border-radius:14px;padding:16px 10px 15px;display:flex;flex-direction:column;align-items:center;gap:3px;
+  font-family:"Chivo";font-weight:560;font-size:16px;letter-spacing:.05em;border:1px solid;
+  transition:transform .06s ease;
+}
+.act:active{transform:scale(.96)}
+.act .ico{font-size:22px;line-height:1}
+.act .sub{font-family:"IBM Plex Mono";font-weight:400;font-size:10px;letter-spacing:.02em;opacity:.8}
+.act.reject{background:linear-gradient(180deg,var(--red),#b8282d);border-color:#8f1f23;color:#fff}
+.act.approve{background:linear-gradient(180deg,#25c489,#159169);border-color:#0d7050;color:#05261a}
+.act.approve .sub{color:rgba(5,38,26,.75)}
+.act[disabled]{opacity:.45;pointer-events:none}
+
+/* ---------- Overlays / modals ---------- */
+.overlay{position:absolute;inset:0;background:rgba(8,6,14,.74);backdrop-filter:blur(3px);z-index:20;display:flex;align-items:center;justify-content:center;padding:20px}
+.sheet{width:100%;max-width:400px;background:var(--bg2);border:1px solid var(--line2);border-radius:16px;box-shadow:var(--shadow);max-height:88%;overflow-y:auto}
+.sheet-h{padding:16px 18px 12px;border-bottom:1px solid var(--line)}
+.sheet-h h2{margin:0;font-size:19px;color:#f3effa}
+.sheet-h .sub{color:var(--muted);font-size:12px;margin-top:3px}
+.sheet-b{padding:16px 18px}
+.sheet-b p{margin:0 0 10px;font-size:13.5px;color:var(--text)}
+.close-x{float:right;font-size:20px;color:var(--muted);width:30px;height:30px;margin:-4px -4px 0 0}
+
+/* incident report */
+.incident .sheet{border-color:var(--red-d)}
+.inc-flag{display:inline-flex;align-items:center;gap:7px;background:color-mix(in srgb, var(--red) 14%, transparent);border:1px solid var(--red-d);color:#ff9a9d;padding:4px 11px;border-radius:20px;font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;margin-bottom:12px}
+.inc-what{font-family:"Chivo";font-weight:560;font-size:18px;color:#f3effa;margin:0 0 8px;line-height:1.25}
+.inc-body{font-size:13.5px;color:var(--text);line-height:1.55}
+.inc-std{margin-top:12px;padding:10px 12px;background:color-mix(in srgb, var(--green) 8%, transparent);border:1px solid var(--green-d);border-radius:9px;font-size:12.5px}
+.inc-std b{color:#6fdcac}
+
+/* protocol drawer */
+.proto h3{font-family:"Chivo";font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--violet);margin:16px 0 7px}
+.proto h3:first-child{margin-top:0}
+.ptab{display:grid;grid-template-columns:1fr auto;gap:2px 10px;font-size:12.5px;padding:4px 0;border-bottom:1px dashed var(--line)}
+.ptab .d{color:var(--muted);text-align:right}
+
+/* ---------- Game over ---------- */
+#over .sheet{max-width:420px}
+.rankbadge{display:flex;align-items:center;gap:14px;padding:14px 16px;background:linear-gradient(180deg,var(--desk2),var(--desk));border:1px solid var(--line2);border-radius:12px;margin-bottom:14px}
+.rankbadge .medal{width:52px;height:52px;flex:0 0 52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:26px;background:radial-gradient(circle at 40% 35%,#c98bff,var(--violet-d));color:#fff;box-shadow:inset 0 -3px 8px rgba(0,0,0,.25)}
+.rankbadge .rk-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+.rankbadge .rk-name{font-family:"Chivo";font-weight:560;font-size:18px;color:#f3effa;line-height:1.1;margin-top:2px}
+.ostats{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:14px}
+.ostat{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:11px 13px}
+.ostat .n{font-family:"Chivo";font-weight:560;font-size:22px;color:#f3effa;font-variant-numeric:tabular-nums}
+.ostat .l{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-top:1px}
+.grid-share{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:14px;text-align:center}
+.grid-share .emojis{font-size:18px;letter-spacing:2px;line-height:1.5;word-break:break-all}
+.grid-share .cap{font-size:11px;color:var(--muted);margin-top:6px}
+.over-btns{display:flex;flex-direction:column;gap:9px}
+
+/* leaderboard */
+.lb-tabs{display:flex;gap:8px;margin-bottom:12px}
+.lb-tab{flex:1;padding:9px;border:1px solid var(--line2);border-radius:9px;text-align:center;font-size:12.5px;color:var(--muted);background:var(--desk)}
+.lb-tab.on{color:#160a24;background:var(--violet);border-color:var(--violet-d);font-weight:520}
+.lb-list{display:flex;flex-direction:column;gap:5px}
+.lb-row{display:flex;align-items:center;gap:10px;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:var(--bg);font-size:13px}
+.lb-row.me{border-color:var(--violet-d);background:color-mix(in srgb, var(--violet) 8%, transparent)}
+.lb-rank{flex:0 0 26px;font-family:"Chivo";font-weight:560;color:var(--muted);text-align:center}
+.lb-row:nth-child(1) .lb-rank{color:var(--violet)}
+.lb-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lb-sc{font-family:"Chivo";font-weight:560;color:#f3effa;font-variant-numeric:tabular-nums}
+.lb-acc{font-size:11px;color:var(--muted);flex:0 0 auto}
+.lb-empty{text-align:center;color:var(--muted);font-size:13px;padding:24px 10px}
+.cloud-note{font-size:10.5px;color:var(--muted2);text-align:center;margin-top:10px;line-height:1.5}
+
+::-webkit-scrollbar{width:0;height:0}
+
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:.001s !important}
+  .plan.deal{animation:none}
+  .shake{animation:none}
+}
+</style>
+<style id="oa-menu-style">
+  #menu{ --oa-card2:rgba(15,23,42,.72); --oa-text:#f8fafc; --oa-muted:#a7b0c2; --oa-stroke:rgba(255,255,255,.12);
+    --oa-primary:#7aa2ff; --oa-cyan:#22d3ee; --oa-green:#34d399; --oa-amber:#f6bd60; --oa-shadow:0 24px 72px rgba(0,0,0,.38);
+    background:#070a12!important;
+    font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; color:var(--oa-text); overflow-y:auto; }
+  html[data-theme="light"] #menu{ --oa-card2:rgba(255,255,255,.86); --oa-text:#111827; --oa-muted:#667085; --oa-stroke:rgba(17,24,39,.11);
+    --oa-primary:#2557d6; --oa-cyan:#0891b2; --oa-green:#047857; --oa-amber:#b45309; --oa-shadow:0 16px 42px rgba(15,23,42,.08);
+    background:#f7f8fb!important; }
+  #menu::before{ content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background:
+      radial-gradient(circle at 14% 6%, rgba(122,162,255,.10), transparent 34%),
+      radial-gradient(circle at 88% 8%, rgba(244,114,182,.06), transparent 32%),
+      radial-gradient(circle at 44% 92%, rgba(34,211,238,.06), transparent 36%); }
+  html[data-theme="light"] #menu::before{
+    background:
+      radial-gradient(circle at 14% 6%, rgba(37,87,214,.08), transparent 34%),
+      radial-gradient(circle at 88% 8%, rgba(192,38,120,.05), transparent 32%),
+      radial-gradient(circle at 44% 92%, rgba(8,145,178,.05), transparent 36%); }
+  #menu .oa-card{ position:relative; z-index:1; }
+
+  #menu .oa-card{ width:100%; max-width:392px; margin:auto; padding:26px 22px; text-align:center; background:transparent; border:none; box-shadow:none; backdrop-filter:none; }
+  #menu .oa-eyebrow{ display:inline-flex; align-items:center; gap:8px; font-size:11px; font-weight:520; letter-spacing:.14em; text-transform:uppercase; color:var(--oa-muted); margin-bottom:10px; }
+  #menu .oa-eyebrow i{ width:7px; height:7px; border-radius:999px; background:var(--oa-green); box-shadow:0 0 0 5px color-mix(in srgb,var(--oa-green) 13%,transparent); }
+  #menu .brand-iv{ filter:drop-shadow(0 6px 14px rgba(122,162,255,.3)); margin:0 auto 8px; }
+  #menu h1{ font-family:inherit; font-size:min(11vw,38px); font-weight:560; letter-spacing:-.02em; line-height:1;
+    background:linear-gradient(120deg,var(--oa-text),var(--oa-primary) 45%,var(--oa-cyan)); -webkit-background-clip:text; background-clip:text; color:transparent; -webkit-text-fill-color:transparent; }
+  #menu h1 .p2{ color:transparent!important; display:block; font-size:.9em; margin-top:.05em; }
+  #menu .tagline{ color:var(--oa-muted); font-size:13px; margin:12px auto 18px; max-width:320px; line-height:1.5; }
+  #menu .menu-btns{ display:flex; flex-direction:column; gap:9px; max-width:320px; margin:0 auto; width:100%; }
+  #menu .menu-btns .btn{ display:flex; justify-content:space-between; align-items:center; font-family:inherit; font-size:14px; font-weight:520; padding:13px 16px; border-radius:12px; border:1px solid var(--oa-stroke); background:color-mix(in srgb,var(--oa-text) 5%,transparent); color:var(--oa-text); cursor:pointer; text-align:left; }
+  #menu .menu-btns .btn .k{ font-size:11px; color:var(--oa-muted); font-weight:500; }
+  #menu .menu-btns .btn.primary{ background:linear-gradient(135deg,var(--oa-primary),color-mix(in srgb,var(--oa-primary) 68%,var(--oa-cyan))); border:none; color:#fff; }
+  #menu .menu-btns .btn.primary .k{ color:rgba(255,255,255,.78); }
+  #menu .menu-btns .btn.ghost{ background:transparent; }
+  #menu .menu-btns .btn:active{ transform:scale(.98); }
+  #menu .name-row{ max-width:320px; margin:16px auto 0; width:100%; text-align:left; }
+  #menu .name-row label{ font-size:11px; color:var(--oa-muted); text-transform:uppercase; letter-spacing:.08em; display:block; margin:0 0 6px 2px; }
+  #menu .name-row input{ width:100%; font-family:inherit; font-size:14px; color:var(--oa-text); background:color-mix(in srgb,var(--oa-text) 5%,transparent); border:1px solid var(--oa-stroke); border-radius:10px; padding:11px 13px; }
+  #menu .name-row input:focus{ outline:none; border-color:var(--oa-primary); }
+  #menu .oa-links{ display:flex; gap:9px; justify-content:center; margin-top:16px; }
+  #menu .oa-links a, #menu .oa-links button{ font-family:inherit; font-size:12.5px; color:var(--oa-muted); text-decoration:none; background:none; border:1px solid var(--oa-stroke); border-radius:999px; padding:8px 13px; cursor:pointer; }
+  #menu .oa-links a:hover, #menu .oa-links button:hover{ color:var(--oa-text); }
+  #menu .oa-about{ margin:14px auto 0; max-width:340px; text-align:left; border:1px solid var(--oa-stroke); border-radius:16px; background:color-mix(in srgb,var(--oa-text) 4%,transparent); padding:14px 16px; }
+  #menu .oa-about > p{ margin:0; color:var(--oa-text); font-size:13px; line-height:1.55; }
+  #menu .oa-sig{ display:flex; align-items:center; gap:11px; margin:12px 0; }
+  #menu .oa-sig .mk{ width:32px; height:32px; border-radius:10px; flex:none; background:conic-gradient(from 180deg,var(--oa-primary),var(--oa-cyan),var(--oa-green),var(--oa-amber),var(--oa-primary)); }
+  #menu .oa-sig b{ display:block; font-size:14px; color:var(--oa-text); }
+  #menu .oa-sig span{ display:block; font-size:12px; color:var(--oa-muted); }
+  #menu .oa-disc{ color:var(--oa-muted)!important; font-size:12px!important; }
+  #menu .menu-foot{ margin-top:18px; display:flex; gap:14px; justify-content:center; align-items:center; color:var(--oa-muted); font-size:12px; flex-wrap:wrap; }
+  #menu .menu-foot button{ font-family:inherit; color:var(--oa-muted); background:none; border:none; cursor:pointer; font-size:12px; text-decoration:none; }
+  #menu .sound-toggle{ display:inline-flex; align-items:center; gap:6px; }
+  #menu .lang-switch{ display:inline-flex; border:1px solid var(--oa-stroke); border-radius:8px; overflow:hidden; }
+  #menu .lang-switch .lang-b{ padding:3px 9px; font-size:11px; color:var(--oa-muted); background:transparent; }
+  #menu .lang-switch .lang-b.on{ background:var(--oa-primary); color:#fff; font-weight:520; }
+  #menu .oa-theme{ border:1px solid var(--oa-stroke)!important; border-radius:999px!important; padding:4px 10px!important; }
+</style>
+<script id="onco-arcade-query-sync">
+(function(){
+  try{
+    var p=new URLSearchParams(location.search);
+    var theme=(p.get('theme')||'').toLowerCase();
+    if(theme==='dark'||theme==='light'){document.documentElement.setAttribute('data-theme',theme);localStorage.setItem('oa-theme',theme);}
+    var lang=(p.get('lang')||'').toLowerCase();
+    if(lang==='fr'||lang==='en'){document.documentElement.lang=lang;localStorage.setItem('oa-lang',lang);localStorage.setItem('vrt_lang',lang);}
+  }catch(e){}
+})();
+</script>
+
+<style id="ok-chimio-border-fix">
+  /* Onco Arcade patch: Plan, Please width and clean page background */
+  html, body{background:var(--bg)!important;}
+  body{display:block;}
+  #app{max-width:690px!important;width:100%!important;margin:0 auto!important;background:transparent!important;}
+  html[data-theme="light"], html[data-theme="light"] body{background:#f7f8fb!important;}
+  html[data-theme="dark"], html[data-theme="dark"] body{background:#070a12!important;}
+  html[data-theme="light"] #menu{left:0;right:0;background:#f7f8fb!important;}
+  html[data-theme="dark"] #menu{left:0;right:0;background:#070a12!important;}
+</style>
+<style id="oa-charte-conformance">
+/* Conformité charte : pas de capitales forcées, poids légers, police système sur le chrome du menu */
+.oa-eyebrow{ text-transform:none !important; letter-spacing:.01em !important; font-weight:500 !important; font-size:13px !important; }
+.oa-title{ font-weight:500 !important; }
+</style>
+<style id="oa-vh-fill">
+/* Plein ecran mobile : le fond remplit tout le viewport, y compris sous la Dynamic Island */
+html{ background:var(--bg, #070a12) !important; min-height:100dvh; }
+html[data-theme="light"]{ background:var(--bg, #f7f8fb) !important; }
+</style>
+<style id="oa-okc-light">
+/* Interface claire facon Plan, Please : desk clair, texte sombre. Les fiches papier et les accents restent. */
+:root{
+  --bg:#f7f8fb; --bg2:#eef1f7; --desk:#ffffff; --desk2:#f4f6fb;
+  --line:rgba(17,24,39,.10); --line2:rgba(17,24,39,.20);
+  --text:#1f2533; --muted:#5c6472; --muted2:#8a93a3;
+  --shadow:0 16px 42px -14px rgba(15,23,42,.20);
+}
+</style>
+<style id="oa-okc-charte">
+/* ===== Palette conforme à la charte Onco Arcade (clair + sombre) =====
+   Tous les accents/neutres suivent la charte ; les fiches papier (--paper/--ink) restent. */
+:root{
+  --bg:#f7f8fb; --bg2:#ffffff; --desk:#ffffff; --desk2:#f4f6fb;
+  --line:rgba(17,24,39,.10); --line2:rgba(17,24,39,.18);
+  --text:#111827; --muted:#667085; --muted2:#98a2b3;
+  --primary:#2557d6;
+  --violet:#6d28d9; --violet-d:#5b21b6; --violet-ink:#4c1d95;
+  --magenta:#c02678; --cyan:#0891b2;
+  --green:#047857; --green-d:#065f46; --green-ink:#064e3b;
+  --red:#c2414b; --red-d:#991b1b;
+  --amber:#b45309; --amber-d:#92400e;
+  --ok:#047857; --bad:#c2414b;
+  --shadow:0 16px 42px -14px rgba(15,23,42,.18);
+}
+html[data-theme="dark"]{
+  --bg:#070a12; --bg2:#0d1323; --desk:#141d30; --desk2:#1b2540;
+  --line:rgba(255,255,255,.10); --line2:rgba(255,255,255,.18);
+  --text:#f8fafc; --muted:#a7b0c2; --muted2:#7d8798;
+  --primary:#7aa2ff;
+  --violet:#a78bfa; --violet-d:#8b5cf6; --violet-ink:#c4b5fd;
+  --magenta:#f472b6; --cyan:#22d3ee;
+  --green:#34d399; --green-d:#10b981; --green-ink:#a7f3d0;
+  --red:#fb7185; --red-d:#f43f5e;
+  --amber:#f6bd60; --amber-d:#d99a2b;
+  --ok:#34d399; --bad:#fb7185;
+  --shadow:0 24px 72px rgba(0,0,0,.4);
+}
+</style>
+<style id="oa-charter-weights">b,strong{font-weight:560}</style>
+<style id="oa-hide-inner-pseudo">/* pseudo demande une seule fois par l'overlay commun : saisie interne masquee */ .name-row:has(#nameInput){display:none!important}</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ================= MENU ================= -->
+  <section class="screen" id="menu">
+    <div class="oa-card">
+    <div class="oa-eyebrow"><i></i><span id="oaEyebrow">Onco Arcade · oncologie médicale</span></div>
+    <svg class="brand-iv" viewBox="0 0 60 72" aria-hidden="true">
+      <!-- hanger -->
+      <path d="M30 3 v6" stroke="var(--violet)" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+      <circle cx="30" cy="3" r="2.4" fill="none" stroke="var(--violet)" stroke-width="2"/>
+      <!-- bag -->
+      <rect x="16" y="9" width="28" height="38" rx="7" fill="#150f24" stroke="var(--violet)" stroke-width="2.4"/>
+      <!-- fluid -->
+      <path d="M18 27 h24 v13 a5 5 0 0 1-5 5 H23 a5 5 0 0 1-5-5 Z" fill="var(--violet-d)" opacity=".85"/>
+      <path d="M18 22 h24 v6 h-24 Z" fill="var(--magenta)" opacity=".55"/>
+      <line x1="22" y1="15" x2="22" y2="21" stroke="#8b7bb5" stroke-width="1.4" stroke-linecap="round"/>
+      <line x1="26" y1="15" x2="26" y2="21" stroke="#8b7bb5" stroke-width="1.4" stroke-linecap="round"/>
+      <!-- drip chamber + tube -->
+      <rect x="27" y="47" width="6" height="9" rx="2" fill="#150f24" stroke="var(--violet)" stroke-width="1.8"/>
+      <path d="M30 56 v10" stroke="var(--violet)" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+      <!-- drop -->
+      <circle cx="30" cy="52" r="1.7" fill="var(--cyan)"/>
+      <path d="M30 66 c-3 3-3 6 0 6 c3 0 3-3 0-6 Z" fill="var(--cyan)"/>
+    </svg>
+    <h1 id="okTitle">OK<span class="p2">CHIMIO</span></h1>
+    <p class="tagline" id="uiTagline"></p>
+    <div class="menu-btns">
+      <button class="btn primary" id="btnDaily"><span id="uiDailyLabel"></span><span class="k" id="dailyTag"></span></button>
+      <button class="btn" id="btnEndless"><span id="uiEndlessLabel"></span><span class="k" id="uiEndlessSub"></span></button>
+      <button class="btn ghost" id="btnLb"><span id="uiLbLabel"></span><span class="k">→</span></button>
+      <button class="btn ghost" id="btnHow"><span id="uiHowLabel"></span><span class="k">?</span></button>
+    </div>
+    <div class="name-row">
+      <label for="nameInput" id="uiNameLabel"></label>
+      <input id="nameInput" maxlength="18" placeholder="Dr …" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="oa-links">
+      <a href="../../index.html" id="allGames">Tous les jeux</a>
+      <button id="aboutBtn" type="button">À propos</button>
+    </div>
+    <div class="oa-about" id="aboutBox" hidden>
+      <p id="aboutLede"></p>
+      <div class="oa-sig"><span class="mk"></span><div><b>Pr Jean-Emmanuel Bibault</b><span id="aboutRole"></span></div></div>
+      <p class="oa-disc" id="aboutDisc"></p>
+    </div>
+    <div class="menu-foot">
+      <button class="sound-toggle" id="btnSound"><span id="soundIco">🔊</span> <span id="uiSoundLabel">Son</span></button>
+      <div class="lang-switch" role="group" aria-label="Language">
+        <button class="lang-b" id="langFr">FR</button><button class="lang-b" id="langEn">EN</button>
+      </div>
+      <button class="oa-theme" id="themeBtn" type="button" aria-label="Thème clair / sombre">☾</button>
+      <span id="bestTag"></span>
+    </div>
+    </div>
+  </section>
+
+  <!-- ================= GAME ================= -->
+  <section class="screen hidden" id="game">
+    <div class="hud">
+      <div class="hud-top">
+        <div class="hud-mode" id="hudMode">FLUX CONTINU</div>
+        <div class="hud-icons">
+          <button class="iconbtn" id="btnProto" title="Référence des protocoles">📋</button>
+          <button class="iconbtn" id="btnSound2" title="Son">🔊</button>
+          <button class="iconbtn" id="btnQuit" title="Terminer la séance">✕</button>
+        </div>
+      </div>
+      <div class="hud-stats">
+        <div class="score-wrap">
+          <div>
+            <div class="score" id="score">0</div>
+            <div class="score-lbl">score</div>
+          </div>
+          <div class="combo" id="combo">×1.0</div>
+        </div>
+        <div class="strikes" id="strikes"></div>
+      </div>
+      <div class="timerbar"><div class="timerfill" id="timerfill"></div></div>
+    </div>
+
+    <div class="stage">
+      <div class="plan-scroll" id="planScroll">
+        <div class="queue-note" id="queueNote">ORDONNANCE 1</div>
+        <div class="plan" id="plan"></div>
+      </div>
+      <div class="flash" id="flash"></div>
+      <div class="popup" id="popup"></div>
+      <div class="toast" id="toast"></div>
+    </div>
+
+    <div class="actions">
+      <button class="act reject" id="btnReject"><span class="ico">✖</span><span id="uiRejectLabel">BLOQUER</span><span class="sub" id="uiRejectSub">renvoyer au prescripteur</span></button>
+      <button class="act approve" id="btnApprove"><span class="ico">✔</span><span id="uiApproveLabel">VALIDER</span><span class="sub" id="uiApproveSub">OK chimio</span></button>
+    </div>
+  </section>
+
+  <!-- ================= OVERLAYS ================= -->
+  <div class="overlay hidden" id="incidentOv">
+    <div class="incident" style="width:100%;max-width:400px">
+      <div class="sheet">
+        <div class="sheet-b">
+          <div class="inc-flag" id="incFlag">⚠ Erreur médicamenteuse</div>
+          <div class="inc-what" id="incWhat"></div>
+          <div class="inc-body" id="incBody"></div>
+          <div class="inc-std" id="incStd"></div>
+          <button class="btn primary" id="btnIncNext" style="margin-top:16px;justify-content:center">Continuer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay hidden" id="protoOv">
+    <div class="sheet">
+      <div class="sheet-h"><button class="close-x" data-close="protoOv">✕</button><h2 id="uiProtoTitle"></h2><div class="sub" id="uiProtoSub"></div></div>
+      <div class="sheet-b proto" id="protoBody"></div>
+    </div>
+  </div>
+
+  <div class="overlay hidden" id="howOv">
+    <div class="sheet">
+      <div class="sheet-h"><button class="close-x" data-close="howOv">✕</button><h2 id="uiHowTitle"></h2><div class="sub" id="uiHowSub"></div></div>
+      <div class="sheet-b">
+        <p id="uiHow1"></p>
+        <p id="uiHow2"></p>
+        <p id="uiHow3"></p>
+        <p id="uiHow4"></p>
+        <p style="color:var(--muted)" id="uiHow5"></p>
+        <button class="btn primary" data-close="howOv" id="uiHowBtn" style="justify-content:center;margin-top:6px"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- game over -->
+  <div class="overlay hidden" id="over">
+    <div class="sheet">
+      <div class="sheet-h"><h2 id="overTitle">Séance terminée</h2><div class="sub" id="overSub"></div></div>
+      <div class="sheet-b">
+        <div class="rankbadge">
+          <div class="medal" id="overMedal">🎖️</div>
+          <div><div class="rk-lbl" id="uiRankLbl"></div><div class="rk-name" id="overRank"></div></div>
+        </div>
+        <div class="ostats">
+          <div class="ostat"><div class="n" id="ovScore">0</div><div class="l" id="uiOsScore"></div></div>
+          <div class="ostat"><div class="n" id="ovCleared">0</div><div class="l" id="uiOsCleared"></div></div>
+          <div class="ostat"><div class="n" id="ovAcc">0%</div><div class="l" id="uiOsAcc"></div></div>
+          <div class="ostat"><div class="n" id="ovStreak">0</div><div class="l" id="uiOsStreak"></div></div>
+        </div>
+        <div class="grid-share hidden" id="shareBox">
+          <div class="emojis" id="shareGrid"></div>
+          <div class="cap" id="shareCap"></div>
+        </div>
+        <div class="over-btns">
+          <button class="btn" id="btnCopy"><span id="uiCopyLabel"></span><span class="k">⧉</span></button>
+          <button class="btn primary" id="btnAgain" style="justify-content:center"></button>
+          <button class="btn ghost" id="btnOverLb" style="justify-content:center"></button>
+          <button class="btn ghost" id="btnMenu" style="justify-content:center"></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- leaderboard -->
+  <div class="overlay hidden" id="lbOv">
+    <div class="sheet">
+      <div class="sheet-h"><button class="close-x" data-close="lbOv">✕</button><h2 id="uiLbTitle"></h2><div class="sub" id="uiLbSub"></div></div>
+      <div class="sheet-b">
+        <div class="lb-tabs">
+          <button class="lb-tab on" id="lbTabDaily"></button>
+          <button class="lb-tab" id="lbTabEndless"></button>
+        </div>
+        <div class="lb-list" id="lbList"></div>
+        <div class="cloud-note" id="cloudNote"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+/* ============================================================
+   OK Chimio — single-file bilingual game (FR / EN)
+   Pharmaceutical validation of chemotherapy orders.
+   Built on the Plan, Please engine.
+   ============================================================ */
+
+/* Optional shared leaderboard backend (Cloudflare Worker).
+   Leave "" to use the in-app board (shared inside Claude, local when self-hosted). */
+var LEADERBOARD_API = "../../api";   // API Onco Arcade (OVH — PHP + MySQL) ; "" = classement in-app/local
+function boardToApi(key){
+  if(String(key).indexOf("ok_lb_daily_")===0) return { game:"ok-chimio-daily", board:"d_"+String(key).replace("ok_lb_daily_","") };
+  return { game:"ok-chimio", board:"endless" };
+}
+
+/* ---------- language ---------- */
+function detectLang(){
+  try{ var u=(new URLSearchParams(location.search).get("lang")||"").toLowerCase(); if(u==="fr"||u==="en"){ try{localStorage.setItem("ok_lang",u);}catch(e){} return u; } }catch(e){}
+  try{ var s=localStorage.getItem("ok_lang"); if(s==="fr"||s==="en") return s; }catch(e){}
+  try{ var n=(navigator.language||navigator.userLanguage||"fr").toLowerCase(); if(n.indexOf("en")===0) return "en"; }catch(e){}
+  return "fr";
+}
+var LANG = detectLang();
+
+/* short UI strings used inside JS-generated markup */
+var TXT = {
+  fr:{ orderTab:"ORDONNANCE DE CHIMIOTHÉRAPIE", patient:"Patient", yrs:" ans", mrn:"IPP",
+       diagnosis:"Diagnostic", protocol:"Protocole", cycle:"Cycle", morph:"Morphologie",
+       rxLabel:"Prescription", labs:"Bilan", bio:"Biologie", fevg:"FEVG", premed:"Prémédication",
+       cumLabel:"cumulée", newCourse:"cette cure", planSys:"SYSTÈME DE PRESCRIPTION",
+       reviewer:"Validé par :", drDash:"Dr —", hudDaily:"VALIDATION DU JOUR", hudEndless:"FLUX CONTINU",
+       queue:"ORDONNANCE", stampOk:"VALIDÉ", stampNo:"BLOQUÉ",
+       toastClean:"Validé — protocole conforme.", toastCatch:"Bien vu — ", bestEndless:"Record flux continu : ",
+       copyOk:"Copié dans le presse-papiers", copyFail:"Copie indisponible — appui long pour sélectionner",
+       none:"— aucune", capNote:"plafond", noneAdmin:"—" },
+  en:{ orderTab:"CHEMOTHERAPY ORDER", patient:"Patient", yrs:"y", mrn:"MRN",
+       diagnosis:"Diagnosis", protocol:"Protocol", cycle:"Cycle", morph:"Body size",
+       rxLabel:"Prescription", labs:"Counts", bio:"Chemistry", fevg:"LVEF", premed:"Premedication",
+       cumLabel:"cumulative", newCourse:"this cycle", planSys:"ORDER-ENTRY SYSTEM",
+       reviewer:"Verified by:", drDash:"Dr —", hudDaily:"DAILY QUEUE", hudEndless:"ENDLESS QUEUE",
+       queue:"ORDER", stampOk:"RELEASED", stampNo:"HELD",
+       toastClean:"Released — order is correct.", toastCatch:"Good catch — ", bestEndless:"Best endless: ",
+       copyOk:"Copied to clipboard", copyFail:"Copy not available — long-press to select",
+       none:"— none", capNote:"cap", noneAdmin:"—" }
+};
+function tr(k){ return (TXT[LANG]&&TXT[LANG][k]!=null)?TXT[LANG][k]:TXT.fr[k]; }
+function L(o){ if(o==null) return ""; if(typeof o==="string") return o; return (o[LANG]!=null)?o[LANG]:o.fr; }
+
+/* ---------- storage abstraction (cloud if in Claude artifact, else localStorage) ---------- */
+var hasCloud = (typeof window !== "undefined" && window.storage && typeof window.storage.get === "function");
+async function storeGet(key, shared){
+  if(hasCloud){ try{ var r = await window.storage.get(key, !!shared); return r && r.value != null ? r.value : null; }catch(e){ return null; } }
+  try{ return localStorage.getItem(key); }catch(e){ return null; }
+}
+async function storeSet(key, val, shared){
+  if(hasCloud){ try{ await window.storage.set(key, val, !!shared); return; }catch(e){} }
+  try{ localStorage.setItem(key, val); }catch(e){}
+}
+async function lbGet(key){ var v = await storeGet(key, true); try{ return v ? JSON.parse(v) : []; }catch(e){ return []; } }
+async function lbSet(key, arr){ await storeSet(key, JSON.stringify(arr), true); }
+
+async function apiTop(key){
+  if(!LEADERBOARD_API) return null;
+  var m = boardToApi(key);
+  try{
+    var r = await fetch(LEADERBOARD_API.replace(/\/$/,"")+"/top.php?game="+encodeURIComponent(m.game)+"&board="+encodeURIComponent(m.board)+"&period=all&limit=100",{cache:"no-store"});
+    if(!r.ok) return null; var d = await r.json();
+    if(!d || !d.ok || !Array.isArray(d.rows)) return null;
+    return d.rows.map(function(x){ var mm=String(x.meta||"").split("|"); return { name:x.name, score:x.score, acc:(parseFloat(mm[0])||0), streak:(parseInt(mm[1]||"0",10)||0) }; });
+  }catch(e){ return null; }
+}
+async function apiSubmit(key, entry){
+  if(!LEADERBOARD_API) return null;
+  var m = boardToApi(key);
+  try{
+    var meta = (entry.acc!=null?entry.acc:"")+"|"+(entry.streak!=null?entry.streak:"");
+    var r = await fetch(LEADERBOARD_API.replace(/\/$/,"")+"/submit.php", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({game:m.game, board:m.board, name:entry.name, score:entry.score, ts:Date.now(), meta:meta})});
+    if(!r.ok) return null; return await r.json();
+  }catch(e){ return null; }
+}
+
+/* ---------- RNG ---------- */
+function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; var t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+var rng = Math.random;
+function rand(lo,hi){ return lo + (hi-lo)*rng(); }
+function randint(lo,hi){ return Math.floor(rand(lo,hi+1)); }
+function pick(a){ return a[Math.floor(rng()*a.length)]; }
+function chance(p){ return rng() < p; }
+function round(x,d){ var m=Math.pow(10,d||0); return Math.round(x*m)/m; }
+function todayKey(){ var d=new Date(); return d.getFullYear()*10000 + (d.getMonth()+1)*100 + d.getDate(); }
+function dateLabel(){ var d=new Date(); return d.toISOString().slice(0,10); }
+
+/* number format — comma decimals in FR */
+function nf(x){ var s=(Math.round(x*100)/100).toString(); return LANG==="fr" ? s.replace(".",",") : s; }
+function mg(x){ return Math.round(x).toLocaleString(LANG==="fr"?"fr-FR":"en-US"); }
+
+/* ---------- names ---------- */
+var NAMES = {
+  fr:{
+    m:["Jean","Pierre","Michel","Philippe","Alain","Jacques","Bernard","Henri","Daniel","Gérard","André","François","Louis","Marc","Thierry","Olivier","Julien","Nicolas","Christophe","Patrick"],
+    f:["Marie","Françoise","Monique","Catherine","Isabelle","Sylvie","Nathalie","Chantal","Nicole","Martine","Christine","Brigitte","Hélène","Sophie","Céline","Camille","Julie","Émilie","Claire","Anne"],
+    l:["Martin","Bernard","Dubois","Thomas","Robert","Petit","Durand","Leroy","Moreau","Simon","Laurent","Lefebvre","Garcia","David","Bertrand","Roux","Vincent","Fournier","Girard","Bonnet","Dupont","Lambert","Rousseau","Blanc","Guérin","Henry","Roussel","Perrin","Morel","Mercier","Fontaine","Chevalier","Gauthier","Faure","Marchand","Dumas","Renard"]
+  },
+  en:{
+    m:["James","Robert","Ahmed","Wei","Marco","Luca","Karl","Sanjay","Pierre","Omar","David","Hassan","Ivan","Diego","Yusuf","Henri","Noah","Thomas","Andreas","Kenji"],
+    f:["Maria","Anna","Fatima","Ling","Sofia","Elena","Ingrid","Priya","Claire","Aisha","Sarah","Emma","Nadia","Olga","Lucia","Zara","Julie","Marie","Chloé","Laura"],
+    l:["Nguyen","Smith","Kowalski","Khan","Rossi","Müller","Dubois","Silva","Johansson","Patel","Garcia","Chen","Ahmadi","Novak","Fischer","Haddad","Bernard","Andersson","Yamada","Costa","Weber","Moreau","Ivanov","Reyes","Okafor","Lindqvist","Bianchi","Tremblay","Schmidt","Park"]
+  }
+};
+function makeName(sex){ var n=NAMES[LANG]||NAMES.fr; var fn = sex==="M" ? pick(n.m) : pick(n.f); return pick(n.l)+", "+fn; }
+function makeMRN(){ return String(randint(1000000,9999999)); }
+
+/* ============================================================
+   REGIMEN TEMPLATES
+   drug.kind: "m2" | "kg" | "auc" | "flat" | "po"
+   flags: capVinca (2 mg cap), vinca (IV-only route), anthra, hep (hepatically cleared)
+   regimen flags: cardio (LVEF shown), renalCrit (cisplatin), hepCrit (bili matters),
+                  premedReq, cum (cumulative-dose scenario), intruder (WRONG_DRUG swap)
+   ============================================================ */
+var REGIMENS = [
+  { key:"folfox", regimen:"FOLFOX 6", sex:"any", age:[42,84],
+    dx:{fr:"Adénocarcinome colorectal", en:"Colorectal adenocarcinoma"},
+    stages:{fr:["stade III — adjuvant","stade IV — métastatique","stade II à haut risque"],
+            en:["stage III — adjuvant","stage IV — metastatic","high-risk stage II"]},
+    drugs:[
+      {n:{fr:"Oxaliplatine",en:"Oxaliplatin"}, kind:"m2", perM2:85, route:"IV", hep:true},
+      {n:{fr:"Ac. folinique",en:"Folinic acid"}, kind:"m2", perM2:400, route:"IV"},
+      {n:{fr:"5-FU bolus",en:"5-FU bolus"}, kind:"m2", perM2:400, route:"IV", hep:true},
+      {n:{fr:"5-FU 46 h",en:"5-FU 46 h"}, kind:"m2", perM2:2400, route:{fr:"IVSE",en:"CIV"}, hep:true}
+    ],
+    premedStd:{fr:"Ondansétron + dexaméthasone", en:"Ondansetron + dexamethasone"},
+    hepCrit:true, labs:{anc:1.5, plt:100},
+    intruder:{n:{fr:"Irinotécan",en:"Irinotecan"}, at:0},
+    errs:["DOSE_MATH","NEUTROPENIA","THROMBOCYTOPENIA","WRONG_DRUG","HEPATIC_CONTRA"],
+    ref:{fr:"FOLFOX = oxaliplatine 85 mg/m² + LV5FU2 (folinique 400 + 5-FU 400 bolus/2400 en 46 h).",
+         en:"FOLFOX = oxaliplatin 85 mg/m² + LV5FU2 (folinic 400 + 5-FU 400 bolus/2400 over 46 h)."} },
+
+  { key:"folfiri", regimen:"FOLFIRI", sex:"any", age:[42,84],
+    dx:{fr:"Adénocarcinome colorectal", en:"Colorectal adenocarcinoma"},
+    stages:{fr:["stade IV — 1re ligne","stade IV — 2e ligne","métastatique (RAS muté)"],
+            en:["stage IV — 1st line","stage IV — 2nd line","metastatic (RAS-mutant)"]},
+    drugs:[
+      {n:{fr:"Irinotécan",en:"Irinotecan"}, kind:"m2", perM2:180, route:"IV", hep:true},
+      {n:{fr:"Ac. folinique",en:"Folinic acid"}, kind:"m2", perM2:400, route:"IV"},
+      {n:{fr:"5-FU bolus",en:"5-FU bolus"}, kind:"m2", perM2:400, route:"IV", hep:true},
+      {n:{fr:"5-FU 46 h",en:"5-FU 46 h"}, kind:"m2", perM2:2400, route:{fr:"IVSE",en:"CIV"}, hep:true}
+    ],
+    premedStd:{fr:"Atropine + ondansétron + dexaméthasone", en:"Atropine + ondansetron + dexamethasone"},
+    hepCrit:true, labs:{anc:1.5, plt:100},
+    intruder:{n:{fr:"Oxaliplatine",en:"Oxaliplatin"}, at:0},
+    errs:["DOSE_MATH","NEUTROPENIA","THROMBOCYTOPENIA","WRONG_DRUG","HEPATIC_CONTRA"],
+    ref:{fr:"FOLFIRI = irinotécan 180 mg/m² + LV5FU2. Irinotécan contre-indiqué si bilirubine > 1,5× N.",
+         en:"FOLFIRI = irinotecan 180 mg/m² + LV5FU2. Irinotecan contraindicated if bilirubin > 1.5× ULN."} },
+
+  { key:"folfirinox", regimen:"FOLFIRINOX", sex:"any", age:[40,75],
+    dx:{fr:"Adénocarcinome pancréatique", en:"Pancreatic adenocarcinoma"},
+    stages:{fr:["localement avancé","métastatique — 1re ligne","borderline resécable"],
+            en:["locally advanced","metastatic — 1st line","borderline resectable"]},
+    drugs:[
+      {n:{fr:"Oxaliplatine",en:"Oxaliplatin"}, kind:"m2", perM2:85, route:"IV", hep:true},
+      {n:{fr:"Irinotécan",en:"Irinotecan"}, kind:"m2", perM2:180, route:"IV", hep:true},
+      {n:{fr:"Ac. folinique",en:"Folinic acid"}, kind:"m2", perM2:400, route:"IV"},
+      {n:{fr:"5-FU 46 h",en:"5-FU 46 h"}, kind:"m2", perM2:2400, route:{fr:"IVSE",en:"CIV"}, hep:true}
+    ],
+    premedStd:{fr:"Atropine + sétron + aprépitant + dexaméthasone", en:"Atropine + setron + aprepitant + dexamethasone"},
+    hepCrit:true, labs:{anc:1.5, plt:100},
+    errs:["DOSE_MATH","NEUTROPENIA","THROMBOCYTOPENIA","HEPATIC_CONTRA"],
+    ref:{fr:"FOLFIRINOX = oxaliplatine 85 + irinotécan 180 + 5-FU 2400/46 h. Régime très myélotoxique (G-CSF).",
+         en:"FOLFIRINOX = oxaliplatin 85 + irinotecan 180 + 5-FU 2400/46 h. Highly myelotoxic (G-CSF)."} },
+
+  { key:"ac", regimen:"AC (dose dense)", sex:"F", age:[38,78],
+    dx:{fr:"Carcinome mammaire (adjuvant)", en:"Breast carcinoma (adjuvant)"},
+    stages:{fr:["pT2 N1 — adjuvant","pT2 N0 grade 3","pT3 N1 — néoadjuvant"],
+            en:["pT2 N1 — adjuvant","pT2 N0 grade 3","pT3 N1 — neoadjuvant"]},
+    drugs:[
+      {n:{fr:"Doxorubicine",en:"Doxorubicin"}, kind:"m2", perM2:60, route:"IV", anthra:true},
+      {n:{fr:"Cyclophosphamide",en:"Cyclophosphamide"}, kind:"m2", perM2:600, route:"IV"}
+    ],
+    premedStd:{fr:"Sétron + aprépitant + dexaméthasone", en:"Setron + aprepitant + dexamethasone"},
+    cardio:true, labs:{anc:1.5, plt:100},
+    cum:{drug:{fr:"Doxorubicine",en:"Doxorubicin"}, unit:"mg/m²", add:60, cap:550},
+    errs:["DOSE_MATH","NEUTROPENIA","IDENTITY_MISMATCH","LVEF_LOW","CUMUL_ANTHRA"],
+    ref:{fr:"AC = doxorubicine 60 mg/m² + cyclophosphamide 600 mg/m². Doxorubicine : dose vie ≤ 550 mg/m², FEVG ≥ 50 %.",
+         en:"AC = doxorubicin 60 mg/m² + cyclophosphamide 600 mg/m². Doxorubicin lifetime ≤ 550 mg/m², LVEF ≥ 50%."} },
+
+  { key:"pacli", regimen:"Paclitaxel (hebdo)", sex:"F", age:[40,80],
+    dx:{fr:"Carcinome mammaire", en:"Breast carcinoma"},
+    stages:{fr:["adjuvant post-AC","métastatique — 1re ligne","pT2 N1 (séquentiel)"],
+            en:["adjuvant post-AC","metastatic — 1st line","pT2 N1 (sequential)"]},
+    drugs:[
+      {n:{fr:"Paclitaxel",en:"Paclitaxel"}, kind:"m2", perM2:80, route:"IV", hep:true}
+    ],
+    premedStd:{fr:"Dexaméthasone + dexchlorphéniramine + anti-H2", en:"Dexamethasone + antihistamine (H1) + H2 blocker"},
+    premedReq:true, hepCrit:true, labs:{anc:1.5, plt:100},
+    intruder:{n:{fr:"Vinorelbine",en:"Vinorelbine"}, at:0},
+    errs:["DOSE_MATH","NEUTROPENIA","PREMED_MISSING","WRONG_DRUG","HEPATIC_CONTRA"],
+    ref:{fr:"Paclitaxel 80 mg/m² hebdo. Prémédication anti-hypersensibilité OBLIGATOIRE (corticoïde + anti-H1 + anti-H2).",
+         en:"Paclitaxel 80 mg/m² weekly. Anti-hypersensitivity premedication MANDATORY (steroid + H1 + H2)."} },
+
+  { key:"trastu", regimen:"Trastuzumab", sex:"F", age:[38,78],
+    dx:{fr:"Carcinome mammaire HER2+", en:"HER2+ breast carcinoma"},
+    stages:{fr:["adjuvant HER2+ (maintenance)","métastatique HER2+","néoadjuvant HER2+"],
+            en:["adjuvant HER2+ (maintenance)","metastatic HER2+","neoadjuvant HER2+"]},
+    drugs:[
+      {n:{fr:"Trastuzumab",en:"Trastuzumab"}, kind:"kg", mgkg:6, route:"IV"}
+    ],
+    premedStd:{fr:"Aucune (surveillance perfusion)", en:"None (infusion monitoring)"},
+    cardio:true, labs:{anc:1.5, plt:100},
+    errs:["DOSE_MATH","IDENTITY_MISMATCH","LVEF_LOW"],
+    ref:{fr:"Trastuzumab 6 mg/kg /3 sem (dose de charge 8 mg/kg). FEVG ≥ 50 % avant chaque cure ; suspendre si chute.",
+         en:"Trastuzumab 6 mg/kg q3w (8 mg/kg loading). LVEF ≥ 50% before each cycle; hold if it drops."} },
+
+  { key:"carbopacli", regimen:"Carboplatine – Paclitaxel", sex:"any", age:[45,82],
+    dx:{fr:"Carcinome ovarien / CBNPC", en:"Ovarian carcinoma / NSCLC"},
+    stages:{fr:["ovaire stade III (adjuvant)","CBNPC stade IV","ovaire — 1re ligne"],
+            en:["ovarian stage III (adjuvant)","NSCLC stage IV","ovarian — 1st line"]},
+    drugs:[
+      {n:{fr:"Carboplatine",en:"Carboplatin"}, kind:"auc", auc:5, route:"IV"},
+      {n:{fr:"Paclitaxel",en:"Paclitaxel"}, kind:"m2", perM2:175, route:"IV", hep:true}
+    ],
+    premedStd:{fr:"Dexaméthasone + dexchlorphéniramine + anti-H2", en:"Dexamethasone + antihistamine (H1) + H2 blocker"},
+    premedReq:true, labs:{anc:1.5, plt:100},
+    errs:["CARBO_AUC","NEUTROPENIA","THROMBOCYTOPENIA","PREMED_MISSING"],
+    ref:{fr:"Carboplatine dosé par l'AUC — formule de Calvert : dose (mg) = AUC × (DFG + 25). Paclitaxel 175 mg/m² : prémédication obligatoire.",
+         en:"Carboplatin is AUC-dosed — Calvert: dose (mg) = AUC × (GFR + 25). Paclitaxel 175 mg/m²: premedication mandatory."} },
+
+  { key:"cispeme", regimen:"Cisplatine – Pemetrexed", sex:"any", age:[48,80],
+    dx:{fr:"CBNPC non épidermoïde", en:"Non-squamous NSCLC"},
+    stages:{fr:["stade IV — 1re ligne","stade III (chimioradiothérapie)","mésothéliome pleural"],
+            en:["stage IV — 1st line","stage III (chemoradiation)","pleural mesothelioma"]},
+    drugs:[
+      {n:{fr:"Cisplatine",en:"Cisplatin"}, kind:"m2", perM2:75, route:"IV"},
+      {n:{fr:"Pemetrexed",en:"Pemetrexed"}, kind:"m2", perM2:500, route:"IV"}
+    ],
+    premedStd:{fr:"Hyperhydratation + sétron + aprépitant + dexaméthasone (+ B9/B12)", en:"Hyperhydration + setron + aprepitant + dexamethasone (+ B9/B12)"},
+    premedReq:true, renalCrit:true, labs:{anc:1.5, plt:100},
+    errs:["DOSE_MATH","NEUTROPENIA","RENAL_CONTRA","PREMED_MISSING"],
+    ref:{fr:"Cisplatine 75 mg/m² : néphrotoxique — DFG ≥ 60 mL/min, hyperhydratation. Hautement émétisant (prophylaxie triple).",
+         en:"Cisplatin 75 mg/m²: nephrotoxic — GFR ≥ 60 mL/min, hyperhydration. Highly emetogenic (triple prophylaxis)."} },
+
+  { key:"cis5fu", regimen:"Cisplatine – 5-FU", sex:"any", age:[48,80],
+    dx:{fr:"Carcinome ORL épidermoïde", en:"Head & neck squamous carcinoma"},
+    stages:{fr:["oropharynx cT3 N2","larynx (préservation)","cavité orale (adjuvant)"],
+            en:["oropharynx cT3 N2","larynx (preservation)","oral cavity (adjuvant)"]},
+    drugs:[
+      {n:{fr:"Cisplatine",en:"Cisplatin"}, kind:"m2", perM2:100, route:"IV"},
+      {n:{fr:"5-FU 96 h",en:"5-FU 96 h"}, kind:"m2", perM2:1000, route:{fr:"IVSE",en:"CIV"}, hep:true}
+    ],
+    premedStd:{fr:"Hyperhydratation + sétron + aprépitant + dexaméthasone", en:"Hyperhydration + setron + aprepitant + dexamethasone"},
+    premedReq:true, renalCrit:true, labs:{anc:1.5, plt:100},
+    intruder:{n:{fr:"Carboplatine",en:"Carboplatin"}, at:0},
+    errs:["DOSE_MATH","NEUTROPENIA","RENAL_CONTRA","WRONG_DRUG","PREMED_MISSING"],
+    ref:{fr:"Cisplatine 100 mg/m² (J1) + 5-FU 1000 mg/m²/j. DFG ≥ 60, hyperhydratation. Carboplatine ≠ cisplatine (ne pas substituer sans motif).",
+         en:"Cisplatin 100 mg/m² (d1) + 5-FU 1000 mg/m²/day. GFR ≥ 60, hyperhydration. Carboplatin ≠ cisplatin (don't swap unjustified)."} },
+
+  { key:"rchop", regimen:"R-CHOP 21", sex:"any", age:[40,82],
+    dx:{fr:"Lymphome B diffus à grandes cellules", en:"Diffuse large B-cell lymphoma"},
+    stages:{fr:["stade III–IV (1re ligne)","stade II bulky","IPI élevé"],
+            en:["stage III–IV (1st line)","stage II bulky","high IPI"]},
+    drugs:[
+      {n:{fr:"Rituximab",en:"Rituximab"}, kind:"m2", perM2:375, route:"IV"},
+      {n:{fr:"Cyclophosphamide",en:"Cyclophosphamide"}, kind:"m2", perM2:750, route:"IV"},
+      {n:{fr:"Doxorubicine",en:"Doxorubicin"}, kind:"m2", perM2:50, route:"IV", anthra:true},
+      {n:{fr:"Vincristine",en:"Vincristine"}, kind:"m2", perM2:1.4, route:"IV", capVinca:true, capMg:2, vinca:true},
+      {n:{fr:"Prednisone",en:"Prednisone"}, kind:"po", doseTxt:{fr:"100 mg · J1–5",en:"100 mg · d1–5"}, route:"PO"}
+    ],
+    premedStd:{fr:"Antihistaminique + paracétamol (rituximab) + sétron", en:"Antihistamine + paracetamol (rituximab) + setron"},
+    cardio:true, labs:{anc:1.5, plt:100},
+    cum:{drug:{fr:"Doxorubicine",en:"Doxorubicin"}, unit:"mg/m²", add:50, cap:550},
+    errs:["DOSE_CAP","NEUTROPENIA","LVEF_LOW","ROUTE_FATAL","CUMUL_ANTHRA"],
+    ref:{fr:"R-CHOP : vincristine 1,4 mg/m² PLAFONNÉE à 2 mg, et IV STRICTEMENT (jamais intrathécale). Doxorubicine cumulée ≤ 550 mg/m².",
+         en:"R-CHOP: vincristine 1.4 mg/m² CAPPED at 2 mg, IV ONLY (never intrathecal). Doxorubicin cumulative ≤ 550 mg/m²."} },
+
+  { key:"bep", regimen:"BEP", sex:"M", age:[18,55],
+    dx:{fr:"Tumeur germinale testiculaire", en:"Testicular germ-cell tumour"},
+    stages:{fr:["non séminomateux (risque intermédiaire)","métastatique (bon pronostic)","séminome avancé"],
+            en:["non-seminomatous (intermediate risk)","metastatic (good prognosis)","advanced seminoma"]},
+    drugs:[
+      {n:{fr:"Bléomycine",en:"Bleomycin"}, kind:"flat", flat:30, unit:"U", route:{fr:"IV · J1,8,15",en:"IV · d1,8,15"}, noTarget:true},
+      {n:{fr:"Étoposide",en:"Etoposide"}, kind:"m2", perM2:100, route:{fr:"IV · J1–5",en:"IV · d1–5"}},
+      {n:{fr:"Cisplatine",en:"Cisplatin"}, kind:"m2", perM2:20, route:{fr:"IV · J1–5",en:"IV · d1–5"}}
+    ],
+    premedStd:{fr:"Hyperhydratation + sétron + aprépitant + dexaméthasone", en:"Hyperhydration + setron + aprepitant + dexamethasone"},
+    renalCrit:true, labs:{anc:1.5, plt:100},
+    cum:{drug:{fr:"Bléomycine",en:"Bleomycin"}, unit:"U", add:90, cap:400},
+    errs:["NEUTROPENIA","RENAL_CONTRA","IDENTITY_MISMATCH","CUMUL_ANTHRA"],
+    ref:{fr:"BEP : cisplatine 20 mg/m²/j — DFG ≥ 60. Bléomycine : dose vie ≤ 400 U (fibrose pulmonaire).",
+         en:"BEP: cisplatin 20 mg/m²/day — GFR ≥ 60. Bleomycin lifetime ≤ 400 U (pulmonary fibrosis)."} },
+
+  { key:"docepred", regimen:"Docétaxel – Prednisone", sex:"M", age:[55,84],
+    dx:{fr:"Cancer de la prostate métastatique", en:"Metastatic prostate cancer"},
+    stages:{fr:["résistant à la castration","hormono-sensible (+ ADT)","métastatique — 1re ligne"],
+            en:["castration-resistant","hormone-sensitive (+ ADT)","metastatic — 1st line"]},
+    drugs:[
+      {n:{fr:"Docétaxel",en:"Docetaxel"}, kind:"m2", perM2:75, route:"IV", hep:true},
+      {n:{fr:"Prednisone",en:"Prednisone"}, kind:"po", doseTxt:{fr:"10 mg/j PO",en:"10 mg/day PO"}, route:"PO"}
+    ],
+    premedStd:{fr:"Dexaméthasone J-1, J, J+1 (rétention hydrique) + sétron", en:"Dexamethasone d-1, d, d+1 (fluid retention) + setron"},
+    premedReq:true, hepCrit:true, labs:{anc:1.5, plt:100},
+    errs:["DOSE_MATH","NEUTROPENIA","IDENTITY_MISMATCH","PREMED_MISSING","HEPATIC_CONTRA"],
+    ref:{fr:"Docétaxel 75 mg/m² /3 sem : corticoïde 3 jours OBLIGATOIRE. Réduction si bilirubine élevée.",
+         en:"Docetaxel 75 mg/m² q3w: 3-day corticosteroid MANDATORY. Reduce if bilirubin elevated."} },
+
+  { key:"gem", regimen:"Gemcitabine", sex:"any", age:[50,84],
+    dx:{fr:"Adénocarcinome pancréatique / vessie", en:"Pancreatic / bladder carcinoma"},
+    stages:{fr:["pancréas métastatique","vessie (métastatique)","adjuvant pancréas"],
+            en:["metastatic pancreas","bladder (metastatic)","adjuvant pancreas"]},
+    drugs:[
+      {n:{fr:"Gemcitabine",en:"Gemcitabine"}, kind:"m2", perM2:1000, route:{fr:"IV · J1,8,15",en:"IV · d1,8,15"}}
+    ],
+    premedStd:{fr:"Sétron + dexaméthasone", en:"Setron + dexamethasone"},
+    labs:{anc:1.5, plt:100},
+    intruder:{n:{fr:"Cisplatine",en:"Cisplatin"}, at:0},
+    errs:["DOSE_MATH","NEUTROPENIA","THROMBOCYTOPENIA","WRONG_DRUG"],
+    ref:{fr:"Gemcitabine 1000 mg/m² (J1,8,15). Thrombopénie fréquente — plaquettes ≥ 100 G/L.",
+         en:"Gemcitabine 1000 mg/m² (d1,8,15). Thrombocytopenia common — platelets ≥ 100 G/L."} },
+
+  { key:"pembro", regimen:"Pembrolizumab", sex:"any", age:[45,84],
+    dx:{fr:"Mélanome / CBNPC (immunothérapie)", en:"Melanoma / NSCLC (immunotherapy)"},
+    stages:{fr:["mélanome métastatique","CBNPC PD-L1 ≥ 50 %","adjuvant (haut risque)"],
+            en:["metastatic melanoma","NSCLC PD-L1 ≥ 50%","adjuvant (high risk)"]},
+    drugs:[
+      {n:{fr:"Pembrolizumab",en:"Pembrolizumab"}, kind:"flat", flat:200, unit:"mg", route:"IV"}
+    ],
+    premedStd:{fr:"Aucune (surveillance immuno-toxicité)", en:"None (monitor immune toxicity)"},
+    labs:{anc:1.0, plt:75},
+    errs:["DOSE_FLAT"],
+    ref:{fr:"Pembrolizumab : dose FIXE 200 mg /3 sem (indépendante du poids/surface). Pas de dose en mg/m².",
+         en:"Pembrolizumab: FLAT dose 200 mg q3w (independent of weight/BSA). Never mg/m²-based."} }
+];
+
+/* ---------- build one valid order ---------- */
+function computeDose(d, ctx){
+  if(d.kind==="m2") return round(d.perM2*ctx.bsa);
+  if(d.kind==="kg") return round(d.mgkg*ctx.weight);
+  if(d.kind==="auc") return round(d.auc*(ctx.gfr+25));
+  if(d.kind==="flat") return d.flat;
+  return null;
+}
+function buildValid(reg){
+  var sex = reg.sex==="any" ? (chance(.5)?"M":"F") : reg.sex;
+  // morphology
+  var weight = randint(50,96), height = randint(154,190);
+  var bsa = round(Math.sqrt(weight*height/3600), 2);
+  // renal (relevant only when renalCrit)
+  var gfr = reg.renalCrit ? randint(66,112) : randint(72,120);
+  var creat = reg.renalCrit ? randint(58,96) : randint(55,95);
+  var bili = randint(5,15);
+  var ctx = {bsa:bsa, weight:weight, gfr:gfr};
+
+  var drugs = reg.drugs.map(function(d){
+    var tot = computeDose(d, ctx);
+    var shown = tot;
+    if(d.capVinca && tot!=null){ shown = Math.min(tot, d.capMg); }
+    return {n:L(d.n), kind:d.kind, perM2:d.perM2, mgkg:d.mgkg, auc:d.auc, flat:d.flat, unit:d.unit,
+            route:L(d.route), routeFatal:false, tot:tot, shown:shown, capViolate:false,
+            capVinca:!!d.capVinca, vinca:!!d.vinca, anthra:!!d.anthra, hep:!!d.hep,
+            noTarget:!!d.noTarget, doseTxt:d.doseTxt?L(d.doseTxt):null };
+  });
+
+  var plan = {
+    reg:reg, key:reg.key, regimen:reg.regimen, sex:sex,
+    name:makeName(sex), mrn:makeMRN(), age:randint(reg.age[0],reg.age[1]),
+    dx:L(reg.dx), stage:pick(reg.stages[LANG]||reg.stages.fr),
+    cycleN:randint(1,6),
+    weight:weight, height:height, bsa:bsa, gfr:gfr, creat:creat, bili:bili,
+    drugs:drugs,
+    premed:L(reg.premedStd), premedReq:!!reg.premedReq, premedMissing:false,
+    renalCrit:!!reg.renalCrit, hepCrit:!!reg.hepCrit, cardio:!!reg.cardio,
+    anc:round(rand(reg.labs.anc+0.2, 8.5),1),
+    plt:randint(reg.labs.plt+20, 380),
+    hb:round(rand(9.5,15),1),
+    ancMin:reg.labs.anc, pltMin:reg.labs.plt,
+    fevg:reg.cardio ? randint(55,68) : null,
+    cum:null,
+    valid:true, errs:[]
+  };
+
+  if(reg.cum){
+    var c=reg.cum, add=c.add, cap=c.cap;
+    // safe cumulative — stay well under the ceiling
+    var priorMax = Math.max(0, Math.floor((cap*0.8 - add)/add));
+    var prior = (add* randint(0, Math.max(0,priorMax)));
+    if(prior+add > cap*0.82) prior = Math.max(0, cap*0.6 - add);
+    plan.cum = {drug:L(c.drug), unit:c.unit, prior:round(prior,0), add:add, cap:cap};
+  }
+  return plan;
+}
+
+/* ---------- error eligibility ---------- */
+function tierOf(code){
+  if(code==="DOSE_MATH"||code==="DOSE_FLAT"||code==="NEUTROPENIA"||code==="THROMBOCYTOPENIA"||code==="WRONG_DRUG"||code==="DOSE_CAP") return 1;
+  if(code==="RENAL_CONTRA"||code==="HEPATIC_CONTRA"||code==="PREMED_MISSING"||code==="IDENTITY_MISMATCH"||code==="CARBO_AUC"||code==="LVEF_LOW") return 2;
+  return 3; // ROUTE_FATAL, CUMUL_ANTHRA
+}
+function maxTierForLevel(level){ return level<=4?1 : (level<=9?2:3); }
+
+function doseTargets(plan){
+  return plan.drugs.filter(function(d){
+    return (d.kind==="m2"||d.kind==="kg"||d.kind==="flat") && !d.capVinca && !d.noTarget;
+  });
+}
+function eligibleErrors(plan, reg, mt){
+  return reg.errs.filter(function(c){
+    if(tierOf(c) > mt) return false;
+    if(c==="DOSE_MATH" && !doseTargets(plan).some(function(d){return d.kind==="m2"||d.kind==="kg";})) return false;
+    if(c==="DOSE_FLAT" && !plan.drugs.some(function(d){return d.kind==="flat"&&!d.noTarget;})) return false;
+    if(c==="DOSE_CAP" && !plan.drugs.some(function(d){return d.capVinca;})) return false;
+    if(c==="CARBO_AUC" && !plan.drugs.some(function(d){return d.kind==="auc";})) return false;
+    if(c==="WRONG_DRUG" && !reg.intruder) return false;
+    if(c==="RENAL_CONTRA" && !reg.renalCrit) return false;
+    if(c==="HEPATIC_CONTRA" && !plan.drugs.some(function(d){return d.hep;})) return false;
+    if(c==="PREMED_MISSING" && !reg.premedReq) return false;
+    if(c==="IDENTITY_MISMATCH" && reg.sex==="any") return false;
+    if(c==="ROUTE_FATAL" && !plan.drugs.some(function(d){return d.vinca;})) return false;
+    if(c==="CUMUL_ANTHRA" && !plan.cum) return false;
+    if(c==="LVEF_LOW" && !reg.cardio) return false;
+    return true;
+  });
+}
+function pickErr(elig){
+  var pool=[];
+  elig.forEach(function(c){
+    var w = (c==="NEUTROPENIA") ? 3 : ((c==="DOSE_MATH"||c==="THROMBOCYTOPENIA") ? 2 : 1);
+    for(var i=0;i<w;i++) pool.push(c);
+  });
+  return pick(pool);
+}
+
+/* ---------- error injection ---------- */
+function offsetDose(correct){
+  var off = Math.max(45, Math.round(correct*rand(0.28,0.55)));
+  if(chance(.5)) off = -off;
+  var v = correct + off;
+  if(v < 20) v = correct + Math.abs(off);
+  return round(v,0);
+}
+function injectError(plan, code){
+  var reg=plan.reg;
+  if(code==="DOSE_MATH"){
+    var cand = doseTargets(plan).filter(function(d){return d.kind==="m2"||d.kind==="kg";});
+    var d = pick(cand);
+    d.shown = offsetDose(d.tot);
+    plan.errs.push({code:code, drug:d});
+  }
+  else if(code==="DOSE_FLAT"){
+    var df = pick(plan.drugs.filter(function(d){return d.kind==="flat"&&!d.noTarget;}));
+    df.shown = df.flat + pick([150,150,200,-100,300]);
+    plan.errs.push({code:code, drug:df});
+  }
+  else if(code==="DOSE_CAP"){
+    var dv = pick(plan.drugs.filter(function(d){return d.capVinca;}));
+    dv.shown = round(rand(2.4,3.4),1); dv.capViolate=true;
+    plan.errs.push({code:code, drug:dv});
+  }
+  else if(code==="CARBO_AUC"){
+    var dc = pick(plan.drugs.filter(function(d){return d.kind==="auc";}));
+    dc.shown = offsetDose(dc.tot);
+    plan.errs.push({code:code, drug:dc, calc:dc.tot});
+  }
+  else if(code==="NEUTROPENIA"){
+    plan.anc = round(rand(0.4, plan.ancMin-0.3),1);
+    plan.errs.push({code:code});
+  }
+  else if(code==="THROMBOCYTOPENIA"){
+    plan.plt = randint(32, plan.pltMin-12);
+    plan.errs.push({code:code});
+  }
+  else if(code==="RENAL_CONTRA"){
+    plan.gfr = randint(32,55); plan.creat = randint(135,235);
+    plan.errs.push({code:code});
+  }
+  else if(code==="HEPATIC_CONTRA"){
+    plan.bili = randint(38,72);
+    var dh = plan.drugs.filter(function(d){return d.hep;})[0];
+    plan.errs.push({code:code, drug:dh});
+  }
+  else if(code==="PREMED_MISSING"){
+    plan.premed = tr('none'); plan.premedMissing=true;
+    plan.errs.push({code:code});
+  }
+  else if(code==="IDENTITY_MISMATCH"){
+    var wrong = plan.sex==="M" ? "F":"M";
+    plan.sex=wrong; plan.name=makeName(wrong);
+    plan.errs.push({code:code});
+  }
+  else if(code==="ROUTE_FATAL"){
+    var dr = plan.drugs.filter(function(d){return d.vinca;})[0];
+    dr.route = LANG==="fr" ? "IT (intrathécal)" : "IT (intrathecal)";
+    dr.routeFatal=true;
+    plan.errs.push({code:code, drug:dr});
+  }
+  else if(code==="CUMUL_ANTHRA"){
+    var c=plan.cum;
+    c.prior = round(c.cap - c.add + randint(20,90), 0); // cumulative just over the cap
+    plan.errs.push({code:code});
+  }
+  else if(code==="LVEF_LOW"){
+    plan.fevg = randint(37,48);
+    plan.errs.push({code:code});
+  }
+  else if(code==="WRONG_DRUG"){
+    var it=reg.intruder, dW=plan.drugs[it.at];
+    var expected = dW.n;
+    dW.n = L(it.n); dW.wrong=true;
+    plan.errs.push({code:code, expected:expected, got:L(it.n)});
+  }
+  plan.valid=false;
+}
+
+/* ---------- generate a plan for a level ---------- */
+function generatePlan(level, cleanBias){
+  var pClean = cleanBias!=null ? cleanBias : 0.42;
+  var reg = pick(REGIMENS);
+  var plan = buildValid(reg);
+  if(chance(pClean)) return plan; // correct order
+
+  var mt = maxTierForLevel(level);
+  var elig = eligibleErrors(plan, reg, mt);
+  if(!elig.length) return plan;
+  injectError(plan, pickErr(elig));
+
+  // second independent error deeper into a session
+  if(level>=11 && chance(0.20)){
+    var have = plan.errs.map(function(e){return e.code;});
+    var conflict = function(c){
+      if((c==="DOSE_MATH"||c==="DOSE_FLAT") && (have.indexOf("DOSE_MATH")>=0||have.indexOf("DOSE_FLAT")>=0)) return true;
+      return false;
+    };
+    var elig2 = eligibleErrors(plan, reg, mt).filter(function(c){ return have.indexOf(c)<0 && !conflict(c); });
+    if(elig2.length) injectError(plan, pickErr(elig2));
+  }
+  return plan;
+}
+
+/* ---------- render an order ---------- */
+function drugLine(d){
+  var route = '<span class="drt'+(d.routeFatal?' fatal':'')+'">'+d.route+'</span>';
+  if(d.kind==="po"){
+    return '<div class="drug"><span class="dn">'+d.n+'</span><span class="dd">'+(d.doseTxt||"")+'</span>'+route+'</div>';
+  }
+  if(d.kind==="flat"){
+    return '<div class="drug"><span class="dn">'+d.n+'</span><span class="dtot">'+mg(d.shown)+' '+(d.unit||"mg")+'</span>'+route+'</div>';
+  }
+  if(d.kind==="flat" && d.noTarget){
+    return '<div class="drug"><span class="dn">'+d.n+'</span><span class="dd">'+mg(d.flat)+' '+(d.unit||"U")+'</span>'+route+'</div>';
+  }
+  var spec;
+  if(d.kind==="m2") spec = nf(d.perM2)+' mg/m²';
+  else if(d.kind==="kg") spec = nf(d.mgkg)+' mg/kg';
+  else if(d.kind==="auc") spec = 'AUC '+nf(d.auc);
+  var totTxt = (d.kind==="m2"&&d.capVinca) ? (nf(d.shown)+' mg') : (mg(d.shown)+' mg');
+  return '<div class="drug"><span class="dn">'+d.n+'</span><span class="dd">'+spec+'</span>'+
+         '<span class="arr">→</span><span class="dtot">'+totTxt+'</span>'+route+'</div>';
+}
+function renderPlan(p, idx){
+  var drugsHTML = p.drugs.map(function(d){
+    if(d.kind==="flat" && d.noTarget){ return '<div class="drug"><span class="dn">'+d.n+'</span><span class="dd">'+mg(d.flat)+' '+(d.unit||"U")+'</span><span class="drt">'+d.route+'</span></div>'; }
+    return drugLine(d);
+  }).join("");
+
+  // counts + chemistry
+  var renalTh = p.renalCrit ? ' <span class="lim">(≥60)</span>' : '';
+  var kANC=pickL("PNN","ANC"), kPlt=pickL("Plaq","Plt"), kGFR=pickL("DFG","GFR"), kCr=pickL("Créat","Creat");
+  var line1 = '<div class="lab-line">'+
+      '<span class="li"><span class="k2">'+kANC+'</span>'+nf(p.anc)+' <span class="lim">(≥'+nf(p.ancMin)+')</span></span>'+
+      '<span class="li"><span class="k2">'+kPlt+'</span>'+mg(p.plt)+' <span class="lim">(≥'+p.pltMin+')</span></span>'+
+      '<span class="li"><span class="k2">Hb</span>'+nf(p.hb)+'</span>'+
+    '</div>';
+  var line2 = '<div class="lab-line">'+
+      '<span class="li"><span class="k2">'+kGFR+'</span>'+p.gfr+' mL/min'+renalTh+'</span>'+
+      '<span class="li"><span class="k2">'+kCr+'</span>'+p.creat+' µmol/L</span>'+
+      '<span class="li"><span class="k2">Bili</span>'+p.bili+' µmol/L <span class="lim">(N&lt;17)</span></span>'+
+    '</div>';
+
+  var fevgRow = p.fevg!=null ? '<div class="row"><div class="lab">'+tr('fevg')+'</div><div class="val">'+p.fevg+' % <span class="sub">(≥ 50 %)</span></div></div>' : '';
+
+  var cumRow='';
+  if(p.cum){
+    var cumv = round(p.cum.prior + p.cum.add,0);
+    cumRow = '<div class="row"><div class="lab">'+p.cum.drug+'</div><div class="val"><div class="cum">'+
+        '<span class="on">'+tr('cumLabel')+' <span class="brk">('+mg(p.cum.prior)+' + '+mg(p.cum.add)+')</span></span>'+
+        '<span class="v">'+mg(cumv)+' '+p.cum.unit+'</span><span class="lim">(≤'+mg(p.cum.cap)+')</span>'+
+      '</div></div></div>';
+  }
+
+  var premedRow = '<div class="row"><div class="lab">'+tr('premed')+'</div><div class="val" style="font-size:13px">'+p.premed+'</div></div>';
+
+  var html =
+    '<div class="plan-tab"><span>'+tr('orderTab')+'</span><span class="isoswatch"></span><span class="pid">#'+String(100000+idx).slice(1)+'</span></div>'+
+    '<div class="plan-body">'+
+      '<div class="row"><div class="lab">'+tr('patient')+'</div><div class="val">'+p.name+' <span class="sub">· '+tr('mrn')+' '+p.mrn+' · '+p.age+tr('yrs')+' · '+p.sex+'</span></div></div>'+
+      '<div class="row"><div class="lab">'+tr('diagnosis')+'</div><div class="val">'+p.dx+' <span class="sub">'+p.stage+'</span></div></div>'+
+      '<div class="row"><div class="lab">'+tr('protocol')+'</div><div class="val"><span class="pill intent">'+p.regimen+'</span> <span class="pill cyc">'+tr('cycle')+' '+p.cycleN+' · J1</span></div></div>'+
+      '<div class="row"><div class="lab">'+tr('morph')+'</div><div class="val">'+nf(p.bsa)+' m² <span class="sub">· '+p.weight+' kg · '+p.height+' cm</span></div></div>'+
+      '<div class="row"><div class="lab">'+tr('rxLabel')+'</div><div class="val drugs">'+drugsHTML+'</div></div>'+
+      '<div class="row"><div class="lab">'+tr('labs')+'</div><div class="val labs">'+line1+line2+'</div></div>'+
+      fevgRow+
+      cumRow+
+      premedRow+
+    '</div>'+
+    '<div class="plan-foot"><span>'+tr('planSys')+' · '+dateLabel()+'</span><span>'+tr('reviewer')+' '+(state.playerName||tr('drDash'))+'</span></div>'+
+    '<div class="stamp" id="stamp"></div>';
+  return html;
+}
+
+/* ---------- game state ---------- */
+var state = {
+  mode:"endless", score:0, strikes:0, streak:0, bestStreak:0,
+  level:0, correct:0, total:0, plan:null, deciding:false,
+  planN:0, dailyN:15, results:[], playerName:"", muted:false,
+  timer:{raf:0, start:0, dur:0, frac:1, active:false}
+};
+var DAILY_N = 15;
+
+/* ---------- audio (WebAudio, no assets) ---------- */
+var actx=null;
+function ac(){ if(state.muted) return null; if(!actx){ try{ actx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ return null; } } if(actx.state==="suspended"){ actx.resume(); } return actx; }
+function beep(freq, dur, type, vol, slideTo){
+  var c=ac(); if(!c) return;
+  var o=c.createOscillator(), g=c.createGain();
+  o.type=type||"sine"; o.frequency.value=freq;
+  if(slideTo){ o.frequency.exponentialRampToValueAtTime(slideTo, c.currentTime+dur); }
+  g.gain.setValueAtTime(0.0001, c.currentTime);
+  g.gain.exponentialRampToValueAtTime(vol||0.15, c.currentTime+0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime+dur);
+  o.connect(g); g.connect(c.destination); o.start(); o.stop(c.currentTime+dur+0.02);
+}
+function sfxStamp(){ var c=ac(); if(!c) return;
+  beep(150,0.12,"square",0.16,60);
+  var b=c.createBuffer(1,c.sampleRate*0.09,c.sampleRate), d=b.getChannelData(0);
+  for(var i=0;i<d.length;i++){ d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,3); }
+  var src=c.createBufferSource(), g=c.createGain(); src.buffer=b; g.gain.value=0.18; src.connect(g); g.connect(c.destination); src.start();
+}
+function sfxGood(){ beep(660,0.09,"sine",0.14); setTimeout(function(){beep(990,0.12,"sine",0.13);},80); }
+function sfxBad(){ beep(200,0.28,"sawtooth",0.14,90); }
+
+/* ---------- DOM refs ---------- */
+var $=function(id){return document.getElementById(id);};
+var elScore=$("score"), elCombo=$("combo"), elStrikes=$("strikes"), elPlan=$("plan"),
+    elQueue=$("queueNote"), elTimer=$("timerfill"), elFlash=$("flash"), elPopup=$("popup"),
+    elToast=$("toast"), elApprove=$("btnApprove"), elReject=$("btnReject");
+
+/* ---------- HUD ---------- */
+function renderStrikes(){
+  var h="";
+  for(var i=0;i<3;i++){ h+='<div class="strike'+(i<state.strikes?" x":"")+'"></div>'; }
+  elStrikes.innerHTML=h;
+}
+function updateHUD(){
+  elScore.textContent = state.score.toLocaleString();
+  renderStrikes();
+  var mult = comboMult();
+  if(state.streak>=2){ elCombo.textContent="×"+mult.toFixed(1); elCombo.classList.add("on"); }
+  else elCombo.classList.remove("on");
+}
+function comboMult(){ return Math.min(1 + state.streak*0.15, 3); }
+
+/* ---------- timer ---------- */
+function planDuration(){
+  if(state.mode==="daily") return 24000;
+  return Math.max(11000, 26000 - state.level*650);
+}
+function startTimer(){
+  var t=state.timer;
+  t.dur=planDuration(); t.start=performance.now(); t.active=true;
+  cancelAnimationFrame(t.raf);
+  function loop(now){
+    if(!t.active) return;
+    t.frac = 1 - (now - t.start)/t.dur;
+    if(t.frac<=0){ t.frac=0; elTimer.style.transform="scaleX(0)"; t.active=false; onTimeout(); return; }
+    elTimer.style.transform="scaleX("+t.frac+")";
+    t.raf=requestAnimationFrame(loop);
+  }
+  t.raf=requestAnimationFrame(loop);
+}
+function stopTimer(){ state.timer.active=false; cancelAnimationFrame(state.timer.raf); }
+
+/* ---------- flow ---------- */
+function startGame(mode){
+  state.mode=mode; state.score=0; state.strikes=0; state.streak=0; state.bestStreak=0;
+  state.level=0; state.correct=0; state.total=0; state.planN=0; state.results=[]; state.deciding=false;
+  if(mode==="daily"){ rng=mulberry32(todayKey()>>>0); state.dailyN=DAILY_N; $("hudMode").textContent=tr('hudDaily'); }
+  else { rng=Math.random; $("hudMode").textContent=tr('hudEndless'); }
+  show("game"); hideAllOverlays();
+  updateHUD();
+  nextPlan();
+}
+function nextPlan(){
+  state.level++; state.planN++;
+  var cleanBias = state.mode==="daily" ? 0.4 : 0.42;
+  state.plan = generatePlan(state.level, cleanBias);
+  elPlan.innerHTML = renderPlan(state.plan, state.planN);
+  elPlan.classList.remove("deal"); void elPlan.offsetWidth; elPlan.classList.add("deal");
+  $("planScroll").scrollTop=0;
+  if(state.mode==="daily"){ elQueue.textContent=tr('queue')+" "+state.planN+" / "+state.dailyN; }
+  else { elQueue.textContent=tr('queue')+" "+state.planN+"  ·  "+rankFor(state.correct).toUpperCase(); }
+  state.deciding=false;
+  elApprove.disabled=false; elReject.disabled=false;
+  startTimer();
+}
+function onTimeout(){ if(state.deciding) return; decide(null, true); }
+
+function decide(approve, timedOut){
+  if(state.deciding) return;
+  state.deciding=true; stopTimer();
+  elApprove.disabled=true; elReject.disabled=true;
+  var p=state.plan;
+  var frac = Math.max(0, state.timer.frac);
+  var shouldApprove = p.valid;
+  var correct = !timedOut && (approve===shouldApprove);
+
+  var stamp=$("stamp");
+  if(!timedOut){
+    stamp.textContent = approve?tr('stampOk'):tr('stampNo');
+    stamp.className = "stamp show "+(approve?"approve":"reject");
+    sfxStamp();
+  }
+
+  state.total++;
+  if(correct){
+    state.correct++; state.streak++; if(state.streak>state.bestStreak) state.bestStreak=state.streak;
+    var base=100, mult=comboMult();
+    var speed=Math.floor(frac*60);
+    var lvlBonus=Math.min(state.level*4, 80);
+    var gain=Math.round((base+speed+lvlBonus)*mult);
+    state.score+=gain;
+    state.results.push(1);
+    setTimeout(function(){ flash("good"); sfxGood(); showPopup("+"+gain); }, 120);
+    setTimeout(function(){ toast(approve? tr('toastClean') : tr('toastCatch')+catchMsg(p), true); }, 140);
+    updateHUD();
+    setTimeout(advance, 1000);
+  } else {
+    state.streak=0; state.strikes++;
+    state.results.push(0);
+    setTimeout(function(){ flash("bad"); shake(); sfxBad(); }, timedOut?0:120);
+    updateHUD();
+    setTimeout(function(){ showIncident(p, approve, timedOut); }, timedOut?260:520);
+  }
+}
+function advance(){
+  if(state.mode==="daily" && state.planN>=state.dailyN){ return gameOver(); }
+  if(state.strikes>=3){ return gameOver(); }
+  nextPlan();
+}
+
+/* ---------- feedback visuals ---------- */
+function flash(kind){ elFlash.className="flash "+kind; void elFlash.offsetWidth; }
+function shake(){ elPlan.classList.remove("shake"); void elPlan.offsetWidth; elPlan.classList.add("shake"); }
+function showPopup(txt){ elPopup.textContent=txt; elPopup.className="popup go"; void elPopup.offsetWidth; }
+var toastT;
+function toast(msg, good){ elToast.textContent=msg; elToast.className="toast on"+(good?" good":""); clearTimeout(toastT); toastT=setTimeout(function(){ elToast.className="toast"; }, 1500); }
+
+/* short "good catch" reason */
+function catchMsg(p){
+  var e=p.errs[0];
+  if(LANG==="en"){
+    if(!e) return "dangerous order stopped.";
+    switch(e.code){
+      case "DOSE_MATH": return "dose doesn't match BSA.";
+      case "DOSE_FLAT": return "flat dose is wrong.";
+      case "DOSE_CAP": return "vincristine over 2 mg cap.";
+      case "CARBO_AUC": return "carboplatin AUC dose is off.";
+      case "NEUTROPENIA": return "neutrophils too low.";
+      case "THROMBOCYTOPENIA": return "platelets too low.";
+      case "RENAL_CONTRA": return "cisplatin with poor renal function.";
+      case "HEPATIC_CONTRA": return "bilirubin too high.";
+      case "PREMED_MISSING": return "premedication missing.";
+      case "IDENTITY_MISMATCH": return "patient mismatch.";
+      case "ROUTE_FATAL": return "vincristine on the intrathecal route.";
+      case "CUMUL_ANTHRA": return "cumulative dose over the lifetime limit.";
+      case "LVEF_LOW": return "LVEF below 50%.";
+      case "WRONG_DRUG": return "wrong drug for this regimen.";
+    }
+    return "dangerous order stopped.";
+  }
+  if(!e) return "prescription dangereuse arrêtée.";
+  switch(e.code){
+    case "DOSE_MATH": return "la dose ne correspond pas à la surface.";
+    case "DOSE_FLAT": return "dose fixe erronée.";
+    case "DOSE_CAP": return "vincristine au-dessus du plafond 2 mg.";
+    case "CARBO_AUC": return "dose de carboplatine (AUC) fausse.";
+    case "NEUTROPENIA": return "polynucléaires trop bas.";
+    case "THROMBOCYTOPENIA": return "plaquettes trop basses.";
+    case "RENAL_CONTRA": return "cisplatine avec insuffisance rénale.";
+    case "HEPATIC_CONTRA": return "bilirubine trop élevée.";
+    case "PREMED_MISSING": return "prémédication manquante.";
+    case "IDENTITY_MISMATCH": return "identité incohérente.";
+    case "ROUTE_FATAL": return "vincristine par voie intrathécale.";
+    case "CUMUL_ANTHRA": return "dose cumulée au-delà de la limite vie.";
+    case "LVEF_LOW": return "FEVG sous 50 %.";
+    case "WRONG_DRUG": return "molécule étrangère au protocole.";
+  }
+  return "prescription dangereuse arrêtée.";
+}
+
+/* ---------- incident report ---------- */
+function showIncident(p, approve, timedOut){
+  var flag=$("incFlag"), what=$("incWhat"), body=$("incBody"), std=$("incStd");
+  var EN=(LANG==="en");
+  if(timedOut){
+    flag.textContent = EN ? "⏱ Delay report" : "⏱ Retard signalé";
+    what.textContent = EN ? "The order sat in the queue." : "L'ordonnance est restée en attente.";
+    body.innerHTML = EN
+      ? "Time ran out: the order went unvalidated and the patient's cycle was delayed a day. Validation must be fast <i>and</i> right."
+      : "Le temps est écoulé : l'ordonnance n'a pas été validée et la cure du patient a pris un jour de retard. La validation doit être rapide <i>et</i> juste.";
+    std.innerHTML = EN
+      ? (p.valid ? "<b>For the record:</b> this order was actually correct." : "<b>For the record:</b> it also had a problem — "+incidentText(p).plain)
+      : (p.valid ? "<b>Pour mémoire :</b> cette ordonnance était en réalité conforme." : "<b>Pour mémoire :</b> elle posait aussi un problème — "+incidentText(p).plain);
+  } else if(p.valid && approve===false){
+    flag.textContent = EN ? "↩ Prescriber complaint" : "↩ Réclamation du prescripteur";
+    what.textContent = EN ? "You held a correct order." : "Vous avez bloqué une ordonnance correcte.";
+    body.innerHTML = EN
+      ? "This order was fully compliant. Holding correct orders delays chemotherapy and erodes the prescriber's trust. Only hold for a real problem."
+      : "Cette ordonnance était parfaitement conforme. Bloquer des ordonnances correctes retarde la chimiothérapie et érode la confiance du prescripteur. Ne bloquez que pour un vrai problème.";
+    std.innerHTML = (EN ? "<b>This order met protocol:</b> " : "<b>Cette ordonnance respectait le protocole :</b> ")+L(p.reg.ref);
+  } else {
+    var t=incidentText(p);
+    flag.textContent = EN ? "⚠ Medication incident" : "⚠ Erreur médicamenteuse";
+    what.textContent=t.title;
+    body.innerHTML=t.body;
+    std.innerHTML=(EN ? "<b>Protocol:</b> " : "<b>Protocole :</b> ")+t.std;
+  }
+  var isFatal = (state.strikes>=3) || (state.mode==="daily" && state.planN>=state.dailyN);
+  $("btnIncNext").textContent = isFatal ? (EN?"End session":"Terminer la séance") : (EN?"Continue":"Continuer");
+  showOverlay("incidentOv");
+}
+
+function incidentText(p){
+  var e = p.errs[0];
+  var reg=p.reg, refTxt=L(reg.ref);
+  if(LANG==="en"){
+    switch(e.code){
+      case "DOSE_MATH":{
+        var d=e.drug, per = d.kind==="kg" ? (nf(d.mgkg)+" mg/kg × "+d.weight) : (nf(d.perM2)+" mg/m² × "+nf(p.bsa)+" m²");
+        if(d.kind==="kg") per = nf(d.mgkg)+" mg/kg × "+p.weight+" kg";
+        return { title:"Dose doesn't match body size.",
+          body:"<b>"+d.n+"</b>: "+per+" = <b>"+mg(d.tot)+" mg</b>, not the <b>"+mg(d.shown)+" mg</b> written. A dose that fails this check must never be released.",
+          std:"Re-multiply dose per m² (or per kg) × body size on every drug before releasing.",
+          plain:d.n+" dose didn't match the BSA." }; }
+      case "DOSE_FLAT":
+        return { title:"Flat-dose drug prescribed at the wrong dose.",
+          body:"<b>"+e.drug.n+"</b> is a fixed-dose agent (<b>"+mg(e.drug.flat)+" mg</b> q3w), independent of weight or BSA. <b>"+mg(e.drug.shown)+" mg</b> was written.",
+          std:refTxt,
+          plain:"a flat-dose drug was written at the wrong dose." };
+      case "DOSE_CAP":
+        return { title:"Vincristine over the 2 mg cap.",
+          body:"Vincristine was dosed at <b>"+nf(e.drug.shown)+" mg</b>. Regardless of body surface, the single dose is capped at <b>2 mg</b> — higher doses cause severe neurotoxicity.",
+          std:"Vincristine: 1.4 mg/m² capped at 2 mg total per dose.",
+          plain:"vincristine exceeded its 2 mg cap." };
+      case "CARBO_AUC":
+        return { title:"Carboplatin AUC dose is wrong.",
+          body:"By the Calvert formula, AUC "+nf(e.drug.auc)+" × (GFR "+p.gfr+" + 25) = <b>"+mg(e.calc)+" mg</b>, not the <b>"+mg(e.drug.shown)+" mg</b> written.",
+          std:"Carboplatin dose (mg) = AUC × (GFR + 25).",
+          plain:"the carboplatin AUC dose didn't match Calvert." };
+      case "NEUTROPENIA":
+        return { title:"Neutrophils too low to treat.",
+          body:"ANC is <b>"+nf(p.anc)+" G/L</b>, below the "+nf(p.ancMin)+" G/L threshold. Giving myelosuppressive chemotherapy now risks febrile neutropenia and sepsis.",
+          std:"Hold and delay if ANC < "+nf(p.ancMin)+" G/L (support with G-CSF as indicated).",
+          plain:"the neutrophil count was below the treatment threshold." };
+      case "THROMBOCYTOPENIA":
+        return { title:"Platelets too low to treat.",
+          body:"Platelets are <b>"+mg(p.plt)+" G/L</b>, below the "+p.pltMin+" G/L threshold. Treating now risks serious bleeding.",
+          std:"Hold and delay if platelets < "+p.pltMin+" G/L.",
+          plain:"the platelet count was below the treatment threshold." };
+      case "RENAL_CONTRA":
+        return { title:"Cisplatin with impaired renal function.",
+          body:"GFR is <b>"+p.gfr+" mL/min</b> (creatinine "+p.creat+" µmol/L). Cisplatin is nephrotoxic and requires GFR ≥ 60 mL/min — switch to carboplatin or delay.",
+          std:"Cisplatin needs GFR ≥ 60 mL/min with hyperhydration.",
+          plain:"cisplatin was ordered despite poor renal function." };
+      case "HEPATIC_CONTRA":
+        return { title:"Bilirubin too high for this drug.",
+          body:"Bilirubin is <b>"+p.bili+" µmol/L</b> (well above ~17). <b>"+e.drug.n+"</b> is hepatically cleared and needs dose reduction or a hold at this level (marked hepatotoxicity risk).",
+          std:"Reduce/hold hepatically-cleared drugs (irinotecan, taxanes) when bilirubin > 1.5× ULN.",
+          plain:"bilirubin was too high for a hepatically-cleared drug." };
+      case "PREMED_MISSING":
+        return { title:"Mandatory premedication missing.",
+          body:"This regimen requires premedication and none was ordered. Without it, hypersensitivity and/or severe emesis are likely.",
+          std:L(reg.premedStd)+" required for this regimen.",
+          plain:"the required premedication was absent." };
+      case "IDENTITY_MISMATCH":
+        return { title:"Patient record inconsistency.",
+          body:"The record lists sex <b>"+p.sex+"</b> for «\u00a0"+p.dx.toLowerCase()+"\u00a0». Such a mismatch signals the wrong patient's data may be loaded.",
+          std:"Stop and re-verify identity whenever demographics and diagnosis conflict.",
+          plain:"the recorded sex was inconsistent with the diagnosis." };
+      case "ROUTE_FATAL":
+        return { title:"Vincristine on the intrathecal route.",
+          body:"Vincristine was ordered <b>intrathecally</b>. This is a fatal never-event: vinca alkaloids are <b>IV only</b> — intrathecal administration causes irreversible, lethal neurotoxicity.",
+          std:"Vinca alkaloids are IV only. Never intrathecal — dispense in a separate step from any IT drug.",
+          plain:"a vinca alkaloid was routed intrathecally." };
+      case "CUMUL_ANTHRA":{
+        var cv=round(p.cum.prior+p.cum.add,0);
+        return { title:"Cumulative dose over the lifetime limit.",
+          body:"<b>"+p.cum.drug+"</b> already reached <b>"+mg(p.cum.prior)+" "+p.cum.unit+"</b>. This cycle adds "+mg(p.cum.add)+", for a cumulative <b>"+mg(cv)+" "+p.cum.unit+"</b> — beyond the lifetime ceiling ("+mg(p.cum.cap)+" "+p.cum.unit+"). Alone the cycle looks fine; the sum is the problem.",
+          std:"Sum every prior course and stay under the lifetime dose (doxorubicin ≤ 550 mg/m², bleomycin ≤ 400 U).",
+          plain:"the cumulative dose exceeded the lifetime limit." }; }
+      case "LVEF_LOW":
+        return { title:"LVEF too low for a cardiotoxic drug.",
+          body:"LVEF is <b>"+p.fevg+"%</b>, below the 50% floor required for anthracyclines / trastuzumab. Treating now risks heart failure.",
+          std:"LVEF ≥ 50% before each cardiotoxic cycle; hold if it drops.",
+          plain:"the LVEF was below the 50% cardiac floor." };
+      case "WRONG_DRUG":
+        return { title:"Wrong drug for this regimen.",
+          body:"The order lists <b>"+e.got+"</b>, which is not part of «\u00a0"+p.regimen+"\u00a0». It should be <b>"+e.expected+"</b>.",
+          std:refTxt,
+          plain:"a drug foreign to the regimen was listed." };
+    }
+    return { title:"Missed problem.", body:"This order should have been held.", std:refTxt, plain:"a problem was missed." };
+  }
+  /* ---- FR ---- */
+  switch(e.code){
+    case "DOSE_MATH":{
+      var d=e.drug;
+      var per = d.kind==="kg" ? (nf(d.mgkg)+" mg/kg × "+p.weight+" kg") : (nf(d.perM2)+" mg/m² × "+nf(p.bsa)+" m²");
+      return { title:"La dose ne correspond pas à la surface.",
+        body:"<b>"+d.n+"</b> : "+per+" = <b>"+mg(d.tot)+" mg</b>, et non les <b>"+mg(d.shown)+" mg</b> prescrits. Une dose qui échoue à ce contrôle ne doit jamais être validée.",
+        std:"Re-multiplier dose/m² (ou /kg) × morphologie sur chaque molécule avant validation.",
+        plain:"la dose de "+d.n+" ne correspondait pas à la surface." }; }
+    case "DOSE_FLAT":
+      return { title:"Molécule à dose fixe mal dosée.",
+        body:"<b>"+e.drug.n+"</b> est administré à dose FIXE (<b>"+mg(e.drug.flat)+" mg</b> /3 sem), indépendante du poids ou de la surface. Or <b>"+mg(e.drug.shown)+" mg</b> ont été prescrits.",
+        std:refTxt,
+        plain:"une molécule à dose fixe a été mal dosée." };
+    case "DOSE_CAP":
+      return { title:"Vincristine au-dessus du plafond 2 mg.",
+        body:"La vincristine est prescrite à <b>"+nf(e.drug.shown)+" mg</b>. Quelle que soit la surface corporelle, la dose unitaire est PLAFONNÉE à <b>2 mg</b> — au-delà, neurotoxicité sévère.",
+        std:"Vincristine : 1,4 mg/m² plafonnée à 2 mg par administration.",
+        plain:"la vincristine dépassait son plafond de 2 mg." };
+    case "CARBO_AUC":
+      return { title:"Dose de carboplatine (AUC) fausse.",
+        body:"Par la formule de Calvert, AUC "+nf(e.drug.auc)+" × (DFG "+p.gfr+" + 25) = <b>"+mg(e.calc)+" mg</b>, et non les <b>"+mg(e.drug.shown)+" mg</b> prescrits.",
+        std:"Carboplatine : dose (mg) = AUC × (DFG + 25).",
+        plain:"la dose de carboplatine ne suivait pas Calvert." };
+    case "NEUTROPENIA":
+      return { title:"Polynucléaires trop bas pour traiter.",
+        body:"Les PNN sont à <b>"+nf(p.anc)+" G/L</b>, sous le seuil de "+nf(p.ancMin)+" G/L. Administrer une chimiothérapie myélotoxique maintenant expose à une neutropénie fébrile et un sepsis.",
+        std:"Reporter la cure si PNN < "+nf(p.ancMin)+" G/L (soutien par G-CSF si indiqué).",
+        plain:"le taux de polynucléaires était sous le seuil de traitement." };
+    case "THROMBOCYTOPENIA":
+      return { title:"Plaquettes trop basses pour traiter.",
+        body:"Les plaquettes sont à <b>"+mg(p.plt)+" G/L</b>, sous le seuil de "+p.pltMin+" G/L. Traiter maintenant expose à un risque hémorragique grave.",
+        std:"Reporter la cure si plaquettes < "+p.pltMin+" G/L.",
+        plain:"le taux de plaquettes était sous le seuil de traitement." };
+    case "RENAL_CONTRA":
+      return { title:"Cisplatine et insuffisance rénale.",
+        body:"Le DFG est à <b>"+p.gfr+" mL/min</b> (créatinine "+p.creat+" µmol/L). Le cisplatine est néphrotoxique et requiert un DFG ≥ 60 mL/min — substituer par carboplatine ou reporter.",
+        std:"Cisplatine : DFG ≥ 60 mL/min et hyperhydratation.",
+        plain:"le cisplatine a été prescrit malgré une fonction rénale altérée." };
+    case "HEPATIC_CONTRA":
+      return { title:"Bilirubine trop élevée pour cette molécule.",
+        body:"La bilirubine est à <b>"+p.bili+" µmol/L</b> (bien au-dessus de ~17). <b>"+e.drug.n+"</b> est à métabolisme hépatique et nécessite une réduction de dose ou un report à ce niveau (risque hépatotoxique marqué).",
+        std:"Réduire/reporter les molécules à clairance hépatique (irinotécan, taxanes) si bilirubine > 1,5× N.",
+        plain:"la bilirubine était trop élevée pour une molécule à clairance hépatique." };
+    case "PREMED_MISSING":
+      return { title:"Prémédication obligatoire absente.",
+        body:"Ce protocole impose une prémédication et aucune n'est prescrite. Sans elle, hypersensibilité et/ou vomissements sévères sont probables.",
+        std:L(reg.premedStd)+" — requise pour ce protocole.",
+        plain:"la prémédication obligatoire était absente." };
+    case "IDENTITY_MISMATCH":
+      return { title:"Incohérence du dossier patient.",
+        body:"Le dossier indique le sexe <b>"+p.sex+"</b> pour «\u00a0"+p.dx.toLowerCase()+"\u00a0». Une telle incohérence signale que les données du mauvais patient ont pu être chargées.",
+        std:"Arrêter et revérifier l'identité dès que démographie et diagnostic sont contradictoires.",
+        plain:"le sexe enregistré était incohérent avec le diagnostic." };
+    case "ROUTE_FATAL":
+      return { title:"Vincristine par voie intrathécale.",
+        body:"La vincristine est prescrite en <b>intrathécal</b>. C'est un « never-event » mortel : les alcaloïdes de la pervenche sont <b>strictement IV</b> — l'administration intrathécale provoque une neurotoxicité irréversible et létale.",
+        std:"Alcaloïdes de la pervenche : IV strictement. Jamais intrathécal — dispensation séparée de tout produit IT.",
+        plain:"un alcaloïde de la pervenche a été prescrit par voie intrathécale." };
+    case "CUMUL_ANTHRA":{
+      var cv=round(p.cum.prior+p.cum.add,0);
+      return { title:"Dose cumulée au-delà de la limite « vie ».",
+        body:"<b>"+p.cum.drug+"</b> atteint déjà <b>"+mg(p.cum.prior)+" "+p.cum.unit+"</b>. Cette cure ajoute "+mg(p.cum.add)+", soit un cumul de <b>"+mg(cv)+" "+p.cum.unit+"</b> — au-delà de la dose vie ("+mg(p.cum.cap)+" "+p.cum.unit+"). Prise isolément la cure semble correcte ; c'est la somme qui pose problème.",
+        std:"Sommer toutes les cures antérieures et rester sous la dose vie (doxorubicine ≤ 550 mg/m², bléomycine ≤ 400 U).",
+        plain:"la dose cumulée dépassait la limite « vie »." }; }
+    case "LVEF_LOW":
+      return { title:"FEVG trop basse pour une molécule cardiotoxique.",
+        body:"La FEVG est à <b>"+p.fevg+" %</b>, sous le seuil de 50 % requis pour les anthracyclines / le trastuzumab. Traiter maintenant expose à une insuffisance cardiaque.",
+        std:"FEVG ≥ 50 % avant chaque cure cardiotoxique ; suspendre en cas de chute.",
+        plain:"la FEVG était sous le plancher cardiaque de 50 %." };
+    case "WRONG_DRUG":
+      return { title:"Molécule étrangère au protocole.",
+        body:"L'ordonnance mentionne <b>"+e.got+"</b>, qui ne fait pas partie du protocole «\u00a0"+p.regimen+"\u00a0». Il devrait s'agir de <b>"+e.expected+"</b>.",
+        std:refTxt,
+        plain:"une molécule étrangère au protocole a été listée." };
+  }
+  return { title:"Problème manqué.", body:"Cette ordonnance aurait dû être bloquée.", std:refTxt, plain:"un problème a été manqué." };
+}
+
+/* ---------- ranks ---------- */
+function rankFor(clears){
+  if(LANG==="en"){
+    if(clears>=60) return "Chief Pharmacist — untouchable";
+    if(clears>=40) return "Pharmacy Department Head";
+    if(clears>=26) return "Pharmacist (Professor)";
+    if(clears>=19) return "Lead Oncology Pharmacist";
+    if(clears>=14) return "Hospital Pharmacist";
+    if(clears>=10) return "Staff Pharmacist";
+    if(clears>=7)  return "Senior Resident";
+    if(clears>=4)  return "Pharmacy Resident";
+    if(clears>=2)  return "Advanced Student";
+    return "Pharmacy Student";
+  }
+  if(clears>=60) return "Pharmacien chef — intouchable";
+  if(clears>=40) return "Chef de service — pharmacie";
+  if(clears>=26) return "Pharmacien PU-PH";
+  if(clears>=19) return "Pharmacien référent oncologie";
+  if(clears>=14) return "Praticien hospitalier";
+  if(clears>=10) return "Assistant spécialiste";
+  if(clears>=7)  return "Interne senior (pharmacie)";
+  if(clears>=4)  return "Interne (pharmacie)";
+  if(clears>=2)  return "Externe confirmé";
+  return "Externe en pharmacie";
+}
+function medalFor(clears){
+  if(clears>=40) return "🏆"; if(clears>=19) return "🥇"; if(clears>=10) return "🎖️"; if(clears>=4) return "💊"; return "📋";
+}
+
+/* ---------- game over ---------- */
+function gameOver(){
+  stopTimer();
+  var acc = state.total? Math.round(state.correct/state.total*100) : 0;
+  var EN=(LANG==="en");
+  $("overTitle").textContent = state.mode==="daily" ? (EN?"Daily queue complete":"Validation du jour terminée") : (EN?"Session over":"Séance terminée");
+  $("overSub").textContent = state.mode==="daily" ? (dateLabel()+(EN?" · everyone got these same orders":" · mêmes ordonnances pour tout le monde")) : (EN?"Three strikes — the desk is closed.":"Trois erreurs — le guichet ferme.");
+  $("ovScore").textContent = state.score.toLocaleString();
+  $("ovCleared").textContent = state.correct;
+  $("ovAcc").textContent = acc+"%";
+  $("ovStreak").textContent = state.bestStreak;
+  $("overRank").textContent = rankFor(state.correct);
+  $("overMedal").textContent = medalFor(state.correct);
+
+  if(state.mode==="daily"){
+    $("shareBox").classList.remove("hidden");
+    $("shareGrid").textContent = state.results.map(function(r){return r?"🟪":"🟥";}).join("");
+    $("shareCap").textContent = "OK Chimio — "+dateLabel();
+  } else { $("shareBox").classList.add("hidden"); }
+  saveScore(acc);
+  show("game");
+  showOverlay("over");
+}
+
+/* ---------- persistence & leaderboard ---------- */
+async function saveScore(acc){
+  if(state.mode==="endless"){
+    var pb = parseInt(await storeGet("ok_best_endless")||"0",10);
+    if(state.score>pb){ await storeSet("ok_best_endless", String(state.score)); }
+    refreshBestTag();
+  }
+  if(!state.playerName){ state.playerName = window.oaAskName ? (await window.oaAskName("")) : ""; if(!state.playerName) return; }
+  var key = state.mode==="daily" ? ("ok_lb_daily_"+todayKey()) : "ok_lb_endless";
+  var uid = await getUID();
+  var entry = {uid:uid, name:state.playerName, score:state.score, acc:acc, streak:state.bestStreak, ts:Date.now()};
+  var remote = await apiSubmit(key, entry);
+  if(remote){ return; }
+  var arr = await lbGet(key);
+  var found=false;
+  for(var i=0;i<arr.length;i++){ if(arr[i].uid===uid){ if(state.score>arr[i].score) arr[i]=entry; found=true; break; } }
+  if(!found) arr.push(entry);
+  arr.sort(function(a,b){ return b.score-a.score; });
+  arr = arr.slice(0,100);
+  await lbSet(key, arr);
+}
+var _uid=null;
+async function getUID(){
+  if(_uid) return _uid;
+  var u = await storeGet("ok_uid");
+  if(!u){ u = "u"+Date.now().toString(36)+Math.random().toString(36).slice(2,7); await storeSet("ok_uid", u); }
+  _uid=u; return u;
+}
+
+var lbView="daily";
+async function renderLeaderboard(){
+  var EN=(LANG==="en");
+  var listEl=$("lbList");
+  listEl.innerHTML='<div class="lb-empty">'+(EN?"Loading…":"Chargement…")+'</div>';
+  var key = lbView==="daily" ? ("ok_lb_daily_"+todayKey()) : "ok_lb_endless";
+  var remote = await apiTop(key);
+  var arr = remote!=null ? remote : await lbGet(key);
+  var uid = await getUID();
+  if(!arr.length){
+    listEl.innerHTML='<div class="lb-empty">'+(EN?"No scores yet.":"Aucun score pour l'instant.")+'<br>'+(lbView==="daily"?(EN?"Be the first to post today's queue.":"Soyez le premier à publier la validation du jour."):(EN?"Play an endless session to get on the board.":"Jouez un flux continu pour entrer au classement."))+'</div>';
+  } else {
+    var h="";
+    arr.slice(0,20).forEach(function(e,i){
+      h+='<div class="lb-row'+(e.uid===uid?" me":"")+'"><div class="lb-rank">'+(i+1)+'</div>'+
+         '<div class="lb-name">'+escapeHTML(e.name)+'</div>'+
+         '<div class="lb-acc">'+e.acc+'%</div>'+
+         '<div class="lb-sc">'+e.score.toLocaleString()+'</div></div>';
+    });
+    var meIdx = arr.findIndex(function(e){return e.uid===uid;});
+    if(meIdx>=20){
+      var me=arr[meIdx];
+      h+='<div class="lb-row me"><div class="lb-rank">'+(meIdx+1)+'</div><div class="lb-name">'+escapeHTML(me.name)+'</div><div class="lb-acc">'+me.acc+'%</div><div class="lb-sc">'+me.score.toLocaleString()+'</div></div>';
+    }
+    listEl.innerHTML=h;
+  }
+  var noteEN, noteFR;
+  if(LEADERBOARD_API){ noteEN="Global shared leaderboard (backend)."; noteFR="Classement mondial partagé (backend)."; }
+  else if(hasCloud){ noteEN="Scores are shared with everyone playing this build."; noteFR="Les scores sont partagés avec tous les joueurs de cette version."; }
+  else { noteEN="This copy stores scores on this device only. Host it with a small backend for a global board."; noteFR="Cette copie enregistre les scores uniquement sur cet appareil. Hébergez-la avec un petit backend pour un classement mondial."; }
+  $("cloudNote").textContent = (LANG==="en")?noteEN:noteFR;
+}
+function escapeHTML(s){ return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
+
+/* ---------- share ---------- */
+function shareText(){
+  var acc = state.total? Math.round(state.correct/state.total*100):0;
+  var EN=(LANG==="en");
+  if(state.mode==="daily"){
+    return "OK Chimio — "+(EN?"Daily Queue ":"Validation du jour ")+dateLabel()+"\n"+
+      state.results.map(function(r){return r?"🟪":"🟥";}).join("")+"\n"+
+      "Score "+state.score.toLocaleString()+" · "+state.correct+"/"+state.total+" · "+(EN?"streak ":"série ")+state.bestStreak+" · "+rankFor(state.correct);
+  }
+  return "OK Chimio — "+(EN?"Endless":"Flux continu")+"\nScore "+state.score.toLocaleString()+" · "+state.correct+(EN?" orders cleared · ":" ordonnances validées · ")+acc+(EN?"% · rank ":"% · rang ")+rankFor(state.correct);
+}
+function copyShare(){
+  var txt=shareText();
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(function(){ toastMenu(tr('copyOk')); }, fallbackCopy.bind(null,txt));
+  } else fallbackCopy(txt);
+}
+function fallbackCopy(txt){
+  var ta=document.createElement("textarea"); ta.value=txt; ta.style.position="fixed"; ta.style.opacity="0";
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand("copy"); toastMenu(tr('copyOk')); }catch(e){ toastMenu(tr('copyFail')); }
+  document.body.removeChild(ta);
+}
+function toastMenu(msg){ toast(msg,true); }
+
+/* ---------- screens & overlays ---------- */
+function show(id){ ["menu","game"].forEach(function(s){ $(s).classList.toggle("hidden", s!==id); }); }
+function showOverlay(id){ $(id).classList.remove("hidden"); }
+function hideOverlay(id){ $(id).classList.add("hidden"); }
+function hideAllOverlays(){ ["incidentOv","protoOv","howOv","over","lbOv"].forEach(hideOverlay); }
+
+/* ---------- protocol drawer ---------- */
+function buildProtocol(){
+  var groups = (LANG==="en") ? [
+    {h:"Dose arithmetic", rows:[["Every drug","dose per m² × BSA (or per kg × weight)"],["Carboplatin","AUC × (GFR + 25) — Calvert"],["Pembrolizumab","flat 200 mg q3w (never mg/m²)"]]},
+    {h:"Hard caps", rows:[["Vincristine","≤ 2 mg per dose (cap)"],["Doxorubicin lifetime","≤ 550 mg/m²"],["Bleomycin lifetime","≤ 400 U"]]},
+    {h:"Count thresholds", rows:[["Neutrophils (ANC)","≥ 1.5 G/L"],["Platelets","≥ 100 G/L"]]},
+    {h:"Organ function", rows:[["Cisplatin","GFR ≥ 60 mL/min + hyperhydration"],["Irinotecan / taxanes","reduce if bilirubin > 1.5× ULN"],["Anthracycline / trastuzumab","LVEF ≥ 50%"]]},
+    {h:"Route — never events", rows:[["Vinca alkaloids","IV ONLY — never intrathecal"],["Intrathecal","only cytarabine / methotrexate / steroid"]]},
+    {h:"Premedication", rows:[["Paclitaxel","steroid + H1 + H2 (hypersensitivity)"],["Cisplatin","hyperhydration + triple antiemetic"],["Docetaxel","3-day corticosteroid"]]},
+    {h:"Regimen make-up", rows:[["FOLFOX","oxaliplatin + LV5FU2"],["FOLFIRI","irinotecan + LV5FU2"],["AC","doxorubicin 60 + cyclophosphamide 600"],["R-CHOP","R + cyclo + doxo + vincristine + prednisone"]]}
+  ] : [
+    {h:"Arithmétique des doses", rows:[["Chaque molécule","dose/m² × surface (ou /kg × poids)"],["Carboplatine","AUC × (DFG + 25) — Calvert"],["Pembrolizumab","dose fixe 200 mg /3 sem (jamais mg/m²)"]]},
+    {h:"Plafonds stricts", rows:[["Vincristine","≤ 2 mg par dose (plafond)"],["Doxorubicine — dose vie","≤ 550 mg/m²"],["Bléomycine — dose vie","≤ 400 U"]]},
+    {h:"Seuils hématologiques", rows:[["Polynucléaires (PNN)","≥ 1,5 G/L"],["Plaquettes","≥ 100 G/L"]]},
+    {h:"Fonction d'organe", rows:[["Cisplatine","DFG ≥ 60 mL/min + hyperhydratation"],["Irinotécan / taxanes","réduire si bilirubine > 1,5× N"],["Anthracycline / trastuzumab","FEVG ≥ 50 %"]]},
+    {h:"Voie — never events", rows:[["Alcaloïdes pervenche","IV STRICTEMENT — jamais intrathécal"],["Intrathécal","seulement cytarabine / méthotrexate / corticoïde"]]},
+    {h:"Prémédication", rows:[["Paclitaxel","corticoïde + anti-H1 + anti-H2 (hypersensibilité)"],["Cisplatine","hyperhydratation + antiémétique triple"],["Docétaxel","corticoïde 3 jours"]]},
+    {h:"Composition des protocoles", rows:[["FOLFOX","oxaliplatine + LV5FU2"],["FOLFIRI","irinotécan + LV5FU2"],["AC","doxorubicine 60 + cyclophosphamide 600"],["R-CHOP","R + cyclo + doxo + vincristine + prednisone"]]}
+  ];
+  var h="";
+  groups.forEach(function(g){
+    h+='<h3>'+g.h+'</h3>';
+    g.rows.forEach(function(r){ h+='<div class="ptab"><span>'+r[0]+'</span><span class="d">'+r[1]+'</span></div>'; });
+  });
+  $("protoBody").innerHTML=h;
+}
+
+/* ---------- language application ---------- */
+function setTxt(id,t){ var el=$(id); if(el) el.textContent=t; }
+function setHTML(id,t){ var el=$(id); if(el) el.innerHTML=t; }
+function pickL(fr,en){ return (LANG==="en")?en:fr; }
+
+function applyLang(){
+  try{ document.documentElement.lang = LANG; }catch(e){}
+  try{ setHTML("okTitle", pickL('OK<span class="p2">CHIMIO</span>','Fit for<span class="p2">chemo</span>')); }catch(e){}
+  try{ document.title = pickL("OK Chimio","Fit for chemo"); }catch(e){}
+  setTxt("uiTagline", pickL(
+    "La validation pharmaceutique est ouverte. Validez les protocoles conformes, bloquez les prescriptions dangereuses. Une erreur qui passe, et c'est une déclaration d'erreur médicamenteuse.",
+    "The pharmacy validation desk is open. Release the correct orders, hold the dangerous ones. Miss one and it's a medication incident report."));
+  setTxt("uiDailyLabel", pickL("Validation du jour","Daily Queue"));
+  setTxt("dailyTag", pickL("15 ordonnances · identiques pour tous","15 orders · same for everyone"));
+  setTxt("uiEndlessLabel", pickL("Flux continu","Endless Queue"));
+  setTxt("uiEndlessSub", pickL("tenir · 3 erreurs","survive · 3 strikes"));
+  setTxt("uiLbLabel", pickL("Classement","Leaderboard"));
+  setTxt("uiHowLabel", pickL("Comment jouer","How to play"));
+  setTxt("uiNameLabel", pickL("Nom du validateur (affiché au classement)","Reviewer name (shown on the leaderboard)"));
+  setTxt("uiSoundLabel", pickL("Son","Sound"));
+  setTxt("oaEyebrow", pickL("Onco Arcade · oncologie médicale","Onco Arcade · medical oncology"));
+  setTxt("allGames", pickL("Tous les jeux","All games"));
+  setTxt("aboutBtn", pickL("À propos","About"));
+  setTxt("aboutLede", pickL("OK Chimio est un mini-jeu de la collection Onco Arcade : au guichet de validation pharmaceutique, valide les protocoles conformes et bloque les prescriptions dangereuses. Imaginé, conçu et développé par :","OK Chimio is a mini-game from the Onco Arcade collection: at the pharmacy validation desk, release the correct orders and hold the dangerous ones. Imagined, designed and built by:"));
+  setTxt("aboutRole", pickL("Professeur de radiothérapie · créateur d’Onco Arcade","Professor of radiation oncology · creator of Onco Arcade"));
+  setTxt("aboutDisc", pickL("Jeu pédagogique et expérimental. Ce n’est pas un dispositif médical : il ne remplace pas une formation clinique et ne doit jamais servir à orienter une prise en charge réelle.","Educational, experimental game. It is not a medical device: it does not replace clinical training and must never be used to guide real patient care."));
+
+  var bp=$("btnProto"); if(bp) bp.title=pickL("Référence des protocoles","Protocol reference");
+  var bs=$("btnSound2"); if(bs) bs.title=pickL("Son","Sound");
+  var bq=$("btnQuit"); if(bq) bq.title=pickL("Terminer la séance","End session");
+  setTxt("uiRejectLabel", pickL("BLOQUER","HOLD"));
+  setTxt("uiRejectSub", pickL("renvoyer au prescripteur","send back"));
+  setTxt("uiApproveLabel", pickL("VALIDER","RELEASE"));
+  setTxt("uiApproveSub", pickL("OK chimio","OK chemo"));
+
+  setTxt("uiProtoTitle", pickL("Référence des protocoles","Protocol reference"));
+  setTxt("uiProtoSub", pickL("Doses, seuils et règles de sécurité. Recoupez tout ce qui paraît suspect.","Doses, thresholds & safety rules. Cross-check anything that looks off."));
+
+  setTxt("uiHowTitle", pickL("Comment jouer","How to play"));
+  setTxt("uiHowSub", pickL("Vous êtes au guichet de validation « OK chimio ».","You are at the OK-chemo validation desk."));
+  setHTML("uiHow1", pickL(
+    "Les ordonnances de chimiothérapie arrivent une par une. Lisez chacune, puis <b style=\"color:#6fdcac\">VALIDEZ</b> (OK chimio) ou <b style=\"color:#ff9a9d\">BLOQUEZ</b> pour correction.",
+    "Chemotherapy orders arrive one at a time. Read each, then <b style=\"color:#6fdcac\">RELEASE</b> (OK chemo) or <b style=\"color:#ff9a9d\">HOLD</b> for correction."));
+  setHTML("uiHow2", pickL(
+    "Certaines sont conformes. D'autres cachent une erreur — une dose qui ne colle pas à la surface corporelle, un taux trop bas pour traiter, une molécule étrangère au protocole, un cisplatine avec insuffisance rénale, une dose cumulée au-delà de la limite « vie », ou une vincristine par voie intrathécale. Tout ce qu'il faut est écrit sur l'ordonnance.",
+    "Some are correct. Others hide an error — a dose that doesn't match the BSA, a count too low to treat, a drug foreign to the regimen, cisplatin with poor renal function, a cumulative dose over the lifetime limit, or vincristine on the intrathecal route. Everything you need is on the order."));
+  setHTML("uiHow3", pickL(
+    "<b>Valider une ordonnance dangereuse</b> ou <b>bloquer une ordonnance conforme</b> vous vaut une erreur. <b>Trois erreurs terminent la séance.</b>",
+    "<b>Releasing a dangerous order</b> or <b>holding a correct one</b> costs a strike. <b>Three strikes end the session.</b>"));
+  setHTML("uiHow4", pickL(
+    "Les décisions rapides et justes font monter un multiplicateur de série. Touchez <b>📋</b> à tout moment pour la référence des protocoles.",
+    "Fast, correct calls build a streak multiplier. Tap <b>📋</b> anytime for the protocol reference."));
+  setTxt("uiHow5", pickL(
+    "La validation du jour donne à tout le monde les 15 mêmes ordonnances — comparez vos scores au classement.",
+    "The daily queue gives everyone the same 15 orders — compare scores on the leaderboard."));
+  setTxt("uiHowBtn", pickL("Compris","Got it"));
+
+  setTxt("uiRankLbl", pickL("Rang atteint","Rank reached"));
+  setTxt("uiOsScore", pickL("Score final","Final score"));
+  setTxt("uiOsCleared", pickL("Ordonnances validées","Orders cleared"));
+  setTxt("uiOsAcc", pickL("Précision","Accuracy"));
+  setTxt("uiOsStreak", pickL("Meilleure série","Best streak"));
+  setTxt("uiCopyLabel", pickL("Copier le résultat à partager","Copy result to share"));
+  setTxt("btnAgain", pickL("Rejouer","Play again"));
+  setTxt("btnOverLb", pickL("Voir le classement","View leaderboard"));
+  setTxt("btnMenu", pickL("Menu principal","Main menu"));
+
+  setTxt("uiLbTitle", pickL("Classement","Leaderboard"));
+  setTxt("uiLbSub", pickL("Les meilleurs validateurs du guichet.","The desk's best reviewers."));
+  setTxt("lbTabDaily", pickL("Aujourd'hui","Today"));
+  setTxt("lbTabEndless", pickL("Flux continu — général","Endless — all-time"));
+
+  var lf=$("langFr"), le=$("langEn");
+  if(lf) lf.classList.toggle("on", LANG==="fr");
+  if(le) le.classList.toggle("on", LANG==="en");
+
+  buildProtocol();
+}
+function applyTheme(mode){ document.documentElement.setAttribute("data-theme",mode); try{localStorage.setItem("oa-theme",mode);}catch(e){} var b=$("themeBtn"); if(b) b.textContent = mode==="light" ? "☀" : "☾"; }
+async function setLang(l){
+  if(l!=="fr"&&l!=="en") return;
+  LANG=l;
+  try{ localStorage.setItem("ok_lang", LANG); }catch(e){}
+  storeSet("ok_lang", LANG);
+  applyLang();
+  refreshBestTag();
+}
+
+/* ---------- bindings ---------- */
+function bind(){
+  $("langFr").onclick=function(){ setLang('fr'); };
+  $("langEn").onclick=function(){ setLang('en'); };
+  var _tb=$("themeBtn"); if(_tb) _tb.onclick=function(){ applyTheme(document.documentElement.getAttribute("data-theme")==="light"?"dark":"light"); };
+  var _ab=$("aboutBtn"); if(_ab) _ab.onclick=function(){ var b=$("aboutBox"); if(b) b.hidden=!b.hidden; };
+  $("btnDaily").onclick=function(){ armAudio(); startGame("daily"); };
+  $("btnEndless").onclick=function(){ armAudio(); startGame("endless"); };
+  $("btnLb").onclick=function(){ lbView="daily"; setLbTabs(); renderLeaderboard(); showOverlay("lbOv"); };
+  $("btnHow").onclick=function(){ showOverlay("howOv"); };
+
+  elApprove.onclick=function(){ decide(true,false); };
+  elReject.onclick=function(){ decide(false,false); };
+
+  $("btnIncNext").onclick=function(){ hideOverlay("incidentOv"); if(state.strikes>=3 || (state.mode==="daily" && state.planN>=state.dailyN)) gameOver(); else advance(); };
+  $("btnProto").onclick=function(){ showOverlay("protoOv"); };
+  $("btnQuit").onclick=function(){ if(state.total>0){ gameOver(); } else { show("menu"); } };
+
+  $("btnAgain").onclick=function(){ hideOverlay("over"); startGame(state.mode); };
+  $("btnMenu").onclick=function(){ hideAllOverlays(); show("menu"); refreshBestTag(); };
+  $("btnOverLb").onclick=function(){ lbView=state.mode; setLbTabs(); renderLeaderboard(); showOverlay("lbOv"); };
+  $("btnCopy").onclick=copyShare;
+
+  $("lbTabDaily").onclick=function(){ lbView="daily"; setLbTabs(); renderLeaderboard(); };
+  $("lbTabEndless").onclick=function(){ lbView="endless"; setLbTabs(); renderLeaderboard(); };
+
+  document.querySelectorAll("[data-close]").forEach(function(b){ b.onclick=function(){ hideOverlay(b.getAttribute("data-close")); }; });
+
+  var ni=$("nameInput");
+  ni.value = state.playerName;
+  ni.oninput=function(){ state.playerName=ni.value.trim(); storeSet("ok_name", state.playerName); };
+
+  $("btnSound").onclick=toggleSound; $("btnSound2").onclick=toggleSound;
+
+  document.addEventListener("keydown",function(e){
+    if($("game").classList.contains("hidden")) return;
+    if(!$("incidentOv").classList.contains("hidden")){ if(e.key==="Enter"||e.key===" "){ $("btnIncNext").click(); } return; }
+    if(state.deciding) return;
+    if(e.key==="a"||e.key==="A"||e.key==="ArrowRight") decide(true,false);
+    if(e.key==="r"||e.key==="R"||e.key==="ArrowLeft") decide(false,false);
+  });
+}
+function setLbTabs(){ $("lbTabDaily").classList.toggle("on", lbView==="daily"); $("lbTabEndless").classList.toggle("on", lbView==="endless"); }
+
+function toggleSound(){
+  state.muted=!state.muted;
+  storeSet("ok_muted", state.muted?"1":"0");
+  var ico = state.muted?"🔇":"🔊";
+  $("soundIco").textContent=ico; $("btnSound2").textContent=ico;
+  if(!state.muted) armAudio();
+}
+function armAudio(){ if(!state.muted){ ac(); } }
+
+async function refreshBestTag(){
+  var pb = parseInt(await storeGet("ok_best_endless")||"0",10);
+  $("bestTag").textContent = pb>0 ? (tr('bestEndless')+pb.toLocaleString()) : "";
+}
+
+/* ---------- init ---------- */
+(async function init(){
+  bind();
+  renderStrikes();
+  applyLang();
+  try{ applyTheme(localStorage.getItem("oa-theme")||"light"); }catch(e){ applyTheme("dark"); }
+  var savedLang = await storeGet("ok_lang"); if((savedLang==="fr"||savedLang==="en") && savedLang!==LANG){ LANG=savedLang; applyLang(); }
+  var savedName = await storeGet("ok_name"); if(savedName){ state.playerName=savedName; $("nameInput").value=savedName; }
+  var m = await storeGet("ok_muted"); if(m==="1"){ state.muted=true; $("soundIco").textContent="🔇"; $("btnSound2").textContent="🔇"; }
+  await getUID();
+  refreshBestTag();
+})();
+</script>
+<style id="oa-swipe-style">
+  #planScroll{ touch-action: pan-y; }
+  #plan{ will-change: transform; }
+  .plan-scroll.oa-swiping, .stage.oa-swiping{ overflow: visible !important; }
+  .oa-swipe-stamp{
+    position:absolute; top:26px; left:50%; z-index:40; pointer-events:none;
+    font-weight:560; font-size:32px; letter-spacing:.04em; padding:6px 18px;
+    border:4px solid currentColor; border-radius:12px; opacity:0; white-space:nowrap;
+    transform:translateX(-50%) rotate(-9deg); transition:opacity .08s linear;
+    text-transform:uppercase;
+  }
+  .oa-swipe-stamp.approve{ color:#12a150; transform:translateX(-50%) rotate(-11deg); }
+  .oa-swipe-stamp.reject{ color:#e0424a; transform:translateX(-50%) rotate(11deg); }
+</style>
+<script id="oa-swipe-script">
+(function(){
+  function init(){
+    var card=document.getElementById('plan');
+    var zone=document.getElementById('planScroll');
+    var stage=card?card.closest('.stage'):null;
+    if(!card||!zone||!stage){ return setTimeout(init,300); }
+    if(zone.dataset.oaSwipe) return; zone.dataset.oaSwipe='1';
+
+    var stamp=document.createElement('div'); stamp.className='oa-swipe-stamp'; stage.appendChild(stamp);
+    var apLbl=document.getElementById('uiApproveLabel'), rjLbl=document.getElementById('uiRejectLabel');
+    var sx=0,sy=0,drag=false,on=false,pid=null;
+    var W=function(){return Math.max(window.innerWidth||360,320);};
+    var TH=88;
+
+    function busy(){ return (typeof window.state!=='undefined' && window.state && window.state.deciding); }
+    function reset(anim){
+      card.style.transition=anim?'transform .2s ease, opacity .2s ease':'none';
+      card.style.transform=''; card.style.opacity='';
+      stamp.style.opacity='0';
+      zone.classList.remove('oa-swiping'); stage.classList.remove('oa-swiping');
+    }
+    zone.addEventListener('pointerdown',function(e){
+      if(busy()||e.pointerType==='mouse'&&e.button!==0) return;
+      sx=e.clientX; sy=e.clientY; on=true; drag=false; pid=e.pointerId; card.style.transition='none';
+    });
+    zone.addEventListener('pointermove',function(e){
+      if(!on||e.pointerId!==pid) return;
+      var dx=e.clientX-sx, dy=e.clientY-sy;
+      if(!drag){
+        if(Math.abs(dx)>12 && Math.abs(dx)>Math.abs(dy)){ drag=true; zone.classList.add('oa-swiping'); stage.classList.add('oa-swiping'); try{zone.setPointerCapture(pid);}catch(_){}}
+        else if(Math.abs(dy)>12){ on=false; return; }
+        else return;
+      }
+      if(e.cancelable) e.preventDefault();
+      card.style.transform='translateX('+dx+'px) rotate('+(dx/22)+'deg)';
+      var k=Math.min(1,Math.abs(dx)/TH); stamp.style.opacity=k;
+      if(dx>0){ stamp.className='oa-swipe-stamp approve'; stamp.textContent=(apLbl&&apLbl.textContent)||'Valider'; }
+      else{ stamp.className='oa-swipe-stamp reject'; stamp.textContent=(rjLbl&&rjLbl.textContent)||'Refuser'; }
+    });
+    function end(e){
+      if(!on) return; on=false;
+      var dx=(e.clientX||sx)-sx;
+      if(drag && Math.abs(dx)>=TH && !busy() && typeof decide==='function'){
+        var ap=dx>0;
+        card.style.transition='transform .26s ease, opacity .26s ease';
+        card.style.transform='translateX('+(ap?W():-W())+'px) rotate('+(ap?15:-15)+'deg)'; card.style.opacity='0';
+        stamp.style.opacity='0';
+        setTimeout(function(){ try{decide(ap,false);}catch(_){} },150);
+        setTimeout(function(){ reset(false); },340);
+      } else { reset(true); }
+      drag=false;
+    }
+    zone.addEventListener('pointerup',end);
+    zone.addEventListener('pointercancel',function(){ if(on){on=false; reset(true);} });
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+})();
+</script>
+<div id="oaNameAsk" style="display:none;position:fixed;inset:0;z-index:2147483000;background:rgba(3,8,18,.74);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif">
+  <div style="width:min(360px,94vw);background:#0f1626;color:#f8fafc;border:1px solid rgba(255,255,255,.14);border-radius:18px;padding:22px;box-shadow:0 30px 80px rgba(0,0,0,.55)">
+    <div id="oaNameAskTitle" style="font-size:18px;font-weight:560;letter-spacing:-.01em;margin-bottom:4px">Ton pseudo</div>
+    <div id="oaNameAskSub" style="font-size:13px;color:#a7b0c2;line-height:1.4;margin-bottom:14px">Pour enregistrer ton score au classement.</div>
+    <input id="oaNameAskInput" maxlength="18" placeholder="Dr …" autocomplete="off" spellcheck="false" style="width:100%;box-sizing:border-box;font:inherit;font-size:15px;font-weight:520;color:#f8fafc;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:12px 14px;outline:none">
+    <div id="oaTeamLabel" style="font-size:12px;color:#a7b0c2;margin:12px 0 5px">Équipe (optionnel)</div>
+    <div id="oaTeamWrap" style="position:relative">
+    <input id="oaNameAskTeam" maxlength="24" placeholder="Ton équipe…" autocomplete="off" spellcheck="false" style="width:100%;box-sizing:border-box;font:inherit;font-size:15px;font-weight:520;color:#f8fafc;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:12px 14px;outline:none">
+    <div id="oaTeamMenu" style="position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:6;background:#0f1626;border:1px solid rgba(255,255,255,.16);border-radius:12px;box-shadow:0 22px 55px rgba(0,0,0,.55);max-height:172px;overflow:auto;display:none"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
+      <button id="oaNameAskSkip" type="button" style="font:inherit;font-weight:520;color:#a7b0c2;background:none;border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:9px 14px;cursor:pointer">Passer</button>
+      <button id="oaNameAskOk" type="button" style="font:inherit;font-weight:560;color:#fff;background:linear-gradient(135deg,#2557d6,#0891b2);border:none;border-radius:999px;padding:9px 16px;cursor:pointer">Enregistrer</button>
+    </div>
+  </div>
+</div>
+<script id="oa-namegate">
+(function(){
+  var DEFAULTS = ['','—','-','dr','dr …','dr...','anonyme','anonymous','ninja','joueur','player','name','nom','pseudo'];
+  function isDefault(n){ return DEFAULTS.indexOf((n||'').trim().toLowerCase()) >= 0; }
+  function isEn(){ var l=(document.documentElement.getAttribute('lang')||document.documentElement.lang||navigator.language||'fr'); return String(l).slice(0,2).toLowerCase()==='en'; }
+  function lget(k){ try{ return localStorage.getItem(k)||''; }catch(e){ return ''; } }
+  function lset(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+
+  var teamsLoaded=false;
+  function loadTeams(){
+    if(teamsLoaded) return; teamsLoaded=true;
+    try{
+      fetch('../../api/teams.php',{cache:'no-store'}).then(function(r){return r.ok?r.json():null;}).then(function(d){
+        if(d&&d.ok&&Array.isArray(d.teams)){ window.__oaTeams=d.teams.map(function(t){return String(t);}); }
+      }).catch(function(){});
+    }catch(e){}
+  }
+
+  function oaRenderTeamMenu(){
+    var tinp=document.getElementById('oaNameAskTeam'), menu=document.getElementById('oaTeamMenu');
+    if(!tinp||!menu) return;
+    var q=(tinp.value||'').toLowerCase();
+    var list=(window.__oaTeams||[]).filter(function(t){return t && t.toLowerCase().indexOf(q)>=0;}).slice(0,8);
+    if(!list.length){ menu.style.display='none'; menu.innerHTML=''; return; }
+    menu.innerHTML=list.map(function(t){return '<div style="padding:11px 14px;font-size:14px;color:#f8fafc;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.07)">'+String(t).replace(/</g,'&lt;')+'</div>';}).join('');
+    Array.prototype.forEach.call(menu.children,function(el){
+      el.onmousedown=function(e){ e.preventDefault(); tinp.value=el.textContent; menu.style.display='none'; };
+      el.ontouchstart=function(e){ e.preventDefault(); tinp.value=el.textContent; menu.style.display='none'; };
+    });
+    menu.style.display='block';
+  }
+  function oaWireTeam(){
+    var tinp=document.getElementById('oaNameAskTeam'), menu=document.getElementById('oaTeamMenu');
+    if(!tinp||tinp._oaWired) return; tinp._oaWired=true;
+    tinp.addEventListener('focus', oaRenderTeamMenu);
+    tinp.addEventListener('input', oaRenderTeamMenu);
+    tinp.addEventListener('blur', function(){ setTimeout(function(){ if(menu) menu.style.display='none'; }, 180); });
+  }
+
+  // Renvoie une Promise<{name, team}>. Demande une seule fois (pseudo + équipe), puis réutilise.
+  window.oaEnsureIdentity = function(bodyName){
+    return new Promise(function(resolve){
+      var sName=lget('oa-name').trim(), sTeam=lget('oa-team').trim(), asked=lget('oa-id2')==='1';
+      var haveName = (bodyName && !isDefault(bodyName)) ? String(bodyName).trim() : sName;
+      if(asked && haveName){ resolve({name:haveName, team:sTeam}); return; }
+      var el=document.getElementById('oaNameAsk');
+      if(!el){ resolve({name:haveName||(isEn()?'Anonymous':'Anonyme'), team:sTeam}); return; }
+      loadTeams(); oaWireTeam();
+      var inp=document.getElementById('oaNameAskInput'), tinp=document.getElementById('oaNameAskTeam');
+      var ok=document.getElementById('oaNameAskOk'), skip=document.getElementById('oaNameAskSkip');
+      var en=isEn();
+      document.getElementById('oaNameAskTitle').textContent = en?'Your name':'Ton pseudo';
+      document.getElementById('oaNameAskSub').textContent   = en?'To save your score on the leaderboard.':'Pour enregistrer ton score au classement.';
+      document.getElementById('oaTeamLabel').textContent    = en?'Team (optional)':'Équipe (optionnel)';
+      tinp.placeholder = en?'Your team…':'Ton équipe…';
+      ok.textContent = en?'Save':'Enregistrer'; skip.textContent = en?'Skip':'Passer';
+      inp.value=haveName||''; tinp.value=sTeam||'';
+      el.style.display='flex'; setTimeout(function(){ try{(inp.value?tinp:inp).focus();}catch(e){} },60);
+      function done(nm,tm,persist){
+        el.style.display='none'; ok.onclick=null; skip.onclick=null; inp.onkeydown=null; tinp.onkeydown=null;
+        if(persist){ lset('oa-name',nm); lset('oa-team',tm); lset('oa-identity','1'); lset('oa-id2','1'); }
+        resolve({name:nm, team:tm});
+      }
+      ok.onclick=function(){ done(inp.value.trim()||(en?'Anonymous':'Anonyme'), tinp.value.trim(), true); };
+      skip.onclick=function(){ done(haveName||(en?'Anonymous':'Anonyme'), sTeam||'', false); };
+      inp.onkeydown=function(e){ if(e.key==='Enter'){ e.preventDefault(); tinp.focus(); } };
+      tinp.onkeydown=function(e){ if(e.key==='Enter'){ e.preventDefault(); ok.onclick(); } };
+    });
+  };
+  // Compat : oaAskName -> renvoie juste le pseudo
+  window.oaAskName = function(cur){ return window.oaEnsureIdentity(cur).then(function(id){ return id.name; }); };
+  /* oa-pregame-ask : demander pseudo+equipe a l'arrivee si pas encore renseigne */
+  setTimeout(function(){ try{ if(lget('oa-id2')!=='1') window.oaEnsureIdentity(''); }catch(e){} }, 500);
+
+  // Interception : tout POST vers submit.php -> injecte pseudo + équipe (demande si première fois)
+  if(window.fetch && !window.__oaNameGate){
+    window.__oaNameGate = true;
+    var orig = window.fetch;
+    window.fetch = function(url, opts){
+      try{
+        var u = (typeof url==='string') ? url : (url && url.url) || '';
+        if(u.indexOf('submit.php')>=0 && opts && opts.method && String(opts.method).toUpperCase()==='POST' && typeof opts.body==='string'){
+          var body = JSON.parse(opts.body);
+          if(body && ('name' in body)){
+            return window.oaEnsureIdentity(body.name).then(function(id){
+              body.name = id.name; body.team = id.team || '';
+              var o2 = {}; for(var k in opts){ o2[k]=opts[k]; } o2.body = JSON.stringify(body);
+              return orig.call(window, url, o2);
+            });
+          }
+        }
+      }catch(e){}
+      return orig.apply(window, arguments);
+    };
+  }
+})();
+</script>
+<button id="oaReportBtn" type="button" aria-label="Signaler un problème" style="position:fixed;left:12px;bottom:12px;z-index:2147482000;width:38px;height:38px;border-radius:50%;border:1px solid rgba(148,163,184,.35);background:rgba(15,22,38,.55);color:#e5e9f0;font-size:17px;line-height:1;cursor:pointer;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);opacity:.55;transition:opacity .15s;font-family:ui-sans-serif,system-ui,sans-serif" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.55" title="Signaler un problème">⚠</button>
+<div id="oaReport" style="display:none;position:fixed;inset:0;z-index:2147483100;background:rgba(3,8,18,.74);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif">
+  <div style="width:min(420px,94vw);background:#0f1626;color:#f8fafc;border:1px solid rgba(255,255,255,.14);border-radius:18px;padding:22px;box-shadow:0 30px 80px rgba(0,0,0,.55)">
+    <div id="oaReportTitle" style="font-size:18px;font-weight:560;letter-spacing:-.01em;margin-bottom:4px">Signaler un problème</div>
+    <div id="oaReportSub" style="font-size:13px;color:#a7b0c2;line-height:1.4;margin-bottom:14px">Décrivez le souci ; il me sera envoyé par e-mail. Aucune adresse n’est affichée.</div>
+    <div id="oaReportForm">
+      <label id="oaReportGameLbl" style="font-size:12px;color:#a7b0c2;display:block;margin-bottom:5px">Jeu concerné</label>
+      <select id="oaReportGame" style="width:100%;box-sizing:border-box;font:inherit;font-size:14px;font-weight:500;color:#f8fafc;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:11px 12px;outline:none;margin-bottom:12px"></select>
+      <label id="oaReportMsgLbl" style="font-size:12px;color:#a7b0c2;display:block;margin-bottom:5px">Description</label>
+      <textarea id="oaReportMsg" rows="5" maxlength="4000" placeholder="Que s’est-il passé ?" style="width:100%;box-sizing:border-box;font:inherit;font-size:14px;color:#f8fafc;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:11px 12px;outline:none;resize:vertical"></textarea>
+      <div id="oaReportErr" style="display:none;font-size:12px;color:#fb7185;margin-top:8px"></div>
+      <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
+        <button id="oaReportCancel" type="button" style="font:inherit;font-weight:520;color:#a7b0c2;background:none;border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:9px 14px;cursor:pointer">Annuler</button>
+        <button id="oaReportSend" type="button" style="font:inherit;font-weight:560;color:#fff;background:linear-gradient(135deg,#2557d6,#0891b2);border:none;border-radius:999px;padding:9px 16px;cursor:pointer">Envoyer</button>
+      </div>
+    </div>
+    <div id="oaReportDone" style="display:none;text-align:center;padding:10px 0">
+      <div style="font-size:34px;line-height:1">✅</div>
+      <div id="oaReportDoneTxt" style="font-size:15px;font-weight:520;margin-top:8px">Merci, c’est envoyé.</div>
+      <button id="oaReportClose2" type="button" style="margin-top:16px;font:inherit;font-weight:560;color:#fff;background:linear-gradient(135deg,#2557d6,#0891b2);border:none;border-radius:999px;padding:9px 18px;cursor:pointer">Fermer</button>
+    </div>
+  </div>
+</div>
+<script id="oa-report">
+(function(){
+  var GAMES=[['plan-please','Plan, Please'],['ok-chimio','OK Chimio'],['arc-racer','Arc Racer'],['beamlet','Beamlet'],['bragg-peak','Bragg Peak'],['fraction-hero','Fraction Hero'],['seed-master','Seed Master'],['mlc-ninja','MLC Ninja'],['tumor-board','Tumor Board'],['radcraft','RadCraft']];
+  function isEn(){ var l=(document.documentElement.getAttribute('lang')||document.documentElement.lang||navigator.language||'fr'); return String(l).slice(0,2).toLowerCase()==='en'; }
+  function API(){ return /\/games\/[^/]+\//.test(location.pathname) ? '../../api' : 'api'; }
+  function curGame(){ var m=location.pathname.match(/\/games\/([a-z0-9-]+)\//i); return m?m[1]:''; }
+  var el=document.getElementById('oaReport');
+  var sel=document.getElementById('oaReportGame'), msg=document.getElementById('oaReportMsg'), err=document.getElementById('oaReportErr');
+  var form=document.getElementById('oaReportForm'), done=document.getElementById('oaReportDone');
+  function labels(){
+    var en=isEn();
+    document.getElementById('oaReportTitle').textContent=en?'Report a problem':'Signaler un problème';
+    document.getElementById('oaReportSub').textContent=en?'Describe the issue; it will be emailed to me. No address is shown.':'Décrivez le souci ; il me sera envoyé par e-mail. Aucune adresse n’est affichée.';
+    document.getElementById('oaReportGameLbl').textContent=en?'Game concerned':'Jeu concerné';
+    document.getElementById('oaReportMsgLbl').textContent=en?'Description':'Description';
+    msg.placeholder=en?'What happened?':'Que s’est-il passé ?';
+    document.getElementById('oaReportCancel').textContent=en?'Cancel':'Annuler';
+    document.getElementById('oaReportSend').textContent=en?'Send':'Envoyer';
+    document.getElementById('oaReportDoneTxt').textContent=en?'Thanks, it’s been sent.':'Merci, c’est envoyé.';
+    document.getElementById('oaReportClose2').textContent=en?'Close':'Fermer';
+    document.getElementById('oaReportBtn').setAttribute('aria-label',en?'Report a problem':'Signaler un problème');
+    document.getElementById('oaReportBtn').title=en?'Report a problem':'Signaler un problème';
+  }
+  function fillSelect(){
+    var en=isEn(), cur=curGame();
+    var html='<option value="">'+(en?'The site / hub':'Le site / le hub')+'</option>';
+    GAMES.forEach(function(g){ html+='<option value="'+g[0]+'">'+g[1]+'</option>'; });
+    html+='<option value="other">'+(en?'Other':'Autre')+'</option>';
+    sel.innerHTML=html; sel.value=cur||'';
+  }
+  window.oaReport=function(){
+    labels(); fillSelect();
+    err.style.display='none'; msg.value=''; form.style.display='block'; done.style.display='none';
+    el.style.display='flex'; setTimeout(function(){ try{msg.focus();}catch(e){} },60);
+  };
+  function close(){ el.style.display='none'; }
+  document.getElementById('oaReportBtn').onclick=window.oaReport;
+  document.getElementById('oaReportCancel').onclick=close;
+  document.getElementById('oaReportClose2').onclick=close;
+  el.addEventListener('click',function(e){ if(e.target===el) close(); });
+  document.getElementById('oaReportSend').onclick=function(){
+    var en=isEn(); var text=(msg.value||'').trim();
+    if(text.length<3){ err.textContent=en?'Please describe the problem.':'Merci de décrire le problème.'; err.style.display='block'; return; }
+    var btn=this; btn.disabled=true; btn.style.opacity=.6;
+    fetch(API()+'/report.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({game:sel.value,message:text,page:location.href})})
+      .then(function(r){return r.ok?r.json():null;}).then(function(d){
+        btn.disabled=false; btn.style.opacity=1;
+        if(d&&d.ok){ form.style.display='none'; done.style.display='block'; }
+        else { err.textContent=en?'Sending failed. Please try again later.':'Envoi impossible. Réessayez plus tard.'; err.style.display='block'; }
+      }).catch(function(){ btn.disabled=false; btn.style.opacity=1; err.textContent=en?'Network error.':'Erreur réseau.'; err.style.display='block'; });
+  };
+})();
+</script>
+</body>
+
+</html>

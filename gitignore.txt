@@ -1,0 +1,38 @@
+# ============================================================
+#  SECRETS & CONFIG — ne JAMAIS committer
+# ============================================================
+oa-config.php
+**/oa-config.php
+config.php
+secrets.*
+*.env
+.env
+.env.*
+
+# --- Dumps / bases de données ---
+*.sql
+*.sqlite
+*.sqlite3
+*.db
+*.dump
+
+# --- Dépendances / build ---
+node_modules/
+dist/
+build/
+vendor/
+
+# --- Cruft OS / éditeurs ---
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*~
+.vscode/
+.idea/
+
+# --- Logs ---
+*.log
+
+# --- Archives locales ---
+*.zip

@@ -1,0 +1,9 @@
+# Onco Arcade — protège les fichiers sensibles de l'API
+# (config.php est de toute façon exécuté par PHP, mais on bloque tout accès direct)
+
+<FilesMatch "^(config\.php|config\.sample\.php|db\.php|schema\.sql)$">
+  Require all denied
+</FilesMatch>
+
+# Empêche le listing du dossier
+Options -Indexes

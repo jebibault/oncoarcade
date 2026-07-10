@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Seed Master — TRUS</title>
+<style>
+  :root{ --dose:#2fe6a5; --ptv:#43e06a; --ure:#ffc24a; --rec:#ff5d5d; --iso:#37e0ff; --bg:#05100c; }
+  *{ box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+  html,body{ height:100%; overflow:hidden; background:var(--bg); font-family:ui-monospace,'Courier New',monospace; color:#cdeee0; touch-action:none; }
+  #app{ position:fixed; inset:0; }
+  canvas{ display:block; }
+  .hud{ position:absolute; z-index:10; pointer-events:none; }
+  #top{ top:0; left:0; right:0; padding:12px 14px; display:flex; justify-content:space-between; align-items:flex-start; }
+  #lvl{ font-size:11px; letter-spacing:2px; opacity:.6; }
+  #v100{ font-size:26px; font-weight:560; color:var(--dose); line-height:1; }
+  #v100l{ font-size:9px; letter-spacing:2px; opacity:.6; }
+  .stat{ font-size:12px; margin-top:2px; }
+  .ure{ color:var(--ure); } .rec{ color:var(--rec); } .sd{ color:#eafff4; opacity:.8; }
+  button{ font-family:inherit; cursor:pointer; }
+  #lang{ pointer-events:auto; background:rgba(10,26,20,.7); color:var(--dose); border:1px solid var(--dose); border-radius:18px; padding:5px 11px; font-size:12px; }
+  #depthWrap{ position:absolute; z-index:9; left:14px; right:14px; bottom:118px; display:flex; align-items:center; gap:10px; pointer-events:none; }
+  #depthWrap .lbl{ font-size:11px; opacity:.7; white-space:nowrap; min-width:96px; }
+  #depth{ flex:1; accent-color:var(--iso); pointer-events:auto; }
+  #panel{ position:absolute; z-index:9; bottom:16px; left:0; right:0; display:flex; justify-content:center; gap:8px; padding:0 12px; flex-wrap:wrap; }
+  .pill{ pointer-events:auto; background:rgba(12,30,24,.8); color:#cdeee0; border:1px solid rgba(255,255,255,.14); border-radius:20px; padding:11px 15px; font-size:13px; }
+  .pill.view{ border-color:var(--iso); color:var(--iso); min-width:118px; }
+  .pill.go{ background:linear-gradient(90deg,var(--dose),#9dffd8); color:#04140e; border:none; font-weight:560; }
+  .pill:active{ transform:scale(.95); }
+  .overlay{ position:absolute; inset:0; z-index:20; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:24px; background:radial-gradient(circle at 50% 40%, rgba(10,40,28,.5), rgba(5,16,12,.96)); }
+  .title{ font-size:min(12vw,52px); font-weight:560; letter-spacing:2px; color:#eafff4; text-shadow:0 0 22px rgba(47,230,165,.4); }
+  .title b{ color:var(--ptv); }
+  .sub{ margin-top:12px; font-size:14.5px; color:#9fccbc; max-width:470px; line-height:1.55; }
+  .play{ margin-top:22px; pointer-events:auto; background:linear-gradient(90deg,var(--dose),var(--ptv)); color:#04140e; border:none; border-radius:40px; padding:15px 42px; font-size:18px; font-weight:560; letter-spacing:1px; box-shadow:0 0 26px rgba(47,230,165,.4); }
+  .play:active{ transform:scale(.96); }
+  .hint{ margin-top:16px; font-size:12px; opacity:.55; line-height:1.55; }
+  .hidden{ display:none!important; }
+  .win{ color:var(--dose); font-size:min(8vw,36px); font-weight:560; letter-spacing:1px; }
+  .legend{ position:absolute; z-index:9; left:14px; top:78px; font-size:10px; line-height:1.7; opacity:.8; pointer-events:none; }
+  .legend span{ display:inline-block; width:9px; height:9px; border-radius:2px; margin-right:5px; vertical-align:middle; }
+
+  /* ---- ultrasound machine plastic bezel (beige, thick) ---- */
+  #bezel{ position:fixed; inset:4px; border-radius:24px; pointer-events:none; z-index:5;
+    box-shadow:
+      0 0 0 2px #6d6448,
+      inset 0 4px 5px rgba(255,255,255,.38),
+      inset 0 -7px 11px rgba(0,0,0,.22),
+      inset 0 0 0 40px #cabf9f,
+      inset 0 0 0 42px #7a7156,
+      inset 0 0 0 44px #05100b,
+      inset 0 0 60px rgba(0,0,0,.5); }
+  #bezel .screw{ position:absolute; width:12px; height:12px; border-radius:50%;
+    background:radial-gradient(circle at 34% 30%,#e6dbbc,#a99d7c 60%,#7c724f);
+    box-shadow:0 1px 1px rgba(0,0,0,.4), inset 0 0 2px rgba(0,0,0,.4); }
+  #bezel .screw::after{ content:''; position:absolute; left:5px; top:1px; bottom:1px; width:2px; background:rgba(80,70,45,.6); transform:rotate(32deg); transform-origin:center; }
+  #bezel .brand{ position:absolute; bottom:12px; left:50%; transform:translateX(-50%); font-size:11px; letter-spacing:5px; color:#5c5335; font-weight:560; }
+  #bezel .led{ position:absolute; top:13px; left:50%; transform:translateX(-50%); width:8px; height:8px; border-radius:50%; background:#37ffcf; box-shadow:0 0 10px #37ffcf, 0 0 2px #eafff4; animation:led 2.4s infinite; }
+  @keyframes led{ 0%,100%{opacity:1} 50%{opacity:.4} }
+
+  /* readouts inside the screen */
+  #top{ padding:52px 50px 12px; }
+  #lang{ font-size:14px; padding:7px 14px; }
+  #v100{ font-size:30px; } #v100l{ font-size:10px; } .stat{ font-size:13px; }
+  .legend{ left:50px; top:176px; font-size:11px; }
+
+  /* ---- bottom console: buttons, slider below them ---- */
+  #panel{ bottom:112px; gap:9px; padding:0 50px; left:0; right:0; }
+  .pill{ pointer-events:auto; border-radius:9px; padding:12px 16px; font-size:12px; font-weight:560; text-transform:uppercase; letter-spacing:1px;
+    color:#33301f; background:linear-gradient(#e9dec1,#c6ba98); border:1px solid #8a7f5f;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.6), inset 0 -2px 3px rgba(0,0,0,.16), 0 2px 4px rgba(0,0,0,.35); }
+  .pill:active{ transform:translateY(1px); box-shadow: inset 0 1px 3px rgba(0,0,0,.3); }
+
+  #depthWrap{ left:50px; right:50px; bottom:58px; gap:12px; padding:9px 15px; border-radius:10px;
+    background:linear-gradient(#ded2b2,#c1b593); border:1px solid #8a7f5f;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.55), 0 2px 5px rgba(0,0,0,.35); }
+  #depthWrap .lbl{ font-size:12px; color:#4a4228; opacity:1; text-transform:uppercase; letter-spacing:1px; min-width:150px; }
+
+  /* ---- depth / TGC slider (machine groove + knurled knob) ---- */
+  #depth{ -webkit-appearance:none; appearance:none; height:26px; background:transparent; }
+  #depth::-webkit-slider-runnable-track{ height:9px; border-radius:5px; background:linear-gradient(#0a1712,#10231b); box-shadow: inset 0 1px 3px rgba(0,0,0,.85), inset 0 0 0 1px rgba(47,230,165,.4); }
+  #depth::-moz-range-track{ height:9px; border-radius:5px; background:linear-gradient(#0a1712,#10231b); box-shadow: inset 0 1px 3px rgba(0,0,0,.85), inset 0 0 0 1px rgba(47,230,165,.4); }
+  #depth::-webkit-slider-thumb{ -webkit-appearance:none; width:17px; height:28px; margin-top:-9.5px; border-radius:4px; background:repeating-linear-gradient(90deg,#efe4c6,#efe4c6 2px,#cabf9f 2px,#cabf9f 4px); border:1px solid #7a7156; box-shadow:0 2px 4px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.6); }
+  #depth::-moz-range-thumb{ width:17px; height:28px; border-radius:4px; background:repeating-linear-gradient(90deg,#efe4c6,#efe4c6 2px,#cabf9f 2px,#cabf9f 4px); border:1px solid #7a7156; box-shadow:0 2px 4px rgba(0,0,0,.4); }
+
+  /* ---- home / tutorial screen ---- */
+  #start{ justify-content:normal; overflow-y:auto; padding:22px 20px 34px; background:radial-gradient(circle at 50% 20%, rgba(12,48,34,.7), rgba(4,14,10,.98)); }
+  .home{ width:100%; max-width:520px; margin:auto; text-align:center; position:relative; }
+  .langHome{ position:absolute; top:0; right:0; pointer-events:auto; background:rgba(10,26,20,.7); color:var(--dose); border:1px solid var(--dose); border-radius:18px; padding:6px 13px; font-size:13px; }
+  .hero{ width:158px; height:120px; display:block; margin:4px auto 2px; filter:drop-shadow(0 0 18px rgba(47,230,165,.25)); }
+  .hero .seedset circle{ r:2.5px; fill:#f2fff8; stroke:rgba(47,230,165,.9); stroke-width:.8; }
+  .hero .isoRing{ transform-box:fill-box; transform-origin:center; animation:isopulse 3.2s ease-in-out infinite; }
+  @keyframes isopulse{ 0%,100%{transform:scale(1);opacity:.55} 50%{transform:scale(1.05);opacity:.95} }
+  .home .title{ font-size:min(12vw,46px); }
+  .tagline{ margin-top:5px; font-size:11px; letter-spacing:3px; text-transform:uppercase; color:var(--dose); opacity:.9; }
+  .intro{ margin:9px auto 2px; max-width:440px; font-size:13px; line-height:1.5; color:#a7d2c3; }
+  .steps{ margin:10px auto; max-width:460px; display:flex; flex-direction:column; gap:7px; text-align:left; }
+  .step{ display:flex; gap:11px; align-items:center; background:rgba(12,32,25,.66); border:1px solid rgba(47,230,165,.16); border-radius:12px; padding:9px 12px; }
+  .badge{ flex:none; width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:560; font-size:13px; color:#04140e; background:linear-gradient(135deg,var(--dose),var(--ptv)); box-shadow:0 0 10px rgba(47,230,165,.3); }
+  .stept{ font-size:12.5px; font-weight:560; color:#eafff4; display:inline; }
+  .stept::after{ content:" — "; color:#5f8579; font-weight:normal; }
+  .stepd{ font-size:12.5px; line-height:1.45; color:#9fc7b8; display:inline; }
+  .homeLegend{ display:flex; flex-wrap:wrap; justify-content:center; gap:8px 14px; margin:8px auto 2px; }
+  .chip{ font-size:11px; color:#bfe3d5; display:inline-flex; align-items:center; }
+  .chip i{ width:10px; height:10px; border-radius:3px; margin-right:6px; display:inline-block; }
+  .prog{ margin-top:16px; font-size:11.5px; color:#7fae9f; display:flex; flex-direction:column; align-items:center; gap:8px; }
+  .restart{ pointer-events:auto; background:transparent; color:#8fb8ab; border:1px solid rgba(143,184,171,.4); border-radius:16px; padding:6px 14px; font-size:12px; }
+  .restart:active{ transform:scale(.96); }
+</style>
+<style id="oa-home-style">
+  #start{
+    --oa-card:rgba(15,23,42,.72); --oa-text:#f8fafc; --oa-muted:#a7b0c2; --oa-stroke:rgba(255,255,255,.12);
+    --oa-primary:#7aa2ff; --oa-cyan:#22d3ee; --oa-green:#34d399; --oa-amber:#f6bd60; --oa-shadow:0 24px 72px rgba(0,0,0,.38);
+    background:radial-gradient(circle at 50% 18%, #10192b, #070a12 72%)!important;
+    font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; color:var(--oa-text);
+  }
+  html[data-theme="light"] #start{
+    --oa-card:rgba(255,255,255,.82); --oa-text:#111827; --oa-muted:#667085; --oa-stroke:rgba(17,24,39,.11);
+    --oa-primary:#2557d6; --oa-cyan:#0891b2; --oa-green:#047857; --oa-amber:#b45309; --oa-shadow:0 16px 42px rgba(15,23,42,.08);
+    background:radial-gradient(circle at 50% 8%, #eef2f9, #f7f8fb 60%)!important;
+  }
+  #start .oa-home{ width:100%; max-width:440px; margin:auto; text-align:center; position:relative; }
+  #start .oa-ctl{ position:absolute; top:0; right:0; display:flex; gap:6px; }
+  #start .oa-ctl button{ font-family:inherit; font-size:11px; font-weight:520; color:var(--oa-muted); background:none; border:1px solid var(--oa-stroke); border-radius:999px; padding:6px 10px; cursor:pointer; }
+  #start .oa-ctl button:hover{ color:var(--oa-text); }
+  #start .oa-eyebrow{ display:inline-flex; align-items:center; gap:8px; font-size:11px; font-weight:520; letter-spacing:.14em; text-transform:uppercase; color:var(--oa-muted); }
+  #start .oa-eyebrow i{ width:7px; height:7px; border-radius:999px; background:var(--oa-green); box-shadow:0 0 0 5px color-mix(in srgb,var(--oa-green) 13%,transparent); }
+  #start .hero{ width:150px; height:112px; margin:8px auto 2px; }
+  #start .oa-title{ font-family:inherit; font-size:min(11vw,42px); font-weight:560; letter-spacing:-.02em; margin:2px 0 4px; line-height:1.02;
+    background:linear-gradient(120deg,var(--oa-text),var(--oa-primary) 45%,var(--oa-cyan)); -webkit-background-clip:text; background-clip:text; color:transparent; -webkit-text-fill-color:transparent; }
+  #start .tagline{ font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:var(--oa-green); }
+  #start .intro{ margin:10px auto 4px; max-width:400px; font-size:13.5px; line-height:1.5; color:var(--oa-muted); }
+  #start .steps{ margin:12px auto; max-width:440px; display:flex; flex-direction:column; gap:7px; text-align:left; }
+  #start .step{ display:flex; gap:11px; align-items:flex-start; background:var(--oa-card); border:1px solid var(--oa-stroke); border-radius:12px; padding:10px 12px; backdrop-filter:blur(12px); }
+  #start .badge{ flex:none; width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:560; font-size:13px; color:#fff; background:linear-gradient(135deg,var(--oa-primary),var(--oa-cyan)); }
+  #start .stept{ font-size:12.5px; font-weight:520; color:var(--oa-text); display:inline; }
+  #start .stept::after{ content:" — "; color:var(--oa-muted); font-weight:normal; }
+  #start .stepd{ font-size:12.5px; line-height:1.45; color:var(--oa-muted); display:inline; }
+  #start .homeLegend{ display:flex; flex-wrap:wrap; justify-content:center; gap:8px 14px; margin:6px auto 2px; }
+  #start .chip{ font-size:11px; color:var(--oa-muted); display:inline-flex; align-items:center; }
+  #start .chip i{ width:10px; height:10px; border-radius:3px; margin-right:6px; display:inline-block; }
+  #start .oa-cta{ margin-top:16px; font-family:inherit; pointer-events:auto; width:100%; max-width:300px; color:#fff; border:none; border-radius:14px; padding:15px 30px; font-size:16px; font-weight:560; letter-spacing:.03em; cursor:pointer; box-shadow:var(--oa-shadow);
+    background:linear-gradient(135deg,var(--oa-primary),color-mix(in srgb,var(--oa-primary) 68%,var(--oa-cyan))); }
+  #start .oa-cta:active{ transform:scale(.98); }
+  #start .hint{ margin-top:12px; font-size:11.5px; color:var(--oa-muted); opacity:.85; line-height:1.5; }
+  #start .oa-lb{ margin:18px auto 0; max-width:440px; text-align:left; border:1px solid var(--oa-stroke); border-radius:16px; background:var(--oa-card); backdrop-filter:blur(12px); padding:12px 14px; }
+  #start .oa-lb-head{ display:flex; justify-content:space-between; align-items:baseline; font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--oa-muted); margin-bottom:8px; }
+  #start .oa-lb-list{ display:grid; gap:6px; }
+  #start .oa-row{ display:grid; grid-template-columns:26px 1fr auto; gap:8px; align-items:center; font-size:13px; padding:6px 8px; border-radius:10px; background:color-mix(in srgb,var(--oa-text) 4%,transparent); }
+  #start .oa-row .rk{ color:var(--oa-muted); font-variant-numeric:tabular-nums; }
+  #start .oa-row .pl{ color:var(--oa-text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  #start .oa-row .pt{ color:var(--oa-text); font-weight:520; font-variant-numeric:tabular-nums; }
+  #start .oa-lb-form{ display:flex; gap:8px; align-items:center; margin-top:10px; }
+  #start #lbName{ flex:1; font-family:inherit; font-size:13px; color:var(--oa-text); background:color-mix(in srgb,var(--oa-text) 5%,transparent); border:1px solid var(--oa-stroke); border-radius:10px; padding:10px 12px; outline:none; }
+  #start #lbHelp{ font-size:11px; color:var(--oa-muted); white-space:nowrap; }
+  #start .oa-links{ display:flex; gap:9px; justify-content:center; margin-top:14px; }
+  #start .oa-links a, #start .oa-links button{ font-family:inherit; font-size:12.5px; color:var(--oa-muted); text-decoration:none; background:none; border:1px solid var(--oa-stroke); border-radius:999px; padding:8px 13px; cursor:pointer; }
+  #start .oa-links a:hover, #start .oa-links button:hover{ color:var(--oa-text); }
+  #start .oa-about{ margin:14px auto 0; max-width:440px; text-align:left; border:1px solid var(--oa-stroke); border-radius:16px; background:var(--oa-card); padding:14px 16px; }
+  #start .oa-about > p{ margin:0; color:var(--oa-text); font-size:13px; line-height:1.55; }
+  #start .oa-sig{ display:flex; align-items:center; gap:11px; margin:12px 0; }
+  #start .oa-sig .mk{ width:32px; height:32px; border-radius:10px; flex:none; background:conic-gradient(from 180deg,var(--oa-primary),var(--oa-cyan),var(--oa-green),var(--oa-amber),var(--oa-primary)); }
+  #start .oa-sig b{ display:block; font-size:14px; color:var(--oa-text); }
+  #start .oa-sig span{ display:block; font-size:12px; color:var(--oa-muted); }
+  #start .oa-disc{ color:var(--oa-muted)!important; font-size:12px!important; }
+  #start .prog{ margin-top:16px; font-size:11.5px; color:var(--oa-muted); display:flex; flex-direction:column; align-items:center; gap:8px; }
+  #start .restart{ font-family:inherit; pointer-events:auto; background:transparent; color:var(--oa-muted); border:1px solid var(--oa-stroke); border-radius:16px; padding:6px 14px; font-size:12px; cursor:pointer; }
+</style>
+<script id="onco-arcade-query-sync">
+(function(){
+  try{
+    var p=new URLSearchParams(location.search);
+    var theme=(p.get('theme')||'').toLowerCase();
+    if(theme==='dark'||theme==='light'){document.documentElement.setAttribute('data-theme',theme);localStorage.setItem('oa-theme',theme);}
+    var lang=(p.get('lang')||'').toLowerCase();
+    if(lang==='fr'||lang==='en'){document.documentElement.lang=lang;localStorage.setItem('oa-lang',lang);localStorage.setItem('vrt_lang',lang);}
+  }catch(e){}
+})();
+</script>
+<style id="oa-charte-conformance">
+/* Conformité charte : pas de capitales forcées, poids légers, police système sur le chrome du menu */
+.oa-eyebrow{ text-transform:none !important; letter-spacing:.01em !important; font-weight:500 !important; font-size:13px !important; }
+.oa-title{ font-weight:500 !important; }
+</style>
+<style id="oa-vh-fill">
+/* Plein ecran mobile : le fond remplit tout le viewport, y compris sous la Dynamic Island */
+html{ background:var(--bg, #070a12) !important; min-height:100dvh; }
+html[data-theme="light"]{ background:var(--bg, #f7f8fb) !important; }
+</style>
+<style id="oa-charter-weights">b,strong{font-weight:560}</style>
+<style id="oa-hide-inner-pseudo">/* pseudo demande une seule fois par l'overlay commun : saisie interne masquee */ .oa-lb-form{display:none!important}</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="bezel">
+  <div class="screw" style="top:11px;left:11px"></div>
+  <div class="screw" style="top:11px;right:11px"></div>
+  <div class="screw" style="bottom:11px;left:11px"></div>
+  <div class="screw" style="bottom:11px;right:11px"></div>
+  <div class="led"></div>
+  <div class="brand">SEED MASTER &middot; TRUS</div>
+</div>
+<div class="hud" id="top">
+  <div>
+    <div id="lvl">NIV 1</div>
+    <div id="v100l">V100 3D</div><div id="v100">0%</div>
+    <div class="stat ure" id="ureS"></div>
+    <div class="stat rec" id="recS"></div>
+    <div class="stat sd" id="seedS"></div>
+  </div>
+  <button id="lang">EN</button>
+</div>
+<div class="legend" id="legend"></div>
+
+<div id="panel">
+  <button class="pill" id="viewBtn"></button>
+  <button class="pill" id="clearBtn"></button>
+  <button class="pill" id="lockBtn"></button>
+</div>
+<div id="depthWrap"><span class="lbl" id="depthLbl"></span><input id="depth" type="range" min="-1.4" max="1.4" step="0.1" value="0"></div>
+
+<div class="overlay" id="start">
+  <div class="oa-home">
+    <div class="oa-ctl"><button id="lang2">EN</button><button id="themeBtn2" aria-label="Thème clair / sombre">☾</button></div>
+    <div class="oa-eyebrow"><i></i><span id="homeEyebrow">Onco Arcade · curiethérapie</span></div>
+    <svg class="hero" viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <defs>
+        <radialGradient id="sec" cx="50%" cy="95%" r="90%">
+          <stop offset="0%" stop-color="#0c2a20"/><stop offset="60%" stop-color="#071c15"/><stop offset="100%" stop-color="#04120d"/>
+        </radialGradient>
+      </defs>
+      <path d="M100 150 L26 44 A96 96 0 0 1 174 44 Z" fill="url(#sec)" stroke="rgba(47,230,165,.15)"/>
+      <g class="isoRing"><ellipse cx="100" cy="80" rx="47" ry="41" fill="none" stroke="#37e0ff" stroke-width="1.6" stroke-dasharray="4 4" opacity=".8"/></g>
+      <ellipse cx="100" cy="80" rx="41" ry="35" fill="rgba(67,224,106,.10)" stroke="#43e06a" stroke-width="2"/>
+      <path d="M72 112 Q100 126 128 112" fill="none" stroke="#ff5d5d" stroke-width="2.4" stroke-linecap="round"/>
+      <circle cx="100" cy="82" r="6" fill="rgba(255,194,74,.18)" stroke="#ffc24a" stroke-width="1.7"/>
+      <g class="seedset">
+        <circle cx="100" cy="49"/><circle cx="125" cy="55"/><circle cx="141" cy="72"/><circle cx="142" cy="92"/>
+        <circle cx="126" cy="107"/><circle cx="74" cy="107"/><circle cx="58" cy="92"/><circle cx="59" cy="72"/><circle cx="75" cy="55"/>
+      </g>
+    </svg>
+    <h1 class="oa-title" id="homeTitle">Seed Master</h1>
+    <div class="tagline" id="tagline"></div>
+    <div class="intro" id="intro"></div>
+    <div class="steps">
+      <div class="step"><div class="badge">1</div><div class="stepbody"><div class="stept" id="s1t"></div><div class="stepd" id="s1"></div></div></div>
+      <div class="step"><div class="badge">2</div><div class="stepbody"><div class="stept" id="s2t"></div><div class="stepd" id="s2"></div></div></div>
+      <div class="step"><div class="badge">3</div><div class="stepbody"><div class="stept" id="s3t"></div><div class="stepd" id="s3"></div></div></div>
+      <div class="step"><div class="badge">4</div><div class="stepbody"><div class="stept" id="s4t"></div><div class="stepd" id="s4"></div></div></div>
+    </div>
+    <div class="homeLegend" id="homeLegend"></div>
+    <button class="oa-cta" id="playBtn">PLAY</button>
+    <div class="hint" id="startHint"></div>
+
+    <div class="oa-lb">
+      <div class="oa-lb-head"><span id="lbTitle">Classement mondial</span><span id="lbStatus">—</span></div>
+      <div class="oa-lb-list" id="lbList"></div>
+      <div class="oa-lb-form"><input id="lbName" maxlength="18" placeholder="Pseudo" autocomplete="nickname"><span id="lbHelp"></span></div>
+    </div>
+
+    <div class="oa-links">
+      <a href="../../index.html" id="allGames">Tous les jeux</a>
+      <button id="aboutBtn" type="button">À propos</button>
+    </div>
+
+    <div class="oa-about" id="aboutBox" hidden>
+      <p id="aboutLede"></p>
+      <div class="oa-sig"><span class="mk"></span><div><b>Pr Jean-Emmanuel Bibault</b><span id="aboutRole"></span></div></div>
+      <p class="oa-disc" id="aboutDisc"></p>
+    </div>
+
+    <div class="prog"><span id="prog"></span><button class="restart" id="restartBtn"></button></div>
+  </div>
+</div>
+<div class="overlay hidden" id="over">
+  <div class="win" id="overTitle"></div>
+  <div class="sub" id="overWhy" style="margin-top:8px"></div>
+  <button class="play" id="againBtn">→</button>
+</div>
+
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+</script>
+<script type="module">
+import * as THREE from 'three';
+const $=id=>document.getElementById(id);
+
+/* ---------------- i18n ---------------- */
+const I={
+ fr:{play:"JOUER",
+  sub:"Planifie un implant de prostate sous <b>échographie (TRUS)</b>. La dose chute en <b>1/r²</b>. Charge la <b>périphérie</b> de la prostate, épargne l'<b>urètre</b> et le <b>rectum</b>, et surtout <b>couvre toute la profondeur</b> : bascule en vue <b>sagittale</b> pour poser des grains de la base à l'apex.",
+  hint:"Vue AXIALE : glisse sur la coupe · curseur = profondeur.  Vue SAGITTALE : pose les grains en profondeur.  Touche un grain pour le retirer.",
+  ure:v=>"Urètre D30 "+v+"% Rx", rec:v=>"Rectum RV100 "+v+"%", seed:n=>n+" grains",
+  won:"IMPLANT VALIDÉ", next:"NIVEAU SUIVANT", done:"SÉRIE TERMINÉE",
+  pass:(v,n,l)=>"V100 "+v+"% · "+n+" grains · niveau "+l+" débloqué",
+  needV:"V100 3D insuffisant — couvre base ET apex (vue sagittale)", needU:"Urètre en surdose — écarte les grains du centre", needR:"Rectum en surdose — retire les grains postérieurs",
+  view:"VUE", axial:"AXIALE", sag:"SAGITTALE", depth:"Profondeur", lateral:"Position L-R",
+  clear:"effacer", lock:"VALIDER PLAN",
+  vtagA:"COUPE AXIALE — z = ", vtagS:"COUPE SAGITTALE — x = ",
+  legP:"Prostate", legU:"Urètre", legR:"Rectum", legI:"Isodose Rx",
+  tagline:"Curiethérapie de prostate · Échographie TRUS 3D",
+  intro:"Implante des grains pour couvrir toute la prostate en épargnant l'urètre et le rectum.",
+  s1t:"But", s1:"Couvre ≥ 85 % de la prostate (V100), urètre et rectum sous leurs seuils.",
+  s2t:"Poser", s2:"Vue AXIALE : touche ou glisse sur la grille. Le curseur règle la profondeur.",
+  s3t:"Profondeur", s3:"Vue SAGITTALE : pose les grains de la base à l'apex — une coupe ne suffit pas.",
+  s4t:"Valider", s4:"Charge la périphérie, évite centre et arrière, puis VALIDER PLAN.",
+  tip:"Touche un grain pour le retirer · flèches ←/→ pour changer de coupe.",
+  resume:"REPRENDRE", restart:"Recommencer à zéro",
+  prog:l=>"Progression : niveau "+l+" / "+LEVELS.length+" débloqué",
+  eyebrow:"Onco Arcade · curiethérapie", allGames:"Tous les jeux", about:"À propos", close:"Fermer",
+  lbTitle:"Classement mondial", lbHelp:"Ton pseudo pour le score", lbEmpty:"Aucun score — sois le premier",
+  lbWorld:"mondial", lbOff:"hors-ligne", lbLocal:"local", namePh:"Pseudo",
+  aboutLede:"Seed Master est un mini-jeu de la collection Onco Arcade : planifie un implant de prostate sous échographie, couvre la cible et épargne l’urètre et le rectum. Imaginé, conçu et développé par :",
+  aboutRole:"Professeur de radiothérapie · créateur d’Onco Arcade",
+  aboutDisc:"Jeu pédagogique et expérimental. Ce n’est pas un dispositif médical : il ne remplace pas une formation clinique et ne doit jamais servir à orienter une prise en charge réelle." },
+ en:{play:"PLAY",
+  sub:"Plan a prostate implant under <b>ultrasound (TRUS)</b>. Dose falls off as <b>1/r²</b>. Load the <b>periphery</b>, spare the <b>urethra</b> and <b>rectum</b>, and above all <b>cover the full depth</b>: switch to the <b>sagittal</b> view to place seeds from base to apex.",
+  hint:"AXIAL view: drag on the slice · slider = depth.  SAGITTAL view: place seeds in depth.  Tap a seed to remove it.",
+  ure:v=>"Urethra D30 "+v+"% Rx", rec:v=>"Rectum RV100 "+v+"%", seed:n=>n+" seeds",
+  won:"IMPLANT ACCEPTED", next:"NEXT LEVEL", done:"SERIES COMPLETE",
+  pass:(v,n,l)=>"V100 "+v+"% · "+n+" seeds · level "+l+" unlocked",
+  needV:"3D V100 too low — cover base AND apex (sagittal view)", needU:"Urethra hot — move seeds off centre", needR:"Rectum hot — remove posterior seeds",
+  view:"VIEW", axial:"AXIAL", sag:"SAGITTAL", depth:"Depth", lateral:"L-R position",
+  clear:"clear", lock:"ACCEPT PLAN",
+  vtagA:"AXIAL SLICE — z = ", vtagS:"SAGITTAL SLICE — x = ",
+  legP:"Prostate", legU:"Urethra", legR:"Rectum", legI:"Rx isodose",
+  tagline:"Prostate brachytherapy · 3D TRUS ultrasound",
+  intro:"Implant seeds to cover the whole prostate while sparing the urethra and rectum.",
+  s1t:"Goal", s1:"Cover ≥ 85% of the prostate (V100), urethra and rectum under their limits.",
+  s2t:"Place", s2:"AXIAL view: tap or drag on the grid. The slider sets the depth.",
+  s3t:"Depth", s3:"SAGITTAL view: place seeds base to apex — one slice is never enough.",
+  s4t:"Accept", s4:"Load the periphery, avoid centre and back, then ACCEPT PLAN.",
+  tip:"Tap a seed to remove it · ←/→ arrows to change slice.",
+  resume:"RESUME", restart:"Restart from zero",
+  prog:l=>"Progress: level "+l+" / "+LEVELS.length+" unlocked",
+  eyebrow:"Onco Arcade · brachytherapy", allGames:"All games", about:"About", close:"Close",
+  lbTitle:"World leaderboard", lbHelp:"Your name for the score", lbEmpty:"No scores yet — be the first",
+  lbWorld:"world", lbOff:"offline", lbLocal:"local", namePh:"Nickname",
+  aboutLede:"Seed Master is a mini-game from the Onco Arcade collection: plan a prostate implant under ultrasound, cover the target and spare the urethra and rectum. Imagined, designed and built by:",
+  aboutRole:"Professor of radiation oncology · creator of Onco Arcade",
+  aboutDisc:"Educational, experimental game. It is not a medical device: it does not replace clinical training and must never be used to guide real patient care." }
+};
+let lang=(function(){try{var u=(new URLSearchParams(location.search).get('lang')||'').toLowerCase();if(u==='fr'||u==='en'){localStorage.setItem('seedmaster.lang',u);return u;}var s2=localStorage.getItem('seedmaster.lang'); if(s2==='fr'||s2==='en')return s2;}catch(e){} return 'fr';})();
+function chip(v,label){ return '<span class="chip"><i style="background:'+css(v)+'"></i>'+label+'</span>'; }
+function updateProg(){ const l=getLvl(), t=I[lang]; if($('prog'))$('prog').textContent=t.prog(l); $('playBtn').textContent=l>1?t.resume:t.play; }
+function applyLang(){ const t=I[lang];
+  $('lang').textContent=lang==='fr'?'EN':'FR'; $('lang2').textContent=lang==='fr'?'EN':'FR';
+  $('clearBtn').textContent=t.clear; $('lockBtn').textContent=t.lock;
+  $('tagline').textContent=t.tagline; $('intro').textContent=t.intro;
+  $('s1t').textContent=t.s1t; $('s1').textContent=t.s1;
+  $('s2t').textContent=t.s2t; $('s2').textContent=t.s2;
+  $('s3t').textContent=t.s3t; $('s3').textContent=t.s3;
+  $('s4t').textContent=t.s4t; $('s4').textContent=t.s4;
+  $('startHint').textContent=t.tip; $('restartBtn').textContent=t.restart;
+  if($('homeEyebrow'))$('homeEyebrow').textContent=t.eyebrow;
+  if($('lbTitle'))$('lbTitle').textContent=t.lbTitle;
+  if($('lbHelp'))$('lbHelp').textContent=t.lbHelp;
+  if($('lbName'))$('lbName').placeholder=t.namePh;
+  if($('allGames'))$('allGames').textContent=t.allGames;
+  if($('aboutBtn'))$('aboutBtn').textContent=t.about;
+  if($('aboutLede'))$('aboutLede').textContent=t.aboutLede;
+  if($('aboutRole'))$('aboutRole').textContent=t.aboutRole;
+  if($('aboutDisc'))$('aboutDisc').textContent=t.aboutDisc;
+  $('homeLegend').innerHTML=chip('--ptv',t.legP)+chip('--ure',t.legU)+chip('--rec',t.legR)+chip('--iso',t.legI);
+  $('legend').innerHTML='<span style="background:'+css('--ptv')+'"></span>'+t.legP+'<br><span style="background:'+css('--ure')+'"></span>'+t.legU+'<br><span style="background:'+css('--rec')+'"></span>'+t.legR+'<br><span style="background:'+css('--iso')+'"></span>'+t.legI;
+  document.documentElement.lang=lang; updateProg(); refreshView(); updateHud();
+}
+function css(v){ return getComputedStyle(document.documentElement).getPropertyValue(v); }
+$('lang').onclick=()=>{ lang=lang==='fr'?'en':'fr'; try{localStorage.setItem('seedmaster.lang',lang);}catch(e){} applyLang(); loadLeaderboard(); };
+$('lang2').onclick=()=>{ lang=lang==='fr'?'en':'fr'; try{localStorage.setItem('seedmaster.lang',lang);}catch(e){} applyLang(); loadLeaderboard(); };
+if($('themeBtn2'))$('themeBtn2').onclick=()=>{ applyTheme(document.documentElement.getAttribute('data-theme')==='light'?'dark':'light'); };
+if($('aboutBtn'))$('aboutBtn').onclick=()=>{ const b=$('aboutBox'); b.hidden=!b.hidden; };
+if($('lbName'))$('lbName').addEventListener('input',()=>{ try{localStorage.setItem('seedmaster.name',$('lbName').value.trim());}catch(e){} });
+$('restartBtn').onclick=()=>{ setLvl(1); updateProg(); };
+
+/* ---------------- storage / leaderboard (API Onco Arcade — OVH) ---------------- */
+const KEY='seedmaster.lvl'; let memL=1;
+const getLvl=()=>{ try{return +(localStorage.getItem(KEY)||1);}catch(e){return memL;} };
+const setLvl=v=>{ try{localStorage.setItem(KEY,v);}catch(e){memL=v;} };
+const API_ROOT="../../api", GAME_SLUG="seed-master";        // "" = 100% local
+const lbEsc=x=>String(x).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function localScores(){ try{return JSON.parse(localStorage.getItem('seedmaster.scores')||'[]');}catch(e){return [];} }
+function pushLocal(n,sc){ const a=localScores(); a.push({name:n,score:sc}); a.sort((x,y)=>y.score-x.score); try{localStorage.setItem('seedmaster.scores',JSON.stringify(a.slice(0,50)));}catch(e){} }
+function renderRows(rows){ const list=$('lbList'); if(!list)return;
+  if(!rows.length){ list.innerHTML='<div class="oa-row"><span class="rk">\u2014</span><span class="pl">'+I[lang].lbEmpty+'</span><span class="pt"></span></div>'; return; }
+  list.innerHTML=rows.slice(0,8).map((x,i)=>'<div class="oa-row"><span class="rk">'+String(i+1).padStart(2,'0')+'</span><span class="pl">'+lbEsc(x.name||'\u2014')+'</span><span class="pt">'+(x.score||0).toLocaleString()+'</span></div>').join('');
+}
+async function loadLeaderboard(){ const st=$('lbStatus'); if(!$('lbList'))return;
+  if(!API_ROOT){ if(st)st.textContent=I[lang].lbLocal; renderRows(localScores()); return; }
+  if(st)st.textContent='\u2026';
+  try{
+    const r=await fetch(API_ROOT+'/top.php?game='+GAME_SLUG+'&period=all&limit=8',{cache:'no-store'});
+    if(!r.ok)throw 0; const d=await r.json(); if(!d||!d.ok||!Array.isArray(d.rows))throw 0;
+    renderRows(d.rows); if(st)st.textContent=I[lang].lbWorld;
+  }catch(e){ if(st)st.textContent=I[lang].lbOff; renderRows(localScores()); }
+}
+async function submitScore(n,sc){ pushLocal(n,sc);
+  if(!API_ROOT)return;
+  try{ await fetch(API_ROOT+'/submit.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({game:GAME_SLUG,name:n,score:sc,ts:Date.now()})}); }catch(e){}
+  loadLeaderboard();
+}
+function applyTheme(mode){ document.documentElement.setAttribute('data-theme',mode); try{localStorage.setItem('oa-theme',mode);}catch(e){} const b=$('themeBtn2'); if(b)b.textContent=mode==='light'?'\u2600':'\u263e'; }
+
+/* ---------------- audio ---------------- */
+let AC=null; const ac=()=>{ if(!AC){ try{AC=new(window.AudioContext||window.webkitAudioContext)();}catch(e){} } return AC; };
+function tone(f,d,t,g,to){ t=t||'sine'; g=g||0.13; const c=ac(); if(!c)return; const o=c.createOscillator(),v=c.createGain(); o.type=t; o.frequency.value=f; if(to)o.frequency.exponentialRampToValueAtTime(to,c.currentTime+d); v.gain.setValueAtTime(g,c.currentTime); v.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+d); o.connect(v); v.connect(c.destination); o.start(); o.stop(c.currentTime+d); }
+const sfxSeed=()=>tone(680,0.05,'square',0.05,900);
+const sfxPull=()=>tone(300,0.05,'sine',0.05,180);
+const sfxWin=()=>{[523,659,784,1046].forEach((f,i)=>setTimeout(()=>tone(f,0.16,'triangle',0.13),i*90));};
+const sfxNo=()=>tone(160,0.22,'sawtooth',0.13,110);
+const sfxView=()=>tone(440,0.06,'sine',0.06,660);
+const hap=m=>{ if(navigator.vibrate)navigator.vibrate(m); };
+
+/* ---------------- three / canvas ---------------- */
+const app=$('app');
+const scene=new THREE.Scene();
+const camera=new THREE.OrthographicCamera(-5,5,5,-5,0.1,100);
+camera.position.set(0,0,10); camera.lookAt(0,0,0);
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.setClearColor(0x04100b,1); renderer.setSize(innerWidth,innerHeight);
+app.appendChild(renderer.domElement);
+scene.add(new THREE.AmbientLight(0xffffff,1));
+const N=200;
+const cvs=document.createElement('canvas'); cvs.width=cvs.height=N; const cx=cvs.getContext('2d');
+const tex=new THREE.CanvasTexture(cvs); tex.minFilter=THREE.LinearFilter; tex.flipY=false;
+const plane=new THREE.Mesh(new THREE.PlaneGeometry(10,10),new THREE.MeshBasicMaterial({map:tex})); scene.add(plane);
+const glow=new THREE.Mesh(new THREE.PlaneGeometry(10.4,10.4),new THREE.MeshBasicMaterial({map:tex,transparent:true,opacity:0.14,blending:THREE.AdditiveBlending,depthWrite:false})); glow.position.z=0.14; scene.add(glow);
+function layoutCamera(){ const a=innerWidth/innerHeight; const base=4.0; let hw,hh; if(a<1){ hw=base; hh=base/a; } else { hh=base; hw=base*a; } camera.left=-hw;camera.right=hw;camera.top=hh;camera.bottom=-hh; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); }
+layoutCamera();
+
+/* ---------------- model config (validated headless) ---------------- */
+const R0=0.30, URE_R=0.30, SPARE=0.15, ZR=2.2, XR=3.4, ZSNAP=0.2;
+const GRID=[-2.4,-1.6,-0.8,0,0.8,1.6,2.4];
+const LEVELS=[
+  {rx:1.8, asym:0,   c:1.05, P:15.1},
+  {rx:2.0, asym:0,   c:1.15, P:15.2},
+  {rx:2.2, asym:0.3, c:1.25, P:19.0},
+  {rx:2.35,asym:0.3, c:1.30, P:21.6}
+];
+const PASS={v100:85, ureD30:165, recV100:6};
+
+const W=i=>(i/N)*10-5;                 // pixel -> plane-local [-5,5]
+let cfg=LEVELS[0], P=cfg.P, curLvl=1, running=false;
+function A(){return cfg.rx*1.12;} function B(){return cfg.rx*0.92;} function C(){return cfg.c;}
+function inProstate(x,y,z){ const yy=y-cfg.asym*Math.sin(x)*0.4; return (x*x)/(A()*A())+(yy*yy)/(B()*B())+(z*z)/(C()*C())<1; }
+function inUre(x,y){ return (x*x+(y+0.1)*(y+0.1))<URE_R*URE_R; }
+function inRec(x,y){ return y<-(cfg.rx-0.15) && Math.abs(x)<cfg.rx*1.1 && y>-(cfg.rx+0.9); }
+function isCoverage(x,y,z){ return inProstate(x,y,z) && Math.hypot(x,y+0.1)>=URE_R+SPARE; }
+function ellRR(x,y,z){ const yy=y-cfg.asym*Math.sin(x)*0.4; return (x*x)/(A()*A())+(yy*yy)/(B()*B())+(z*z)/(C()*C()); }
+
+let seeds=[]; // {x,y,z}
+function field3D(x,y,z){ let v=0; for(let n=0;n<seeds.length;n++){ const s=seeds[n]; const dx=x-s.x,dy=y-s.y,dz=z-s.z; v+=1/(dx*dx+dy*dy+dz*dz+R0*R0); } return v; }
+
+/* ---------------- metrics voxels ---------------- */
+const NXv=40, NZv=22;
+let ptvVox=[], ureVox=[], recVox=[];
+function buildVox(){
+  ptvVox=[]; ureVox=[]; recVox=[];
+  for(let a=0;a<NXv;a++)for(let b=0;b<NXv;b++)for(let c=0;c<NZv;c++){
+    const x=-XR+(a+0.5)/NXv*2*XR, y=-XR+(b+0.5)/NXv*2*XR, z=-ZR+(c+0.5)/NZv*2*ZR;
+    if(inUre(x,y)&&Math.abs(z)<C()) ureVox.push([x,y,z]);
+    if(inRec(x,y)) recVox.push([x,y,z]);
+    if(isCoverage(x,y,z)) ptvVox.push([x,y,z]);
+  }
+}
+function pctile(arr,p){ if(!arr.length)return 0; arr.sort((a,b)=>b-a); return arr[Math.min(arr.length-1,Math.floor(p*arr.length))]; }
+let lastMetrics={v100:0,ureD30:0,recV100:0};
+function computeMetrics(){
+  let cov=0; for(let n=0;n<ptvVox.length;n++){ const v=ptvVox[n]; if(field3D(v[0],v[1],v[2])>=P) cov++; }
+  const uv=[]; for(let n=0;n<ureVox.length;n++){ const v=ureVox[n]; uv.push(field3D(v[0],v[1],v[2])); }
+  let rHot=0; for(let n=0;n<recVox.length;n++){ const v=recVox[n]; if(field3D(v[0],v[1],v[2])>=P) rHot++; }
+  lastMetrics={ v100: ptvVox.length?cov/ptvVox.length*100:0, ureD30: pctile(uv,0.30)/P*100, recV100: recVox.length?rHot/recVox.length*100:0 };
+}
+
+/* ---------------- views & coord maps ---------------- */
+let view='axial', zSlice=0, xSlice=0;
+function pixelToWorld(i,j){ const px=W(i), py=W(j);
+  if(view==='axial') return {x:px, y:py, z:zSlice};
+  return {x:xSlice, y:py, z:px*ZR/5}; }
+function seedPix(s){
+  if(view==='axial') return {px:(s.x+5)/10*N, py:(s.y+5)/10*N, dist:Math.abs(s.z-zSlice)};
+  return {px:(s.z*5/ZR+5)/10*N, py:(s.y+5)/10*N, dist:Math.abs(s.x-xSlice)}; }
+function probeWorldY(){ return -(cfg.rx+0.35); }
+
+/* ---------------- ultrasound render ---------------- */
+let dirty=true, frame=0;
+let gStruct=new Uint8ClampedArray(N*N);
+let ovImg=cx.createImageData(N,N);
+let fanArr=new Float32Array(N*N);
+let dispImg=cx.createImageData(N,N);
+
+function buildFan(){
+  const apexI=N/2, apexJ=(probeWorldY()+5)/10*N;
+  for(let j=0;j<N;j++)for(let i=0;i<N;i++){
+    const k=j*N+i; let a=1;
+    if(view==='axial'){
+      const dx=i-apexI, dy=j-apexJ;
+      const r=Math.hypot(dx,dy);
+      const ang=Math.atan2(dx, Math.max(0.001,dy));
+      const half=0.95;
+      if(dy<-2 || Math.abs(ang)>half || r>N*0.92) a=0.06;
+      else { a=1; if(r>N*0.7) a=1-(r-N*0.7)/(N*0.25); a=Math.max(0.1,Math.min(1,a)); }
+    } else {
+      const ex=Math.abs(i-N/2)/(N/2), ey=Math.abs(j-N/2)/(N/2);
+      a=1 - 0.6*Math.max(0,ex-0.7)/0.3 - 0.6*Math.max(0,ey-0.75)/0.25;
+      a=Math.max(0.12,Math.min(1,a));
+    }
+    fanArr[k]=a;
+  }
+}
+
+function recomputeStruct(){
+  const inP=new Uint8Array(N*N), inU=new Uint8Array(N*N), inR=new Uint8Array(N*N), dzA=new Uint8Array(N*N), dz15=new Uint8Array(N*N);
+  for(let j=0;j<N;j++)for(let i=0;i<N;i++){ const k=j*N+i; const w=pixelToWorld(i,j);
+    const P_=inProstate(w.x,w.y,w.z), U_=inUre(w.x,w.y), R_=inRec(w.x,w.y);
+    inP[k]=P_?1:0; inU[k]=U_?1:0; inR[k]=R_?1:0;
+    const f=field3D(w.x,w.y,w.z); dzA[k]=f>=P?1:0; dz15[k]=f>=1.5*P?1:0;
+    // filled ultrasound tissue: the gland reads as a solid rounded shape
+    let g=44; if(R_) g=76;                                   // surrounding soft tissue / rectal wall
+    if(P_){ const rr=Math.min(1,ellRR(w.x,w.y,w.z)); g=96+34*rr; }  // parenchyma, brighter toward capsule
+    g += (hash(i>>2,j>>2,9)-0.5)*13;                          // static heterogeneity (not animated)
+    if(U_) g=38;                                             // urethra hypoechoic
+    gStruct[k]=g<0?0:(g>255?255:g);
+  }
+  const od=ovImg.data;
+  for(let j=0;j<N;j++)for(let i=0;i<N;i++){ const k=j*N+i, o=k*4;
+    if(inP[k] && ((i>0&&!inP[k-1])||(i<N-1&&!inP[k+1])||(j>0&&!inP[k-N])||(j<N-1&&!inP[k+N]))) gStruct[k]=184;
+    if(inU[k] && ((i>0&&!inU[k-1])||(i<N-1&&!inU[k+1])||(j>0&&!inU[k-N])||(j<N-1&&!inU[k+N]))) gStruct[k]=150;
+    let r=0,gg=0,b=0,a=0;
+    if(dzA[k]){ r=32;gg=210;b=190;a=42; }
+    if(dz15[k]){ r=90;gg=255;b=210;a=70; }
+    if(dzA[k] && ((i>0&&!dzA[k-1])||(i<N-1&&!dzA[k+1])||(j>0&&!dzA[k-N])||(j<N-1&&!dzA[k+N]))){ r=55;gg=224;b=255;a=210; }
+    if(inR[k] && ((j<N-1&&!inR[k+N])||(j>0&&!inR[k-N])||(i>0&&!inR[k-1])||(i<N-1&&!inR[k+1]))){ r=255;gg=93;b=93;a=220; }
+    if(inP[k] && ((i>0&&!inP[k-1])||(i<N-1&&!inP[k+1])||(j>0&&!inP[k-N])||(j<N-1&&!inP[k+N]))){ r=67;gg=224;b=106;a=210; }
+    if(inU[k] && ((i>0&&!inU[k-1])||(i<N-1&&!inU[k+1])||(j>0&&!inU[k-N])||(j<N-1&&!inU[k+N]))){ r=255;gg=194;b=74;a=220; }
+    od[o]=r; od[o+1]=gg; od[o+2]=b; od[o+3]=a;
+  }
+}
+
+function hash(i,j,f){ let x=(i*374761393+j*668265263+f*362437)>>>0; x=((x^(x>>>13))*1274126177)>>>0; return ((x^(x>>>16))>>>0)/4294967295; }
+
+function renderFrame(){
+  const d=dispImg.data, od=ovImg.data;
+  for(let j=0;j<N;j++)for(let i=0;i<N;i++){ const k=j*N+i, o=k*4;
+    const sp=0.84+0.26*hash(i,j,(frame>>2)&255);
+    let g=gStruct[k]*sp; g*=fanArr[k]; if(g>255)g=255;
+    let r=g,gg=g,b=g;
+    const oa=od[o+3];
+    if(oa>0){ const t=oa/255*fanArr[k]; r=r*(1-t)+od[o]*t; gg=gg*(1-t)+od[o+1]*t; b=b*(1-t)+od[o+2]*t; }
+    d[o]=r; d[o+1]=gg; d[o+2]=b; d[o+3]=255;
+  }
+  cx.putImageData(dispImg,0,0);
+  drawSeeds();
+  drawScale();
+  tex.needsUpdate=true;
+}
+
+function drawSeeds(){
+  const apexJ=(probeWorldY()+5)/10*N;
+  cx.save();
+  if(view==='axial'){
+    for(let a=0;a<GRID.length;a++)for(let b=0;b<GRID.length;b++){ const px=(GRID[a]+5)/10*N, py=(GRID[b]+5)/10*N; cx.beginPath();cx.arc(px,py,1.1,0,7);cx.fillStyle='rgba(150,220,200,.18)';cx.fill(); }
+  } else {
+    for(let b=0;b<GRID.length;b++){ const py=(GRID[b]+5)/10*N; cx.strokeStyle='rgba(150,220,200,.12)';cx.lineWidth=0.6;cx.beginPath();cx.moveTo(0,py);cx.lineTo(N,py);cx.stroke(); }
+  }
+  for(let n=0;n<seeds.length;n++){ const p=seedPix(seeds[n]); const near=Math.max(0,1-p.dist/0.7); if(near<=0.02)continue;
+    const apexI = view==='axial'? N/2 : p.px;
+    let ddx=p.px-apexI, ddy=p.py-apexJ; const dl=Math.hypot(ddx,ddy)||1; ddx/=dl; ddy/=dl;
+    const sl=26*near; const ex=p.px+ddx*sl, ey=p.py+ddy*sl;
+    const grd=cx.createLinearGradient(p.px,p.py,ex,ey);
+    grd.addColorStop(0,'rgba(0,0,0,'+(0.5*near)+')'); grd.addColorStop(1,'rgba(0,0,0,0)');
+    cx.strokeStyle=grd; cx.lineWidth=3.2*near; cx.beginPath();cx.moveTo(p.px,p.py);cx.lineTo(ex,ey);cx.stroke();
+  }
+  for(let n=0;n<seeds.length;n++){ const p=seedPix(seeds[n]); const near=Math.max(0,1-p.dist/0.7); if(near<=0.02)continue;
+    cx.globalAlpha=0.5+0.5*near;
+    cx.beginPath();cx.arc(p.px,p.py,2.6*(0.6+0.4*near),0,7);cx.fillStyle='#f2fff8';cx.fill();
+    cx.beginPath();cx.arc(p.px,p.py,2.6*(0.6+0.4*near),0,7);cx.strokeStyle='rgba(47,230,165,.9)';cx.lineWidth=0.8;cx.stroke();
+    cx.globalAlpha=1;
+  }
+  cx.restore();
+}
+
+function drawScale(){
+  cx.save();
+  cx.strokeStyle='rgba(200,240,225,.35)'; cx.lineWidth=0.7;
+  for(let t=1;t<=4;t++){ const py=t/5*N; cx.beginPath();cx.moveTo(2,py);cx.lineTo(7,py);cx.stroke(); }
+  cx.restore();
+}
+
+/* ---------------- HUD ---------------- */
+function refreshView(){
+  const t=I[lang];
+  $('viewBtn').textContent=t.view+" : "+(view==='axial'?t.axial:t.sag);
+  if(view==='axial'){ $('depth').min=-1.4;$('depth').max=1.4;$('depth').step=0.1;$('depth').value=zSlice; $('depthLbl').textContent=t.depth+"  z = "+zSlice.toFixed(1); }
+  else { $('depth').min=-2.4;$('depth').max=2.4;$('depth').step=0.8;$('depth').value=xSlice; $('depthLbl').textContent=t.lateral+"  x = "+xSlice.toFixed(1); }
+}
+function updateHud(){ const t=I[lang], m=lastMetrics;
+  $('lvl').textContent=(lang==='fr'?'NIV ':'LVL ')+curLvl;
+  $('v100').textContent=Math.round(m.v100)+'%';
+  $('ureS').textContent=t.ure(Math.round(m.ureD30));
+  $('recS').textContent=t.rec(Math.round(m.recV100));
+  $('seedS').textContent=t.seed(seeds.length);
+}
+
+/* ---------------- interaction ---------------- */
+const ray=new THREE.Raycaster(); const ndc=new THREE.Vector2();
+function screenToPlane(cxp,cyp){ ndc.x=(cxp/innerWidth)*2-1; ndc.y=-(cyp/innerHeight)*2+1; ray.setFromCamera(ndc,camera); return ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0,0,1),0),new THREE.Vector3()); }
+function snapGrid(v){ let best=GRID[0],bd=1e9; for(let n=0;n<GRID.length;n++){ const d=Math.abs(GRID[n]-v); if(d<bd){bd=d;best=GRID[n];} } return {v:best,d:bd}; }
+function placeAt(clientX,clientY){
+  if(!running)return; const w=screenToPlane(clientX,clientY); if(!w)return;
+  const X=w.x, Y=w.y;
+  let sx,sy,sz;
+  if(view==='axial'){ const gx=snapGrid(X), gy=snapGrid(Y); if(gx.d>0.42||gy.d>0.42)return; sx=gx.v; sy=gy.v; sz=zSlice; }
+  else { const gy=snapGrid(Y); if(gy.d>0.42)return; sy=gy.v; sx=xSlice; sz=Math.round((X*ZR/5)/ZSNAP)*ZSNAP; if(Math.abs(sz)>ZR)return; }
+  const ex=seeds.findIndex(s=> Math.abs(s.x-sx)<0.06 && Math.abs(s.y-sy)<0.06 && Math.abs(s.z-sz)<Math.max(0.12,ZSNAP*0.6));
+  if(ex>=0){ seeds.splice(ex,1); sfxPull(); }
+  else { seeds.push({x:sx,y:sy,z:sz}); sfxSeed(); hap(5); }
+  dirty=true;
+}
+let dragging=false, lastPlace=null;
+function placeDedup(clientX,clientY){
+  const w=screenToPlane(clientX,clientY); if(!w)return; const key=Math.round(w.x*6)+','+Math.round(w.y*6);
+  if(key===lastPlace)return; lastPlace=key; placeAt(clientX,clientY);
+}
+const el=renderer.domElement;
+el.addEventListener('touchstart',e=>{e.preventDefault();dragging=true;lastPlace=null;const t=e.touches[0];placeDedup(t.clientX,t.clientY);},{passive:false});
+el.addEventListener('touchmove',e=>{e.preventDefault();if(dragging){const t=e.touches[0];placeDedup(t.clientX,t.clientY);}},{passive:false});
+el.addEventListener('touchend',e=>{e.preventDefault();dragging=false;},{passive:false});
+el.addEventListener('mousedown',e=>{dragging=true;lastPlace=null;placeDedup(e.clientX,e.clientY);});
+el.addEventListener('mousemove',e=>{if(dragging)placeDedup(e.clientX,e.clientY);});
+window.addEventListener('mouseup',()=>dragging=false);
+
+$('depth').addEventListener('input',()=>{ const v=parseFloat($('depth').value); if(view==='axial'){zSlice=v; $('depthLbl').textContent=I[lang].depth+"  z = "+zSlice.toFixed(1);} else {xSlice=v; $('depthLbl').textContent=I[lang].lateral+"  x = "+xSlice.toFixed(1);} dirty=true; });
+function stepSlice(dir){ if(!running)return;
+  if(view==='axial'){ zSlice=Math.min(1.4,Math.max(-1.4,+(zSlice+dir*0.1).toFixed(2))); $('depth').value=zSlice; $('depthLbl').textContent=I[lang].depth+"  z = "+zSlice.toFixed(1); }
+  else { xSlice=Math.min(2.4,Math.max(-2.4,+(xSlice+dir*0.8).toFixed(2))); $('depth').value=xSlice; $('depthLbl').textContent=I[lang].lateral+"  x = "+xSlice.toFixed(1); }
+  dirty=true; }
+window.addEventListener('keydown',e=>{ if(e.key==='ArrowRight'){ stepSlice(1); e.preventDefault(); } else if(e.key==='ArrowLeft'){ stepSlice(-1); e.preventDefault(); } });
+$('viewBtn').onclick=()=>{ view=view==='axial'?'sagittal':'axial'; sfxView(); buildFan(); refreshView(); dirty=true; };
+$('clearBtn').onclick=()=>{ seeds=[]; dirty=true; };
+
+/* ---------------- level flow ---------------- */
+function loadLevel(l){ curLvl=l; cfg=LEVELS[Math.min(l,LEVELS.length)-1]; P=cfg.P; seeds=[]; zSlice=0; xSlice=0; view='axial'; buildVox(); buildFan(); refreshView(); dirty=true; }
+function start(){ ac(); running=true; loadLevel(getLvl()); $('start').classList.add('hidden'); $('over').classList.add('hidden'); }
+$('playBtn').onclick=start;
+
+$('lockBtn').onclick=()=>{
+  if(!running)return; computeMetrics(); const m=lastMetrics, t=I[lang];
+  const ok = m.v100>=PASS.v100 && m.ureD30<PASS.ureD30 && m.recV100<PASS.recV100;
+  if(ok){
+    sfxWin(); hap([15,30,15]); const nxt=curLvl+1; if(nxt>getLvl())setLvl(Math.min(nxt,LEVELS.length)); running=false;
+    $('overTitle').textContent=nxt>LEVELS.length?t.done:t.won;
+    $('overWhy').textContent=t.pass(Math.round(m.v100),seeds.length,curLvl);
+    $('againBtn').textContent=nxt>LEVELS.length?'↻':'→';
+    const _nm=(($('lbName')&&$('lbName').value.trim())||(function(){try{return localStorage.getItem('seedmaster.name')||''}catch(e){return ''}})()||'\u2014').slice(0,18);
+    submitScore(_nm, Math.max(0, Math.round(m.v100)*10 - seeds.length + curLvl*50));
+    $('over').classList.remove('hidden');
+    $('againBtn').onclick=()=>{ $('over').classList.add('hidden'); running=true; loadLevel(Math.min(nxt,LEVELS.length)); };
+  } else {
+    sfxNo(); hap(30);
+    toast(m.v100<PASS.v100? t.needV : m.ureD30>=PASS.ureD30? t.needU : t.needR);
+  }
+};
+let toastEl=null;
+function toast(msg){ if(!toastEl){toastEl=document.createElement('div');toastEl.style.cssText='position:fixed;left:50%;top:22%;transform:translateX(-50%);z-index:30;background:rgba(4,20,14,.92);color:#9dffd8;border:1px solid rgba(47,230,165,.5);padding:12px 18px;border-radius:12px;font-size:14px;pointer-events:none;transition:opacity .2s;text-align:center;max-width:82vw';document.body.appendChild(toastEl);} toastEl.textContent=msg; toastEl.style.opacity='1'; setTimeout(()=>toastEl.style.opacity='0',2000); }
+
+/* ---------------- loop ---------------- */
+function tick(){
+  requestAnimationFrame(tick); frame++;
+  if(dirty){ recomputeStruct(); computeMetrics(); updateHud(); dirty=false; }
+  renderFrame();
+  // subtle "alive" motion — gentle probe sway + breathing (tiny, well under snap tolerance)
+  const tt=frame*0.016;
+  const ox=Math.sin(tt*0.7)*0.045+Math.sin(tt*1.9)*0.016;
+  const oy=Math.cos(tt*0.5)*0.032+Math.sin(tt*2.3)*0.013;
+  const rz=Math.sin(tt*0.33)*0.004;
+  const sc=1+Math.sin(tt*0.9)*0.006;
+  plane.position.set(ox,oy,0); plane.rotation.z=rz; plane.scale.set(sc,sc,1);
+  glow.position.set(ox,oy,0.14); glow.rotation.z=rz; glow.scale.set(sc,sc,1);
+  glow.material.opacity=0.05+0.03*Math.sin(frame*0.05);
+  renderer.render(scene,camera);
+}
+applyTheme((function(){try{return localStorage.getItem('oa-theme')}catch(e){return null}})()||'dark');
+try{ const _n=localStorage.getItem('seedmaster.name'); if(_n&&$('lbName'))$('lbName').value=_n; }catch(e){}
+buildVox(); buildFan(); recomputeStruct(); computeMetrics(); applyLang(); loadLeaderboard(); tick();
+addEventListener('resize',layoutCamera);
+</script>
+<div id="oaNameAsk" style="display:none;position:fixed;inset:0;z-index:2147483000;background:rgba(3,8,18,.74);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif">
+  <div style="width:min(360px,94vw);background:#0f1626;color:#f8fafc;border:1px solid rgba(255,255,255,.14);border-radius:18px;padding:22px;box-shadow:0 30px 80px rgba(0,0,0,.55)">
+    <div id="oaNameAskTitle" style="font-size:18px;font-weight:560;letter-spacing:-.01em;margin-bottom:4px">Ton pseudo</div>
+    <div id="oaNameAskSub" style="font-size:13px;color:#a7b0c2;line-height:1.4;margin-bottom:14px">Pour enregistrer ton score au classement.</div>
+    <input id="oaNameAskInput" maxlength="18" placeholder="Dr …" autocomplete="off" spellcheck="false" style="width:100%;box-sizing:border-box;font:inherit;font-size:15px;font-weight:520;color:#f8fafc;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:12px 14px;outline:none">
+    <div id="oaTeamLabel" style="font-size:12px;color:#a7b0c2;margin:12px 0 5px">Équipe (optionnel)</div>
+    <div id="oaTeamWrap" style="position:relative">
+    <input id="oaNameAskTeam" maxlength="24" placeholder="Ton équipe…" autocomplete="off" spellcheck="false" style="width:100%;box-sizing:border-box;font:inherit;font-size:15px;font-weight:520;color:#f8fafc;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:12px 14px;outline:none">
+    <div id="oaTeamMenu" style="position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:6;background:#0f1626;border:1px solid rgba(255,255,255,.16);border-radius:12px;box-shadow:0 22px 55px rgba(0,0,0,.55);max-height:172px;overflow:auto;display:none"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
+      <button id="oaNameAskSkip" type="button" style="font:inherit;font-weight:520;color:#a7b0c2;background:none;border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:9px 14px;cursor:pointer">Passer</button>
+      <button id="oaNameAskOk" type="button" style="font:inherit;font-weight:560;color:#fff;background:linear-gradient(135deg,#2557d6,#0891b2);border:none;border-radius:999px;padding:9px 16px;cursor:pointer">Enregistrer</button>
+    </div>
+  </div>
+</div>
+<script id="oa-namegate">
+(function(){
+  var DEFAULTS = ['','—','-','dr','dr …','dr...','anonyme','anonymous','ninja','joueur','player','name','nom','pseudo'];
+  function isDefault(n){ return DEFAULTS.indexOf((n||'').trim().toLowerCase()) >= 0; }
+  function isEn(){ var l=(document.documentElement.getAttribute('lang')||document.documentElement.lang||navigator.language||'fr'); return String(l).slice(0,2).toLowerCase()==='en'; }
+  function lget(k){ try{ return localStorage.getItem(k)||''; }catch(e){ return ''; } }
+  function lset(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+
+  var teamsLoaded=false;
+  function loadTeams(){
+    if(teamsLoaded) return; teamsLoaded=true;
+    try{
+      fetch('../../api/teams.php',{cache:'no-store'}).then(function(r){return r.ok?r.json():null;}).then(function(d){
+        if(d&&d.ok&&Array.isArray(d.teams)){ window.__oaTeams=d.teams.map(function(t){return String(t);}); }
+      }).catch(function(){});
+    }catch(e){}
+  }
+
+  function oaRenderTeamMenu(){
+    var tinp=document.getElementById('oaNameAskTeam'), menu=document.getElementById('oaTeamMenu');
+    if(!tinp||!menu) return;
+    var q=(tinp.value||'').toLowerCase();
+    var list=(window.__oaTeams||[]).filter(function(t){return t && t.toLowerCase().indexOf(q)>=0;}).slice(0,8);
+    if(!list.length){ menu.style.display='none'; menu.innerHTML=''; return; }
+    menu.innerHTML=list.map(function(t){return '<div style="padding:11px 14px;font-size:14px;color:#f8fafc;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.07)">'+String(t).replace(/</g,'&lt;')+'</div>';}).join('');
+    Array.prototype.forEach.call(menu.children,function(el){
+      el.onmousedown=function(e){ e.preventDefault(); tinp.value=el.textContent; menu.style.display='none'; };
+      el.ontouchstart=function(e){ e.preventDefault(); tinp.value=el.textContent; menu.style.display='none'; };
+    });
+    menu.style.display='block';
+  }
+  function oaWireTeam(){
+    var tinp=document.getElementById('oaNameAskTeam'), menu=document.getElementById('oaTeamMenu');
+    if(!tinp||tinp._oaWired) return; tinp._oaWired=true;
+    tinp.addEventListener('focus', oaRenderTeamMenu);
+    tinp.addEventListener('input', oaRenderTeamMenu);
+    tinp.addEventListener('blur', function(){ setTimeout(function(){ if(menu) menu.style.display='none'; }, 180); });
+  }
+
+  // Renvoie une Promise<{name, team}>. Demande une seule fois (pseudo + équipe), puis réutilise.
+  window.oaEnsureIdentity = function(bodyName){
+    return new Promise(function(resolve){
+      var sName=lget('oa-name').trim(), sTeam=lget('oa-team').trim(), asked=lget('oa-id2')==='1';
+      var haveName = (bodyName && !isDefault(bodyName)) ? String(bodyName).trim() : sName;
+      if(asked && haveName){ resolve({name:haveName, team:sTeam}); return; }
+      var el=document.getElementById('oaNameAsk');
+      if(!el){ resolve({name:haveName||(isEn()?'Anonymous':'Anonyme'), team:sTeam}); return; }
+      loadTeams(); oaWireTeam();
+      var inp=document.getElementById('oaNameAskInput'), tinp=document.getElementById('oaNameAskTeam');
+      var ok=document.getElementById('oaNameAskOk'), skip=document.getElementById('oaNameAskSkip');
+      var en=isEn();
+      document.getElementById('oaNameAskTitle').textContent = en?'Your name':'Ton pseudo';
+      document.getElementById('oaNameAskSub').textContent   = en?'To save your score on the leaderboard.':'Pour enregistrer ton score au classement.';
+      document.getElementById('oaTeamLabel').textContent    = en?'Team (optional)':'Équipe (optionnel)';
+      tinp.placeholder = en?'Your team…':'Ton équipe…';
+      ok.textContent = en?'Save':'Enregistrer'; skip.textContent = en?'Skip':'Passer';
+      inp.value=haveName||''; tinp.value=sTeam||'';
+      el.style.display='flex'; setTimeout(function(){ try{(inp.value?tinp:inp).focus();}catch(e){} },60);
+      function done(nm,tm,persist){
+        el.style.display='none'; ok.onclick=null; skip.onclick=null; inp.onkeydown=null; tinp.onkeydown=null;
+        if(persist){ lset('oa-name',nm); lset('oa-team',tm); lset('oa-identity','1'); lset('oa-id2','1'); }
+        resolve({name:nm, team:tm});
+      }
+      ok.onclick=function(){ done(inp.value.trim()||(en?'Anonymous':'Anonyme'), tinp.value.trim(), true); };
+      skip.onclick=function(){ done(haveName||(en?'Anonymous':'Anonyme'), sTeam||'', false); };
+      inp.onkeydown=function(e){ if(e.key==='Enter'){ e.preventDefault(); tinp.focus(); } };
+      tinp.onkeydown=function(e){ if(e.key==='Enter'){ e.preventDefault(); ok.onclick(); } };
+    });
+  };
+  // Compat : oaAskName -> renvoie juste le pseudo
+  window.oaAskName = function(cur){ return window.oaEnsureIdentity(cur).then(function(id){ return id.name; }); };
+  /* oa-pregame-ask : demander pseudo+equipe a l'arrivee si pas encore renseigne */
+  setTimeout(function(){ try{ if(lget('oa-id2')!=='1') window.oaEnsureIdentity(''); }catch(e){} }, 500);
+
+  // Interception : tout POST vers submit.php -> injecte pseudo + équipe (demande si première fois)
+  if(window.fetch && !window.__oaNameGate){
+    window.__oaNameGate = true;
+    var orig = window.fetch;
+    window.fetch = function(url, opts){
+      try{
+        var u = (typeof url==='string') ? url : (url && url.url) || '';
+        if(u.indexOf('submit.php')>=0 && opts && opts.method && String(opts.method).toUpperCase()==='POST' && typeof opts.body==='string'){
+          var body = JSON.parse(opts.body);
+          if(body && ('name' in body)){
+            return window.oaEnsureIdentity(body.name).then(function(id){
+              body.name = id.name; body.team = id.team || '';
+              var o2 = {}; for(var k in opts){ o2[k]=opts[k]; } o2.body = JSON.stringify(body);
+              return orig.call(window, url, o2);
+            });
+          }
+        }
+      }catch(e){}
+      return orig.apply(window, arguments);
+    };
+  }
+})();
+</script>
+<button id="oaReportBtn" type="button" aria-label="Signaler un problème" style="position:fixed;left:12px;bottom:12px;z-index:2147482000;width:38px;height:38px;border-radius:50%;border:1px solid rgba(148,163,184,.35);background:rgba(15,22,38,.55);color:#e5e9f0;font-size:17px;line-height:1;cursor:pointer;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);opacity:.55;transition:opacity .15s;font-family:ui-sans-serif,system-ui,sans-serif" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.55" title="Signaler un problème">⚠</button>
+<div id="oaReport" style="display:none;position:fixed;inset:0;z-index:2147483100;background:rgba(3,8,18,.74);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif">
+  <div style="width:min(420px,94vw);background:#0f1626;color:#f8fafc;border:1px solid rgba(255,255,255,.14);border-radius:18px;padding:22px;box-shadow:0 30px 80px rgba(0,0,0,.55)">
+    <div id="oaReportTitle" style="font-size:18px;font-weight:560;letter-spacing:-.01em;margin-bottom:4px">Signaler un problème</div>
+    <div id="oaReportSub" style="font-size:13px;color:#a7b0c2;line-height:1.4;margin-bottom:14px">Décrivez le souci ; il me sera envoyé par e-mail. Aucune adresse n’est affichée.</div>
+    <div id="oaReportForm">
+      <label id="oaReportGameLbl" style="font-size:12px;color:#a7b0c2;display:block;margin-bottom:5px">Jeu concerné</label>
+      <select id="oaReportGame" style="width:100%;box-sizing:border-box;font:inherit;font-size:14px;font-weight:500;color:#f8fafc;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:11px 12px;outline:none;margin-bottom:12px"></select>
+      <label id="oaReportMsgLbl" style="font-size:12px;color:#a7b0c2;display:block;margin-bottom:5px">Description</label>
+      <textarea id="oaReportMsg" rows="5" maxlength="4000" placeholder="Que s’est-il passé ?" style="width:100%;box-sizing:border-box;font:inherit;font-size:14px;color:#f8fafc;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:11px 12px;outline:none;resize:vertical"></textarea>
+      <div id="oaReportErr" style="display:none;font-size:12px;color:#fb7185;margin-top:8px"></div>
+      <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
+        <button id="oaReportCancel" type="button" style="font:inherit;font-weight:520;color:#a7b0c2;background:none;border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:9px 14px;cursor:pointer">Annuler</button>
+        <button id="oaReportSend" type="button" style="font:inherit;font-weight:560;color:#fff;background:linear-gradient(135deg,#2557d6,#0891b2);border:none;border-radius:999px;padding:9px 16px;cursor:pointer">Envoyer</button>
+      </div>
+    </div>
+    <div id="oaReportDone" style="display:none;text-align:center;padding:10px 0">
+      <div style="font-size:34px;line-height:1">✅</div>
+      <div id="oaReportDoneTxt" style="font-size:15px;font-weight:520;margin-top:8px">Merci, c’est envoyé.</div>
+      <button id="oaReportClose2" type="button" style="margin-top:16px;font:inherit;font-weight:560;color:#fff;background:linear-gradient(135deg,#2557d6,#0891b2);border:none;border-radius:999px;padding:9px 18px;cursor:pointer">Fermer</button>
+    </div>
+  </div>
+</div>
+<script id="oa-report">
+(function(){
+  var GAMES=[['plan-please','Plan, Please'],['ok-chimio','OK Chimio'],['arc-racer','Arc Racer'],['beamlet','Beamlet'],['bragg-peak','Bragg Peak'],['fraction-hero','Fraction Hero'],['seed-master','Seed Master'],['mlc-ninja','MLC Ninja'],['tumor-board','Tumor Board'],['radcraft','RadCraft']];
+  function isEn(){ var l=(document.documentElement.getAttribute('lang')||document.documentElement.lang||navigator.language||'fr'); return String(l).slice(0,2).toLowerCase()==='en'; }
+  function API(){ return /\/games\/[^/]+\//.test(location.pathname) ? '../../api' : 'api'; }
+  function curGame(){ var m=location.pathname.match(/\/games\/([a-z0-9-]+)\//i); return m?m[1]:''; }
+  var el=document.getElementById('oaReport');
+  var sel=document.getElementById('oaReportGame'), msg=document.getElementById('oaReportMsg'), err=document.getElementById('oaReportErr');
+  var form=document.getElementById('oaReportForm'), done=document.getElementById('oaReportDone');
+  function labels(){
+    var en=isEn();
+    document.getElementById('oaReportTitle').textContent=en?'Report a problem':'Signaler un problème';
+    document.getElementById('oaReportSub').textContent=en?'Describe the issue; it will be emailed to me. No address is shown.':'Décrivez le souci ; il me sera envoyé par e-mail. Aucune adresse n’est affichée.';
+    document.getElementById('oaReportGameLbl').textContent=en?'Game concerned':'Jeu concerné';
+    document.getElementById('oaReportMsgLbl').textContent=en?'Description':'Description';
+    msg.placeholder=en?'What happened?':'Que s’est-il passé ?';
+    document.getElementById('oaReportCancel').textContent=en?'Cancel':'Annuler';
+    document.getElementById('oaReportSend').textContent=en?'Send':'Envoyer';
+    document.getElementById('oaReportDoneTxt').textContent=en?'Thanks, it’s been sent.':'Merci, c’est envoyé.';
+    document.getElementById('oaReportClose2').textContent=en?'Close':'Fermer';
+    document.getElementById('oaReportBtn').setAttribute('aria-label',en?'Report a problem':'Signaler un problème');
+    document.getElementById('oaReportBtn').title=en?'Report a problem':'Signaler un problème';
+  }
+  function fillSelect(){
+    var en=isEn(), cur=curGame();
+    var html='<option value="">'+(en?'The site / hub':'Le site / le hub')+'</option>';
+    GAMES.forEach(function(g){ html+='<option value="'+g[0]+'">'+g[1]+'</option>'; });
+    html+='<option value="other">'+(en?'Other':'Autre')+'</option>';
+    sel.innerHTML=html; sel.value=cur||'';
+  }
+  window.oaReport=function(){
+    labels(); fillSelect();
+    err.style.display='none'; msg.value=''; form.style.display='block'; done.style.display='none';
+    el.style.display='flex'; setTimeout(function(){ try{msg.focus();}catch(e){} },60);
+  };
+  function close(){ el.style.display='none'; }
+  document.getElementById('oaReportBtn').onclick=window.oaReport;
+  document.getElementById('oaReportCancel').onclick=close;
+  document.getElementById('oaReportClose2').onclick=close;
+  el.addEventListener('click',function(e){ if(e.target===el) close(); });
+  document.getElementById('oaReportSend').onclick=function(){
+    var en=isEn(); var text=(msg.value||'').trim();
+    if(text.length<3){ err.textContent=en?'Please describe the problem.':'Merci de décrire le problème.'; err.style.display='block'; return; }
+    var btn=this; btn.disabled=true; btn.style.opacity=.6;
+    fetch(API()+'/report.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({game:sel.value,message:text,page:location.href})})
+      .then(function(r){return r.ok?r.json():null;}).then(function(d){
+        btn.disabled=false; btn.style.opacity=1;
+        if(d&&d.ok){ form.style.display='none'; done.style.display='block'; }
+        else { err.textContent=en?'Sending failed. Please try again later.':'Envoi impossible. Réessayez plus tard.'; err.style.display='block'; }
+      }).catch(function(){ btn.disabled=false; btn.style.opacity=1; err.textContent=en?'Network error.':'Erreur réseau.'; err.style.display='block'; });
+  };
+})();
+</script>
+</body>
+</html>

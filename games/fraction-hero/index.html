@@ -1,0 +1,1214 @@
+<!doctype html>
+<html lang="fr" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#101827" />
+  <title>Fraction Hero</title>
+  <style>
+    :root{
+      --bg:#070a12;
+      --bg2:#0d1323;
+      --panel:rgba(255,255,255,.06);
+      --panel2:rgba(255,255,255,.1);
+      --stroke:rgba(255,255,255,.12);
+      --text:#f8fafc;
+      --muted:#a7b0c2;
+      --good:#5ef2a6;
+      --warn:#ffd166;
+      --bad:#ff6b8a;
+      --blue:#73d2ff;
+      --purple:#b892ff;
+      --orange:#ffb35c;
+      --shadow:0 24px 72px rgba(0,0,0,.38);
+      --radius:18px;
+      --safe-top: env(safe-area-inset-top,0px);
+      --safe-bottom: env(safe-area-inset-bottom,0px);
+    }
+
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;overscroll-behavior:none}
+    body{
+      min-height:100dvh;
+      background:
+        radial-gradient(circle at 15% 5%, rgba(115,210,255,.24), transparent 35%),
+        radial-gradient(circle at 92% 12%, rgba(184,146,255,.20), transparent 32%),
+        radial-gradient(circle at 30% 95%, rgba(94,242,166,.12), transparent 30%),
+        linear-gradient(160deg,#0b1020 0%, #0d1323 45%, #070a12 100%);
+      overflow:hidden;
+    }
+    button,input,select{font:inherit}
+    button{border:0;color:inherit;cursor:pointer}
+    .app{height:100dvh;width:100%;max-width:760px;margin:0 auto;position:relative;overflow:hidden;padding:calc(12px + var(--safe-top)) 14px calc(14px + var(--safe-bottom));}
+    .orb{position:absolute;filter:blur(3px);opacity:.55;pointer-events:none;border-radius:999px;animation:float 9s ease-in-out infinite alternate}
+    .orb.one{width:110px;height:110px;background:rgba(115,210,255,.28);left:-42px;top:75px}.orb.two{width:170px;height:170px;background:rgba(184,146,255,.18);right:-80px;top:240px;animation-delay:-2s}.orb.three{width:90px;height:90px;background:rgba(94,242,166,.18);left:30%;bottom:42px;animation-delay:-4s}
+    @keyframes float{from{transform:translate3d(0,-10px,0) scale(.98)}to{transform:translate3d(10px,16px,0) scale(1.04)}}
+
+    .topbar{height:48px;display:flex;align-items:center;justify-content:space-between;gap:10px;position:relative;z-index:5}
+    .brand{display:flex;align-items:center;gap:10px;font-weight:560;letter-spacing:.2px}.brandmark{width:40px;height:40px;border-radius:14px;background:linear-gradient(135deg,#73d2ff,#b892ff 58%,#5ef2a6);display:grid;place-items:center;box-shadow:0 12px 30px rgba(115,210,255,.2);position:relative;overflow:hidden}.brandmark:after{content:"";position:absolute;inset:8px;border:2px solid rgba(255,255,255,.75);border-radius:999px;border-left-color:transparent;transform:rotate(-20deg)}.brandmark span{font-size:20px;z-index:1}.top-actions{display:flex;align-items:center;gap:8px}.pill{border:1px solid var(--stroke);background:rgba(255,255,255,.1);backdrop-filter:blur(18px);border-radius:999px;padding:9px 11px;line-height:1;font-weight:560;box-shadow:0 10px 28px rgba(0,0,0,.12)}.pill.active{background:rgba(115,210,255,.18);border-color:rgba(115,210,255,.45)}
+
+    .screen{position:absolute;left:14px;right:14px;top:calc(68px + var(--safe-top));bottom:calc(14px + var(--safe-bottom));opacity:0;transform:translateY(22px) scale(.985);pointer-events:none;transition:opacity .32s ease, transform .32s ease;z-index:2;display:flex;flex-direction:column;gap:14px}.screen.active{opacity:1;transform:translateY(0) scale(1);pointer-events:auto}.scroll{overflow:auto;padding-bottom:10px;scrollbar-width:none}.scroll::-webkit-scrollbar{display:none}
+
+    .hero{border:1px solid var(--stroke);background:linear-gradient(145deg,rgba(255,255,255,.14),rgba(255,255,255,.07));box-shadow:var(--shadow);border-radius:32px;padding:22px;position:relative;overflow:hidden;min-height:210px}.hero:before{content:"";position:absolute;inset:auto -55px -80px auto;width:260px;height:260px;border-radius:999px;background:radial-gradient(circle,rgba(115,210,255,.26),transparent 64%)}.hero h1{font-size:44px;line-height:.94;margin:5px 0 10px;letter-spacing:-2px}.hero p{color:var(--muted);font-weight:560;line-height:1.35;margin:0;max-width:420px}.hero-visual{position:absolute;right:13px;bottom:12px;width:128px;height:128px;border-radius:38px;background:linear-gradient(150deg,rgba(115,210,255,.18),rgba(184,146,255,.12));border:1px solid var(--stroke);display:grid;place-items:center;transform:rotate(3deg);box-shadow:0 16px 45px rgba(0,0,0,.25)}.linac{position:relative;width:90px;height:90px}.linac .gantry{position:absolute;inset:9px;border:12px solid rgba(255,255,255,.72);border-left-color:rgba(115,210,255,.95);border-radius:999px;animation:spin 7s linear infinite}.linac .bed{position:absolute;width:78px;height:14px;background:rgba(255,255,255,.82);border-radius:999px;bottom:18px;left:6px;box-shadow:0 0 24px rgba(115,210,255,.35)}.linac .patient-dot{position:absolute;width:28px;height:11px;background:#5ef2a6;border-radius:999px;bottom:31px;left:31px}.linac .beam{position:absolute;width:52px;height:52px;background:conic-gradient(from 0deg, rgba(115,210,255,.0),rgba(115,210,255,.45),rgba(115,210,255,.0));border-radius:999px;top:19px;left:19px;animation:pulse 1.8s ease-in-out infinite}@keyframes spin{to{transform:rotate(360deg)}}@keyframes pulse{50%{opacity:.35;transform:scale(.88)}}
+
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.card{border:1px solid var(--stroke);background:rgba(255,255,255,.1);backdrop-filter:blur(20px);border-radius:var(--radius);box-shadow:0 14px 40px rgba(0,0,0,.19);padding:14px}.card h3,.card h4{margin:0 0 8px}.muted{color:var(--muted)}.tiny{font-size:12px}.small{font-size:13px}.strong{font-weight:560}.btn{width:100%;border-radius:20px;background:linear-gradient(135deg,#73d2ff,#b892ff);padding:15px 16px;font-weight:560;color:#071120;box-shadow:0 18px 38px rgba(115,210,255,.22);transition:transform .15s ease, filter .15s ease}.btn:active{transform:scale(.98);filter:brightness(1.08)}.btn.secondary{background:rgba(255,255,255,.11);color:var(--text);box-shadow:none;border:1px solid var(--stroke)}.btn.danger{background:linear-gradient(135deg,#ff6b8a,#ffb35c);color:#21060b}.button-row{display:flex;gap:10px}.button-row .btn{flex:1}.chips{display:flex;gap:8px;overflow:auto;padding:2px 0 4px;scroll-snap-type:x mandatory;scrollbar-width:none}.chips::-webkit-scrollbar{display:none}.chip{flex:0 0 auto;border:1px solid var(--stroke);background:rgba(255,255,255,.095);padding:9px 12px;border-radius:999px;font-weight:560;color:var(--muted);scroll-snap-align:start}.chip.selected{background:rgba(115,210,255,.22);color:var(--text);border-color:rgba(115,210,255,.5)}
+
+    .case-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.case-card{min-height:112px;padding:13px;border-radius:24px;border:1px solid var(--stroke);background:linear-gradient(145deg,rgba(255,255,255,.13),rgba(255,255,255,.07));position:relative;overflow:hidden;text-align:left}.case-card.selected{outline:2px solid rgba(115,210,255,.72);box-shadow:0 0 0 6px rgba(115,210,255,.08)}.case-card .emoji{font-size:30px}.case-card .name{font-weight:560;margin-top:4px}.case-card .rx{color:var(--muted);font-size:11px;line-height:1.25;margin-top:4px}.case-card:after{content:"";position:absolute;width:80px;height:80px;border-radius:999px;right:-28px;bottom:-32px;background:var(--accent,rgba(115,210,255,.2));opacity:.45}
+
+    .game-head{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}.patient-strip{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:23px;background:rgba(255,255,255,.10);border:1px solid var(--stroke);min-width:0}.avatar{width:52px;height:52px;border-radius:19px;background:linear-gradient(145deg,rgba(255,255,255,.2),rgba(255,255,255,.07));display:grid;place-items:center;font-size:27px;position:relative;box-shadow:inset 0 -10px 22px rgba(0,0,0,.12)}.avatar:before{content:"";position:absolute;inset:7px;border-radius:15px;border:1px dashed rgba(255,255,255,.28)}.patient-name{font-weight:560;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.fraction-badge{padding:12px 13px;border-radius:20px;background:rgba(255,255,255,.10);border:1px solid var(--stroke);text-align:center;font-weight:560}.fraction-badge span{display:block;color:var(--muted);font-size:10px;font-weight:560;text-transform:uppercase;letter-spacing:.5px}
+
+    .metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.metric{border:1px solid var(--stroke);background:rgba(255,255,255,.09);border-radius:19px;padding:10px 10px 9px;overflow:hidden}.metric-top{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;font-weight:560;color:var(--muted)}.bar{height:8px;background:rgba(255,255,255,.12);border-radius:999px;margin-top:8px;overflow:hidden}.fill{height:100%;width:50%;border-radius:999px;background:linear-gradient(90deg,var(--blue),var(--good));transition:width .45s cubic-bezier(.2,.8,.2,1), background .3s ease}.fill.badfill{background:linear-gradient(90deg,var(--warn),var(--bad))}.metric.flash{animation:metricFlash .52s ease}@keyframes metricFlash{40%{transform:scale(1.025);border-color:rgba(115,210,255,.65);background:rgba(115,210,255,.16)}}
+
+    .event-zone{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px}.event-card{flex:1;min-height:190px;border-radius:32px;border:1px solid var(--stroke);background:linear-gradient(145deg,rgba(255,255,255,.16),rgba(255,255,255,.075));box-shadow:var(--shadow);padding:18px;position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between}.event-card:before{content:"";position:absolute;inset:-90px auto auto -80px;width:210px;height:210px;border-radius:999px;background:radial-gradient(circle,rgba(115,210,255,.2),transparent 67%)}.event-meta{display:flex;align-items:center;justify-content:space-between;gap:10px}.event-icon{font-size:42px;width:62px;height:62px;border-radius:22px;display:grid;place-items:center;background:rgba(255,255,255,.12);border:1px solid var(--stroke)}.severity{display:flex;gap:4px}.dot{width:8px;height:8px;border-radius:999px;background:rgba(255,255,255,.22)}.dot.on{background:var(--warn);box-shadow:0 0 14px rgba(255,209,102,.5)}.dot.danger.on{background:var(--bad);box-shadow:0 0 14px rgba(255,107,138,.5)}.event-title{font-size:25px;line-height:1.05;font-weight:560;letter-spacing:-.8px;margin:14px 0 8px}.event-desc{color:var(--muted);font-size:14px;line-height:1.35;font-weight:560}.event-tag{display:inline-flex;align-self:flex-start;margin-top:12px;padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.1);border:1px solid var(--stroke);font-size:11px;font-weight:560;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}.feedback{border-radius:22px;border:1px solid var(--stroke);background:rgba(255,255,255,.10);padding:12px 13px;line-height:1.25;font-weight:560;color:var(--text);min-height:44px;display:none}.feedback.show{display:block;animation:slideUp .34s ease}@keyframes slideUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+    .actions-title{display:flex;align-items:center;justify-content:space-between;color:var(--muted);font-size:12px;font-weight:560;text-transform:uppercase;letter-spacing:.45px}.actions{display:flex;gap:10px;overflow-x:auto;padding:1px 2px 10px;scroll-snap-type:x mandatory;scrollbar-width:none}.actions::-webkit-scrollbar{display:none}.action-card{scroll-snap-align:center;flex:0 0 74%;min-height:112px;border-radius:25px;border:1px solid var(--stroke);background:linear-gradient(145deg,rgba(255,255,255,.15),rgba(255,255,255,.075));box-shadow:0 14px 38px rgba(0,0,0,.18);padding:14px;text-align:left;position:relative;overflow:hidden;touch-action:pan-x pan-y;transition:transform .18s ease, border-color .18s ease, opacity .18s ease}.action-card:active{transform:scale(.985)}.action-card .aicon{font-size:24px}.action-card .alabel{font-weight:560;font-size:16px;margin-top:8px}.action-card .ahint{color:var(--muted);font-size:12px;line-height:1.25;margin-top:4px}.action-card:after{content:"↔";position:absolute;right:12px;top:12px;color:rgba(255,255,255,.28);font-weight:560}.action-card.commit{border-color:rgba(94,242,166,.75);transform:translateX(80px) rotate(3deg);opacity:.8}.action-card.reject{border-color:rgba(255,107,138,.75);transform:translateX(-80px) rotate(-3deg);opacity:.8}
+
+    .progress-wrap{height:9px;background:rgba(255,255,255,.12);border-radius:999px;overflow:hidden}.progress{height:100%;width:0%;background:linear-gradient(90deg,#73d2ff,#5ef2a6);border-radius:999px;transition:width .4s ease}.round-log{max-height:82px;overflow:auto;padding:10px;border-radius:18px;border:1px solid var(--stroke);background:rgba(0,0,0,.12);font-size:12px;line-height:1.3;color:var(--muted);scrollbar-width:none}.round-log::-webkit-scrollbar{display:none}.log-item{margin-bottom:6px}.log-item b{color:var(--text)}
+
+    .modal{position:absolute;inset:0;z-index:20;background:rgba(7,12,22,.72);backdrop-filter:blur(16px);display:none;align-items:center;justify-content:center;padding:20px}.modal.show{display:flex}.modal-card{width:min(680px,100%);max-height:86dvh;overflow:auto;border-radius:30px;border:1px solid var(--stroke);background:linear-gradient(155deg,rgba(26,36,61,.96),rgba(17,23,39,.96));box-shadow:var(--shadow);padding:18px}.modal-card h2{margin:3px 0 8px;letter-spacing:-1px}.modal-card p{color:var(--muted);line-height:1.4}.tutorial-steps{display:grid;gap:10px;margin:14px 0}.tutorial-step{display:flex;gap:10px;align-items:flex-start;border-radius:22px;padding:12px;background:rgba(255,255,255,.08);border:1px solid var(--stroke)}.tutorial-step .num{width:28px;height:28px;border-radius:999px;background:rgba(115,210,255,.2);display:grid;place-items:center;font-weight:560;color:#bfeeff;flex:0 0 auto}.form-grid{display:grid;gap:10px}.field label{display:block;color:var(--muted);font-size:12px;font-weight:560;margin:0 0 6px}.field input,.field select{width:100%;border:1px solid var(--stroke);background:rgba(0,0,0,.16);color:var(--text);border-radius:16px;padding:13px 12px;outline:none}.field input:focus,.field select:focus{border-color:rgba(115,210,255,.65)}
+
+    .leader-tabs{display:flex;gap:8px;overflow:auto;margin:10px 0}.leader-table{display:grid;gap:8px}.score-row{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;border:1px solid var(--stroke);background:rgba(255,255,255,.08);border-radius:18px;padding:10px}.rank{width:30px;height:30px;border-radius:999px;background:rgba(255,255,255,.1);display:grid;place-items:center;font-weight:560}.score-main{min-width:0}.score-main b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.score-main span{display:block;color:var(--muted);font-size:11px}.score-num{font-weight:560;font-size:19px}.badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.badge{border-radius:999px;padding:6px 8px;background:rgba(94,242,166,.12);border:1px solid rgba(94,242,166,.28);color:#b9ffd8;font-size:11px;font-weight:560}.badge.purple{background:rgba(184,146,255,.12);border-color:rgba(184,146,255,.32);color:#decfff}.badge.orange{background:rgba(255,179,92,.12);border-color:rgba(255,179,92,.30);color:#ffe1bd}.badge.red{background:rgba(255,107,138,.12);border-color:rgba(255,107,138,.30);color:#ffc1cf}
+
+    .end-score{font-size:58px;font-weight:560;letter-spacing:-3px;margin:4px 0;background:linear-gradient(135deg,#73d2ff,#5ef2a6);-webkit-background-clip:text;background-clip:text;color:transparent}.summary-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0}.summary-tile{border:1px solid var(--stroke);border-radius:20px;padding:12px;background:rgba(255,255,255,.08)}.summary-tile span{display:block;color:var(--muted);font-size:11px;font-weight:560;text-transform:uppercase;letter-spacing:.4px}.summary-tile b{font-size:20px}.toast{position:absolute;z-index:50;left:50%;bottom:calc(24px + var(--safe-bottom));transform:translateX(-50%) translateY(20px);opacity:0;background:rgba(8,12,22,.86);border:1px solid var(--stroke);box-shadow:0 12px 40px rgba(0,0,0,.35);border-radius:999px;padding:11px 14px;font-weight:560;transition:.25s ease;pointer-events:none;white-space:nowrap}.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
+    .hidden{display:none!important}.fade-pop{animation:fadePop .42s cubic-bezier(.2,.8,.2,1)}@keyframes fadePop{from{opacity:0;transform:translateY(12px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+    @media(min-width:650px){.app{border-left:1px solid rgba(255,255,255,.08);border-right:1px solid rgba(255,255,255,.08)}.hero h1{font-size:62px}.metrics{grid-template-columns:repeat(3,minmax(0,1fr))}.action-card{flex-basis:42%}.case-list{grid-template-columns:repeat(3,minmax(0,1fr))}}
+    @media(max-height:720px){.hero{min-height:178px}.hero h1{font-size:38px}.metrics{gap:7px}.metric{padding:8px}.event-card{min-height:158px}.event-title{font-size:22px}.action-card{min-height:98px}.round-log{display:none}}
+  
+    /* ---- Mode clair (charte) ---- */
+    html[data-theme="light"]{
+      --bg:#f7f8fb; --bg2:#ffffff; --panel:rgba(17,24,39,.05); --panel2:rgba(17,24,39,.09);
+      --stroke:rgba(17,24,39,.11); --text:#111827; --muted:#667085; --shadow:0 16px 42px rgba(15,23,42,.08);
+    }
+    html[data-theme="light"] body{
+      background:
+        radial-gradient(circle at 15% 5%, rgba(37,87,214,.10), transparent 35%),
+        radial-gradient(circle at 92% 12%, rgba(168,85,247,.09), transparent 32%),
+        radial-gradient(circle at 30% 95%, rgba(4,120,87,.07), transparent 30%),
+        linear-gradient(160deg,#eef2f9 0%, #f7f8fb 45%, #eceff6 100%);
+    }
+    html[data-theme="light"] .pill{ background:rgba(17,24,39,.05); }
+    html[data-theme="light"] .pill.active{ background:rgba(37,87,214,.14); border-color:rgba(37,87,214,.4); }
+    /* ---- Identité Onco Arcade ---- */
+    .hero h1{ background:linear-gradient(120deg,var(--text),var(--blue) 45%,var(--purple)); -webkit-background-clip:text; background-clip:text; color:transparent; -webkit-text-fill-color:transparent; }
+    .oa-eyebrow{ display:inline-flex; align-items:center; gap:8px; font-size:11px; font-weight:560; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+    .oa-eyebrow i{ width:7px; height:7px; border-radius:999px; background:var(--good); box-shadow:0 0 0 5px color-mix(in srgb,var(--good) 14%,transparent); }
+    .oa-links{ display:flex; gap:9px; justify-content:center; flex-wrap:wrap; }
+    .oa-links a, .oa-links button.oa-link{ font-size:12.5px; color:var(--muted); text-decoration:none; background:none; border:1px solid var(--stroke); border-radius:999px; padding:9px 14px; cursor:pointer; }
+    .oa-links a:hover, .oa-links button.oa-link:hover{ color:var(--text); }
+    .oa-sig{ display:flex; align-items:center; gap:12px; margin:12px 0; }
+    .oa-sig .mk{ width:34px; height:34px; border-radius:11px; flex:none; background:conic-gradient(from 180deg,var(--blue),var(--purple),var(--bad),var(--warn),var(--good),var(--blue)); }
+    .oa-sig b{ display:block; font-size:14px; } .oa-sig span{ display:block; font-size:12px; color:var(--muted); }
+
+/* Onco Arcade patch: readable tutorial and shared visual language */
+html[data-theme="light"]{
+  --bg:#f7f8fb;--bg2:#ffffff;--panel:rgba(255,255,255,.82);--panel2:rgba(255,255,255,.97);--stroke:rgba(17,24,39,.11);--text:#111827;--muted:#667085;--blue:#2557d6;--purple:#6d28d9;--good:#047857;--warn:#b45309;--bad:#c2414b;--shadow:0 16px 42px rgba(15,23,42,.08);
+}
+html[data-theme="light"] body{background:radial-gradient(circle at 14% 6%,rgba(37,87,214,.10),transparent 34%),radial-gradient(circle at 88% 8%,rgba(192,38,120,.06),transparent 32%),#f7f8fb;}
+html[data-theme="light"] .hero,html[data-theme="light"] .card,html[data-theme="light"] .patient-strip,html[data-theme="light"] .fraction-badge,html[data-theme="light"] .event-card{background:rgba(255,255,255,.86);border-color:rgba(17,24,39,.11);color:#111827;box-shadow:var(--shadow);}
+html[data-theme="light"] .btn.secondary,html[data-theme="light"] .pill,html[data-theme="light"] .chip{background:rgba(255,255,255,.86);border-color:rgba(17,24,39,.11);color:#111827;}
+.modal{position:fixed;inset:0;z-index:30;background:rgba(7,10,18,.62);backdrop-filter:blur(12px);overflow-y:auto;align-items:flex-start;justify-content:center;padding:18px 14px;}
+.modal.show{display:flex;}
+.modal-card{width:min(640px,100%);max-height:none;overflow:visible;margin:auto 0;border-radius:18px;border:1px solid var(--stroke);background:var(--panel2);color:var(--text);box-shadow:var(--shadow);padding:22px;}
+.modal-card h2{font-size:clamp(22px,5vw,30px);letter-spacing:-.04em;color:var(--text);}
+.modal-card p{font-size:14px;color:var(--muted);line-height:1.55;}
+.tutorial-steps{gap:9px;}
+.tutorial-step{border-radius:14px;padding:12px 13px;background:rgba(122,162,255,.10);border:1px solid var(--stroke);color:var(--text);line-height:1.45;font-weight:560;}
+.tutorial-step .num{background:linear-gradient(135deg,var(--blue),var(--purple));color:white;}
+html[data-theme="light"] .modal{background:rgba(17,24,39,.32);}
+@media(max-width:560px){.modal{padding:10px;}.modal-card{margin:0;border-radius:16px;padding:16px}.tutorial-step{font-size:14px}.button-row{flex-wrap:wrap}}
+
+</style>
+<script id="onco-arcade-query-sync">
+(function(){
+  try{
+    var p=new URLSearchParams(location.search);
+    var theme=(p.get('theme')||'').toLowerCase();
+    if(theme==='dark'||theme==='light'){document.documentElement.setAttribute('data-theme',theme);localStorage.setItem('oa-theme',theme);}
+    var lang=(p.get('lang')||'').toLowerCase();
+    if(lang==='fr'||lang==='en'){document.documentElement.lang=lang;localStorage.setItem('oa-lang',lang);localStorage.setItem('vrt_lang',lang);}
+  }catch(e){}
+})();
+</script>
+
+<style id="oa-fraction-scroll-final">
+
+/* Onco Arcade fix 2026-07: Fraction Hero scroll after home */
+html,body{
+  height:auto !important;
+  min-height:100% !important;
+  overflow-x:hidden !important;
+  overflow-y:auto !important;
+  overscroll-behavior-y:auto !important;
+  -webkit-overflow-scrolling:touch;
+}
+body{overflow-y:auto !important;}
+.app{
+  height:auto !important;
+  min-height:100svh !important;
+  overflow:visible !important;
+  padding-bottom:calc(18px + var(--safe-bottom)) !important;
+}
+.screen{
+  overflow-x:hidden !important;
+  overflow-y:auto !important;
+  -webkit-overflow-scrolling:touch !important;
+  padding-bottom:calc(28px + var(--safe-bottom)) !important;
+}
+.screen.active{pointer-events:auto !important;}
+#game.screen{
+  display:flex !important;
+  flex-direction:column !important;
+  gap:12px !important;
+}
+#game .event-zone{flex:0 0 auto !important; min-height:auto !important;}
+#game .event-card{flex:0 0 auto !important; min-height:170px !important;}
+#game .actions{padding-bottom:14px !important;}
+@media(max-width:560px){
+  .screen{left:10px !important; right:10px !important; top:calc(62px + var(--safe-top)) !important; bottom:calc(10px + var(--safe-bottom)) !important;}
+  #game .metrics{grid-template-columns:1fr 1fr !important;}
+  #game .event-title{font-size:22px !important;}
+  #game .action-card{min-width:78% !important;}
+}
+
+</style>
+
+<style id="oa-fraction-mobile-game-scroll-hardfix">
+
+/* Hard mobile fix: screens become normal document sections, so the game can scroll after the home screen */
+@media (max-width: 760px), (pointer: coarse) {
+  html, body {
+    height: auto !important;
+    min-height: 100% !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  body { overflow-y: auto !important; touch-action: auto !important; }
+  .app {
+    height: auto !important;
+    min-height: 100svh !important;
+    overflow: visible !important;
+    position: relative !important;
+    padding: calc(10px + var(--safe-top)) 10px calc(28px + var(--safe-bottom)) !important;
+  }
+  .topbar {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 20 !important;
+    backdrop-filter: blur(18px) !important;
+  }
+  .screen {
+    position: static !important;
+    left: auto !important;
+    right: auto !important;
+    top: auto !important;
+    bottom: auto !important;
+    display: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    pointer-events: none !important;
+    overflow: visible !important;
+    min-height: auto !important;
+    max-height: none !important;
+    padding-bottom: calc(26px + var(--safe-bottom)) !important;
+  }
+  .screen.active {
+    display: flex !important;
+    pointer-events: auto !important;
+  }
+  .screen.scroll { overflow: visible !important; }
+  #game.screen {
+    gap: 12px !important;
+    min-height: auto !important;
+  }
+  #game .event-zone,
+  #game .event-card {
+    flex: 0 0 auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+  }
+  #game .event-card { padding: 15px !important; }
+  #game .actions {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding-bottom: 18px !important;
+  }
+  #game .action-card { flex-basis: 82% !important; }
+  .modal {
+    align-items: flex-start !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding: 14px 10px calc(24px + var(--safe-bottom)) !important;
+  }
+}
+
+</style>
+<style id="oa-charte-conformance">
+/* Conformité charte : pas de capitales forcées, poids légers, police système sur le chrome du menu */
+.oa-eyebrow{ text-transform:none !important; letter-spacing:.01em !important; font-weight:500 !important; font-size:13px !important; }
+.oa-title{ font-weight:500 !important; }
+</style>
+<style id="oa-vh-fill">
+/* Plein ecran mobile : le fond remplit tout le viewport, y compris sous la Dynamic Island */
+html{ background:var(--bg, #070a12) !important; min-height:100dvh; }
+html[data-theme="light"]{ background:var(--bg, #f7f8fb) !important; }
+</style>
+<style id="oa-charter-weights">b,strong{font-weight:560}</style>
+<style id="oa-hide-inner-pseudo">/* pseudo demande une seule fois par l'overlay commun : saisie interne masquee */ .field:has(#pseudoInput){display:none!important}</style>
+</head>
+<body>
+  <div class="app" id="app">
+    <div class="orb one"></div><div class="orb two"></div><div class="orb three"></div>
+    <header class="topbar">
+      <div class="brand" aria-label="Fraction Hero"><div class="brandmark"><span>⚕</span></div><div>Fraction<br><span class="muted">Hero</span></div></div>
+      <div class="top-actions">
+        <button class="pill" id="soundBtn" type="button" aria-label="Sound">♪</button>
+        <button class="pill active" id="langBtn" type="button">EN</button>
+        <button class="pill" id="themeBtn" type="button" aria-label="Thème clair / sombre">☾</button>
+      </div>
+    </header>
+
+    <section id="home" class="screen active scroll">
+      <div class="hero">
+        <div class="oa-eyebrow"><i></i><span data-i18n="oaEyebrow">Onco Arcade · radiothérapie</span></div>
+        <h1 data-i18n="homeTitle">Fraction Hero</h1>
+        <p data-i18n="homeSubtitle">Le roguelite clinique où chaque fraction est une décision. Sauvez le TCP, domptez la NTCP et gardez la machine en vie.</p>
+        <div class="hero-visual"><div class="linac"><div class="gantry"></div><div class="beam"></div><div class="bed"></div><div class="patient-dot"></div></div></div>
+      </div>
+      <div class="grid">
+        <button class="card btn secondary" id="tutorialBtn" type="button"><span data-i18n="tutorial">Tutoriel</span></button>
+        <button class="card btn secondary" id="leaderBtn" type="button"><span data-i18n="leaderboard">Leaderboard</span></button>
+      </div>
+      <button class="btn hidden" id="continueBtn" type="button" data-i18n="continueGame">Continuer la partie</button>
+
+      <div class="card">
+        <h3 data-i18n="chooseMode">Choisis un mode</h3>
+        <div class="chips" id="modeChips"></div>
+      </div>
+      <div class="card">
+        <h3 data-i18n="chooseCase">Choisis un cas</h3>
+        <div class="case-list" id="caseList"></div>
+      </div>
+      <div class="button-row">
+        <button class="btn" id="startBtn" type="button" data-i18n="startTreatment">Démarrer le traitement</button>
+      </div>
+      <div class="oa-links">
+        <a href="../../index.html" data-i18n="allGames">Tous les jeux</a>
+        <button class="oa-link" id="aboutBtn" type="button" data-i18n="about">À propos</button>
+      </div>
+      <button class="btn secondary hidden" id="settingsBtn" type="button" data-i18n="settings">Réglages</button>
+    </section>
+
+    <section id="game" class="screen scroll">
+      <div class="game-head">
+        <div class="patient-strip">
+          <div class="avatar" id="avatar">🧑‍⚕️</div>
+          <div style="min-width:0">
+            <div class="patient-name" id="patientName">Patient</div>
+            <div class="tiny muted" id="rxLine">Rx</div>
+          </div>
+        </div>
+        <div class="fraction-badge"><span data-i18n="fraction">Fraction</span><div id="fractionText">1/10</div></div>
+      </div>
+      <div class="progress-wrap"><div class="progress" id="progress"></div></div>
+      <div class="metrics" id="metrics"></div>
+      <div class="event-zone">
+        <div class="event-card" id="eventCard">
+          <div>
+            <div class="event-meta"><div class="event-icon" id="eventIcon">🫧</div><div class="severity" id="severityDots"></div></div>
+            <div class="event-title" id="eventTitle">Event</div>
+            <div class="event-desc" id="eventDesc">Description</div>
+          </div>
+          <div class="event-tag" id="eventTag">CBCT</div>
+        </div>
+        <div class="feedback" id="feedback"></div>
+        <div class="actions-title"><span data-i18n="chooseAction">Choisis une action</span><span data-i18n="swipeHint">tape ou glisse</span></div>
+        <div class="actions" id="actions"></div>
+        <div class="round-log" id="roundLog"></div>
+      </div>
+    </section>
+
+    <section id="end" class="screen scroll">
+      <div class="card">
+        <h2 data-i18n="endTitle">Traitement terminé</h2>
+        <div class="end-score" id="finalScore">0</div>
+        <p id="endMessage" class="muted">Résumé</p>
+        <div class="badges" id="badgeBox"></div>
+      </div>
+      <div class="summary-grid" id="summaryGrid"></div>
+      <div class="card">
+        <div class="field"><label data-i18n="pseudoLabel">Pseudo</label><input id="pseudoInput" maxlength="22" autocomplete="nickname" placeholder="Dr Fraction"></div>
+        <button class="btn" id="saveScoreBtn" type="button" data-i18n="saveScore">Enregistrer le score</button>
+      </div>
+      <div class="button-row">
+        <button class="btn secondary" id="againBtn" type="button" data-i18n="playAgain">Rejouer</button>
+        <button class="btn secondary" id="endLeaderBtn" type="button" data-i18n="leaderboard">Leaderboard</button>
+      </div>
+    </section>
+
+    <div class="modal" id="tutorialModal" role="dialog" aria-modal="true">
+      <div class="modal-card">
+        <h2 data-i18n="tutorialTitle">Comment jouer</h2>
+        <p data-i18n="tutorialIntro">Chaque tour est une fraction. Lis l’événement, choisis une action et vise le meilleur équilibre clinique.</p>
+        <div class="tutorial-steps">
+          <div class="tutorial-step"><div class="num">1</div><div data-i18n="tut1">TCP monte quand tu traites efficacement. Mais attention aux anatomies douteuses.</div></div>
+          <div class="tutorial-step"><div class="num">2</div><div data-i18n="tut2">NTCP et stress doivent rester bas. Le temps machine est précieux.</div></div>
+          <div class="tutorial-step"><div class="num">3</div><div data-i18n="tut3">Les actions prudentes coûtent du temps, mais sauvent parfois la partie.</div></div>
+          <div class="tutorial-step"><div class="num">4</div><div data-i18n="tut4">À la fin, ton score dépend du contrôle tumoral, de la toxicité, du patient, du plan et de l’équipe.</div></div>
+        </div>
+        <button class="btn" id="closeTutorial" type="button" data-i18n="gotIt">Compris</button>
+      </div>
+    </div>
+
+    <div class="modal" id="aboutModal" role="dialog" aria-modal="true">
+      <div class="modal-card">
+        <div class="oa-eyebrow"><i></i><span data-i18n="oaEyebrow">Onco Arcade · radiothérapie</span></div>
+        <h2 data-i18n="about">À propos</h2>
+        <p data-i18n="aboutLede">—</p>
+        <div class="oa-sig"><span class="mk"></span><div><b>Pr Jean-Emmanuel Bibault</b><span data-i18n="aboutRole">—</span></div></div>
+        <p class="muted" data-i18n="aboutDisc">—</p>
+        <div class="button-row">
+          <button class="btn" id="closeAbout" type="button" data-i18n="close">Fermer</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal" id="leaderModal" role="dialog" aria-modal="true">
+      <div class="modal-card">
+        <h2 data-i18n="leaderboard">Leaderboard</h2>
+        <div class="leader-tabs">
+          <button class="chip selected" data-leader-filter="global" data-i18n="global">Global</button>
+          <button class="chip" data-leader-filter="case" data-i18n="byCase">Par cas</button>
+          <button class="chip" data-leader-filter="mode" data-i18n="byMode">Par mode</button>
+        </div>
+        <div class="leader-table" id="leaderTable"></div>
+        <div class="button-row" style="margin-top:12px">
+          <button class="btn secondary" id="refreshLeader" type="button" data-i18n="refresh">Actualiser</button>
+          <button class="btn" id="closeLeader" type="button" data-i18n="close">Fermer</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal" id="settingsModal" role="dialog" aria-modal="true">
+      <div class="modal-card">
+        <h2 data-i18n="settings">Réglages</h2>
+        <p data-i18n="settingsIntro">Colle ici les paramètres Supabase si tu veux un leaderboard distant. Laisse vide pour utiliser uniquement localStorage.</p>
+        <div class="form-grid">
+          <div class="field"><label>Supabase URL</label><input id="supabaseUrl" placeholder="https://xxxx.supabase.co"></div>
+          <div class="field"><label>Supabase anon key</label><input id="supabaseKey" placeholder="eyJ... "></div>
+          <div class="field"><label data-i18n="tableName">Nom de table</label><input id="supabaseTable" placeholder="fraction_hero_scores"></div>
+        </div>
+        <div class="button-row" style="margin-top:12px">
+          <button class="btn secondary" id="closeSettings" type="button" data-i18n="close">Fermer</button>
+          <button class="btn" id="saveSettings" type="button" data-i18n="save">Sauver</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast">OK</div>
+  </div>
+
+  <script>
+  "use strict";
+
+  /*
+    Fraction Hero — static mobile game.
+    Supabase setup:
+    1) Create a table named fraction_hero_scores (or change the table in settings).
+    2) Columns: id uuid default gen_random_uuid() primary key, pseudo text, score int,
+       case_key text, case_name text, mode_key text, mode_name text, tcp numeric, ntcp numeric,
+       satisfaction numeric, machine_time numeric, adaptations int, badges jsonb, created_at timestamptz default now().
+    3) Enable insert/select with RLS policies appropriate for a public leaderboard.
+  */
+  window.FRACTION_HERO_CONFIG = window.FRACTION_HERO_CONFIG || {
+    supabaseUrl: "",
+    supabaseAnonKey: "",
+    tableName: "fraction_hero_scores"
+  };
+
+  const STORAGE = {
+    save: "fractionHero.save.v1",
+    scores: "fractionHero.scores.v1",
+    settings: "fractionHero.settings.v1",
+    seenTutorial: "fractionHero.seenTutorial.v1"
+  };
+
+  const i18n = {
+    fr: {
+      homeTitle:"Fraction Hero",
+      homeSubtitle:"Le roguelite clinique où chaque fraction est une décision. Sauvez le TCP, domptez la NTCP et gardez la machine en vie.",
+      tutorial:"Tutoriel", leaderboard:"Leaderboard", continueGame:"Continuer la partie", chooseMode:"Choisis un mode", chooseCase:"Choisis un cas", startTreatment:"Démarrer le traitement", settings:"Réglages", staticHint:"Site statique : le leaderboard utilise Supabase si configuré, sinon localStorage.",
+      fraction:"Fraction", chooseAction:"Choisis une action", swipeHint:"fais défiler · tape pour choisir", tutorialTitle:"Comment jouer", tutorialIntro:"Chaque tour est une fraction. Lis l’événement, choisis une action et vise le meilleur équilibre clinique.",
+      tut1:"TCP monte quand tu traites efficacement. Mais attention aux anatomies douteuses.", tut2:"NTCP et stress doivent rester bas. Le temps machine est précieux.", tut3:"Les actions prudentes coûtent du temps, mais sauvent parfois la partie.", tut4:"À la fin, ton score dépend du contrôle tumoral, de la toxicité, du patient, du plan et de l’équipe.", gotIt:"Compris",
+      global:"Global", byCase:"Par cas", byMode:"Par mode", refresh:"Actualiser", close:"Fermer", settingsIntro:"Colle ici les paramètres Supabase si tu veux un leaderboard distant. Laisse vide pour utiliser uniquement localStorage.", tableName:"Nom de table", save:"Sauver",
+      oaEyebrow:"Onco Arcade · radiothérapie", allGames:"Tous les jeux", about:"À propos",
+      aboutLede:"Fraction Hero est un mini-jeu de la collection Onco Arcade : un roguelite clinique où chaque fraction est une décision — sauve le TCP, dompte la NTCP et garde la machine en vie. Imaginé, conçu et développé par :",
+      aboutRole:"Professeur de radiothérapie · créateur d’Onco Arcade",
+      aboutDisc:"Jeu pédagogique et expérimental. Ce n’est pas un dispositif médical : il ne remplace pas une formation clinique et ne doit jamais servir à orienter une prise en charge réelle.",
+      endTitle:"Traitement terminé", pseudoLabel:"Pseudo", saveScore:"Enregistrer le score", playAgain:"Rejouer", noScores:"Aucun score pour l’instant. À toi d’ouvrir le bal.", savedLocal:"Score enregistré localement", savedRemote:"Score enregistré dans Supabase", configSaved:"Réglages sauvegardés", soundOn:"Sons activés", soundOff:"Sons coupés",
+      tcp:"Contrôle tumoral", ntcp:"Toxicité", satisfaction:"Patient", machine:"Machine", robustness:"Robustesse", stress:"Stress", minutes:"min", adaptations:"Adaptations", finalCase:"Cas", finalMode:"Mode", finalTCP:"TCP", finalNTCP:"NTCP", finalMachine:"Temps machine",
+      mode_quick_name:"Rapide", mode_quick_desc:"10 fractions. Dense, nerveux, parfait en pause café.", mode_standard_name:"Standard", mode_standard_desc:"25 à 35 fractions. Le vrai marathon clinique.", mode_sbrt_name:"SBRT", mode_sbrt_desc:"Peu de fractions. Tolérance faible aux erreurs.", mode_chaos_name:"Chaos", mode_chaos_desc:"Service saturé, imprévus absurdes, staff héroïque.",
+      action_treat:"Traiter", action_repeatImaging:"Refaire l’imagerie", action_adaptPlan:"Adapter le plan", action_pause:"Interrompre", action_callDoctor:"Appeler le médecin", action_adjustImmobilization:"Modifier la contention", action_replan:"Replanifier", action_reduceMargin:"Réduire la marge", action_checkLabs:"Vérifier la biologie", action_supportiveCare:"Soins de support", action_reschedule:"Reprogrammer", action_optimizePlan:"Optimiser le plan", action_validateAI:"Valider l’IA", action_askPhysics:"Appeler la physique",
+      hint_treat:"Rapide, efficace… si tout est acceptable.", hint_repeatImaging:"Coûte du temps, gagne en certitude.", hint_adaptPlan:"Long mais puissant quand l’anatomie change.", hint_pause:"Sécurise, mais casse le flux du traitement.", hint_callDoctor:"La carte joker du staff prudent.", hint_adjustImmobilization:"Un bon masque vaut parfois un replan.", hint_replan:"L’artillerie lourde de l’adaptation.", hint_reduceMargin:"Épargne les OAR, mais attention au target miss.", hint_checkLabs:"Indispensable si le patient devient fragile.", hint_supportiveCare:"Le patient remercie, l’équipe respire.", hint_reschedule:"Pas élégant, parfois nécessaire.", hint_optimizePlan:"Fait briller les DVH, consomme du cerveau.", hint_validateAI:"L’IA a confiance. Toi, vérifie.", hint_askPhysics:"Le physicien soupire, puis sauve la journée.",
+      tag_anatomy:"Anatomie", tag_clinical:"Clinique", tag_machine:"Machine", tag_image:"Image", tag_rare:"Rare", tag_ai:"IA", tag_motion:"Mouvement", tag_patient:"Patient", tag_planning:"Planning",
+      fb_best:"Décision brillante. Le staff te regarde comme si tu venais d’inventer l’IGRT.", fb_ok:"Correct. Pas spectaculaire, mais la fraction avance sans drame.", fb_bad:"Aïe. Le comité qualité vient de lever un sourcil.", fb_rare:"Événement rare maîtrisé. Badge invisible du héros de plateau technique.",
+      end_excellent:"Parcours premium : TCP solide, toxicité maîtrisée, équipe encore civilisée.", end_good:"Bon traitement. Quelques sueurs froides, mais le patient sort gagnant.", end_mid:"Traitement terminé, mais la RMM a déjà réservé une salle.", end_low:"Le service survit. Le plan, lui, demande une deuxième saison.",
+      badge_robust:"Plan robuste", badge_happy:"Patient heureux", badge_machine:"Machine whisperer", badge_toxicity:"Toxicity saver", badge_adaptive:"Adaptive hero", badge_calm:"Staff zen", badge_sbrt:"SBRT samurai",
+      rankCase:"cas", rankMode:"mode"
+    },
+    en: {
+      homeTitle:"Fraction Hero",
+      homeSubtitle:"The clinical roguelite where every fraction is a decision. Save TCP, tame NTCP, and keep the linac alive.",
+      tutorial:"Tutorial", leaderboard:"Leaderboard", continueGame:"Continue game", chooseMode:"Choose a mode", chooseCase:"Choose a case", startTreatment:"Start treatment", settings:"Settings", staticHint:"Static site: leaderboard uses Supabase when configured, otherwise localStorage.",
+      fraction:"Fraction", chooseAction:"Choose an action", swipeHint:"scroll · tap to choose", tutorialTitle:"How to play", tutorialIntro:"Each turn is one fraction. Read the event, choose an action, and aim for the best clinical balance.",
+      tut1:"TCP rises when you treat efficiently. But suspicious anatomy can hurt you.", tut2:"NTCP and stress should stay low. Machine time is precious.", tut3:"Cautious actions cost time, but sometimes save the run.", tut4:"At the end, your score depends on tumor control, toxicity, patient experience, planning and team stress.", gotIt:"Got it",
+      global:"Global", byCase:"By case", byMode:"By mode", refresh:"Refresh", close:"Close", settingsIntro:"Paste Supabase settings here if you want a remote leaderboard. Leave blank for localStorage only.", tableName:"Table name", save:"Save",
+      oaEyebrow:"Onco Arcade · radiation oncology", allGames:"All games", about:"About",
+      aboutLede:"Fraction Hero is a mini-game from the Onco Arcade collection: a clinical roguelite where every fraction is a decision — save the TCP, tame the NTCP and keep the machine alive. Imagined, designed and built by:",
+      aboutRole:"Professor of radiation oncology · creator of Onco Arcade",
+      aboutDisc:"Educational, experimental game. It is not a medical device: it does not replace clinical training and must never be used to guide real patient care.",
+      endTitle:"Treatment completed", pseudoLabel:"Nickname", saveScore:"Save score", playAgain:"Play again", noScores:"No scores yet. Be the first hero.", savedLocal:"Score saved locally", savedRemote:"Score saved to Supabase", configSaved:"Settings saved", soundOn:"Sound on", soundOff:"Sound off",
+      tcp:"Tumor control", ntcp:"Toxicity", satisfaction:"Patient", machine:"Machine", robustness:"Robustness", stress:"Stress", minutes:"min", adaptations:"Adaptations", finalCase:"Case", finalMode:"Mode", finalTCP:"TCP", finalNTCP:"NTCP", finalMachine:"Machine time",
+      mode_quick_name:"Quick", mode_quick_desc:"10 fractions. Dense, snappy, perfect for a coffee break.", mode_standard_name:"Standard", mode_standard_desc:"25 to 35 fractions. The true clinical marathon.", mode_sbrt_name:"SBRT", mode_sbrt_desc:"Few fractions. Very low tolerance for mistakes.", mode_chaos_name:"Chaos", mode_chaos_desc:"Overloaded department, absurd surprises, heroic staff.",
+      action_treat:"Treat", action_repeatImaging:"Repeat imaging", action_adaptPlan:"Adapt plan", action_pause:"Interrupt", action_callDoctor:"Call physician", action_adjustImmobilization:"Adjust immobilization", action_replan:"Replan", action_reduceMargin:"Reduce margin", action_checkLabs:"Check labs", action_supportiveCare:"Supportive care", action_reschedule:"Reschedule", action_optimizePlan:"Optimize plan", action_validateAI:"Validate AI", action_askPhysics:"Call physics",
+      hint_treat:"Fast and effective… if everything is acceptable.", hint_repeatImaging:"Costs time, buys certainty.", hint_adaptPlan:"Slow but powerful when anatomy changes.", hint_pause:"Safe, but disrupts the treatment flow.", hint_callDoctor:"The cautious staff’s joker card.", hint_adjustImmobilization:"A good mask can beat a replan.", hint_replan:"The heavy artillery of adaptation.", hint_reduceMargin:"Spares OARs, but beware of target miss.", hint_checkLabs:"Essential when the patient becomes fragile.", hint_supportiveCare:"The patient is grateful, the team breathes.", hint_reschedule:"Not elegant, sometimes necessary.", hint_optimizePlan:"Makes DVHs shine, consumes brainpower.", hint_validateAI:"The AI is confident. You still verify.", hint_askPhysics:"The physicist sighs, then saves the day.",
+      tag_anatomy:"Anatomy", tag_clinical:"Clinical", tag_machine:"Machine", tag_image:"Image", tag_rare:"Rare", tag_ai:"AI", tag_motion:"Motion", tag_patient:"Patient", tag_planning:"Planning",
+      fb_best:"Brilliant decision. The staff looks at you as if you just invented IGRT.", fb_ok:"Acceptable. Not spectacular, but the fraction moves forward.", fb_bad:"Ouch. The quality committee just raised an eyebrow.", fb_rare:"Rare event mastered. Invisible badge of the treatment-room hero.",
+      end_excellent:"Premium course: solid TCP, controlled toxicity, team still civilized.", end_good:"Good treatment. A few cold sweats, but the patient wins.", end_mid:"Treatment completed, but the morbidity meeting already booked a room.", end_low:"The department survives. The plan, however, needs a second season.",
+      badge_robust:"Robust plan", badge_happy:"Happy patient", badge_machine:"Machine whisperer", badge_toxicity:"Toxicity saver", badge_adaptive:"Adaptive hero", badge_calm:"Calm staff", badge_sbrt:"SBRT samurai",
+      rankCase:"case", rankMode:"mode"
+    }
+  };
+
+  const cases = [
+    {key:"prostate", icon:"🥜", accent:"#73d2ff", tags:["pelvis","prostate"], name:{fr:"Prostate",en:"Prostate"}, rxByMode:{
+      quick:{fr:"Prostate • run rapide 30 Gy/10 fr — vessie/rectum disciplinés",en:"Prostate • quick run 30 Gy/10 fx — bladder/rectum discipline"},
+      standard:{fr:"Prostate • 60 Gy/20 fr ou 78 Gy/39 fr — IGRT quotidienne",en:"Prostate • 60 Gy/20 fx or 78 Gy/39 fx — daily IGRT"},
+      sbrt:{fr:"Prostate SBRT • 36,25–40 Gy/5 fr — marge serrée, zéro improvisation",en:"Prostate SBRT • 36.25–40 Gy/5 fx — tight margins, no improvisation"},
+      chaos:{fr:"Prostate chaos • 20 fr compressées — vessie variable, machine grognon",en:"Prostate chaos • compressed 20-fx course — variable bladder, grumpy linac"}
+    }, base:{tcp:15,ntcp:8,satisfaction:82,machine:82,robustness:64,stress:28}, sensitivity:1.0, toxicity:1.0},
+    {key:"leftBreast", icon:"💗", accent:"#ff9ecb", tags:["breast","breathhold"], name:{fr:"Sein gauche",en:"Left breast"}, rxByMode:{
+      quick:{fr:"Sein gauche • run rapide 30 Gy/10 fr — DIBH express, cœur à distance",en:"Left breast • quick run 30 Gy/10 fx — express DIBH, heart at distance"},
+      standard:{fr:"Sein gauche • 40–50 Gy en 15–25 fr — DIBH et contrainte cœur",en:"Left breast • 40–50 Gy in 15–25 fx — DIBH and heart constraint"},
+      sbrt:{fr:"Sein gauche focal • APBI 30 Gy/5 fr — clip visible, cœur protégé",en:"Focal left breast • APBI 30 Gy/5 fx — visible clip, protected heart"},
+      chaos:{fr:"Sein gauche chaos • DIBH capricieux, planning serré, boost à caser",en:"Left breast chaos • moody DIBH, tight schedule, boost to squeeze in"}
+    }, base:{tcp:18,ntcp:6,satisfaction:86,machine:84,robustness:68,stress:24}, sensitivity:0.95, toxicity:.85},
+    {key:"lungSbrt", icon:"🫁", accent:"#9fe8ff", tags:["lung","motion","sbrt"], name:{fr:"Poumon",en:"Lung"}, rxByMode:{
+      quick:{fr:"Poumon • run rapide 30 Gy/10 fr — mouvement respiratoire surveillé",en:"Lung • quick run 30 Gy/10 fx — respiratory motion watched"},
+      standard:{fr:"Poumon • 60–66 Gy en 30–33 fr — 4DCT, cœur/poumons sous contrôle",en:"Lung • 60–66 Gy in 30–33 fx — 4DCT, heart/lungs controlled"},
+      sbrt:{fr:"Poumon SBRT • 48–54 Gy/3–5 fr — Bragg mental sur cible mobile",en:"Lung SBRT • 48–54 Gy/3–5 fx — mental Bragg peak on a moving target"},
+      chaos:{fr:"Poumon chaos • toux, retard machine, ITV qui danse la salsa",en:"Lung chaos • coughs, linac delay, ITV dancing salsa"}
+    }, base:{tcp:25,ntcp:10,satisfaction:80,machine:78,robustness:58,stress:36}, sensitivity:1.25, toxicity:1.35},
+    {key:"hn", icon:"🗣️", accent:"#c6a5ff", tags:["headneck","mucositis","weight"], name:{fr:"ORL",en:"Head & neck"}, rxByMode:{
+      quick:{fr:"ORL • run rapide 30 Gy/10 fr — masque exigeant, nutrition active",en:"Head & neck • quick run 30 Gy/10 fx — demanding mask, active nutrition"},
+      standard:{fr:"ORL • 70 Gy/35 fr — parotides, moelle et poids sous tension",en:"Head & neck • 70 Gy/35 fx — parotids, cord and weight under pressure"},
+      sbrt:{fr:"ORL SBRT • 35–40 Gy/5 fr — récidive focale, contrainte moelle sacrée",en:"Head & neck SBRT • 35–40 Gy/5 fx — focal recurrence, sacred cord constraint"},
+      chaos:{fr:"ORL chaos • masque lâche, mucite, perte de poids et créneau impossible",en:"Head & neck chaos • loose mask, mucositis, weight loss and impossible slot"}
+    }, base:{tcp:12,ntcp:15,satisfaction:72,machine:76,robustness:52,stress:42}, sensitivity:1.05, toxicity:1.25},
+    {key:"rectum", icon:"🌀", accent:"#ffcf7a", tags:["pelvis","rectum","chemo"], name:{fr:"Rectum",en:"Rectum"}, rxByMode:{
+      quick:{fr:"Rectum • run rapide 30 Gy/10 fr — intestin susceptible, timing chirurgical",en:"Rectum • quick run 30 Gy/10 fx — sensitive bowel, surgery timing"},
+      standard:{fr:"Rectum • RTCT 45–50,4 Gy/25–28 fr — chimio, vessie et grêle",en:"Rectum • CRT 45–50.4 Gy/25–28 fx — chemo, bladder and small bowel"},
+      sbrt:{fr:"Rectum SBRT • boost focal 25–30 Gy/5 fr — rectum boss à ne pas réveiller",en:"Rectum SBRT • focal boost 25–30 Gy/5 fx — do not wake the rectum boss"},
+      chaos:{fr:"Rectum chaos • rectum plein, chimio en retard, grêle curieux",en:"Rectum chaos • full rectum, delayed chemo, curious small bowel"}
+    }, base:{tcp:14,ntcp:13,satisfaction:76,machine:78,robustness:58,stress:36}, sensitivity:1.05, toxicity:1.2},
+    {key:"pancreas", icon:"🥐", accent:"#ffd166", tags:["pancreas","duodenum","chemo"], name:{fr:"Pancréas",en:"Pancreas"}, rxByMode:{
+      quick:{fr:"Pancréas • run rapide 30 Gy/10 fr — duodénum drama, estomac susceptible",en:"Pancreas • quick run 30 Gy/10 fx — duodenum drama, touchy stomach"},
+      standard:{fr:"Pancréas • 50–54 Gy/25–30 fr — chimio, duodénum en alerte",en:"Pancreas • 50–54 Gy/25–30 fx — chemo, duodenum on alert"},
+      sbrt:{fr:"Pancréas SBRT • 33–40 Gy/5 fr — contrainte duodénum tyrannique",en:"Pancreas SBRT • 33–40 Gy/5 fx — tyrannical duodenum constraint"},
+      chaos:{fr:"Pancréas chaos • physicien demande 24 h, duodénum colle à la cible",en:"Pancreas chaos • physics asks for 24 h, duodenum hugs the target"}
+    }, base:{tcp:10,ntcp:17,satisfaction:70,machine:74,robustness:50,stress:46}, sensitivity:1.15, toxicity:1.35},
+    {key:"brain", icon:"🧠", accent:"#b892ff", tags:["brain","edema"], name:{fr:"Cerveau",en:"Brain"}, rxByMode:{
+      quick:{fr:"Cerveau • 30 Gy/10 fr — œdème, corticoïdes et précision",en:"Brain • 30 Gy/10 fx — edema, steroids and precision"},
+      standard:{fr:"Cerveau • 54–60 Gy/30 fr — précision quotidienne, fatigue cognitive",en:"Brain • 54–60 Gy/30 fx — daily precision, cognitive fatigue"},
+      sbrt:{fr:"Cerveau SRS/SBRT • 18–27 Gy/1–3 fr — millimètre ou panique",en:"Brain SRS/SBRT • 18–27 Gy/1–3 fx — millimeter or panic"},
+      chaos:{fr:"Cerveau chaos • IRM douteuse, œdème joueur, créneau stéréo perdu",en:"Brain chaos • suspicious MRI, playful edema, lost stereo slot"}
+    }, base:{tcp:16,ntcp:11,satisfaction:78,machine:80,robustness:62,stress:38}, sensitivity:1.05, toxicity:1.1},
+    {key:"mediastinum", icon:"🫀", accent:"#ff8fa3", tags:["mediastinum","heart","lung"], name:{fr:"Médiastin",en:"Mediastinum"}, rxByMode:{
+      quick:{fr:"Médiastin • 30 Gy/10 fr — cœur/poumons sous surveillance",en:"Mediastinum • 30 Gy/10 fx — heart/lungs under watch"},
+      standard:{fr:"Médiastin • 45–50 Gy/25 fr — cœur, poumons, œsophage en négociation",en:"Mediastinum • 45–50 Gy/25 fx — heart, lungs, esophagus negotiating"},
+      sbrt:{fr:"Médiastin SBRT • 30–45 Gy/5 fr — zone centrale, prudence maximale",en:"Mediastinum SBRT • 30–45 Gy/5 fx — central zone, maximum caution"},
+      chaos:{fr:"Médiastin chaos • DIBH oublié, cœur vexé, œsophage dramatique",en:"Mediastinum chaos • forgotten DIBH, offended heart, dramatic esophagus"}
+    }, base:{tcp:13,ntcp:16,satisfaction:75,machine:75,robustness:54,stress:41}, sensitivity:1.05, toxicity:1.25},
+    {key:"reirradiation", icon:"♻️", accent:"#5ef2a6", tags:["reirradiation","scar","nerve"], name:{fr:"Réirradiation",en:"Re-irradiation"}, rxByMode:{
+      quick:{fr:"Réirradiation • run rapide 30 Gy/10 fr — historique incomplet, nerfs nerveux",en:"Re-irradiation • quick run 30 Gy/10 fx — incomplete history, nervous nerves"},
+      standard:{fr:"Réirradiation • 30–45 Gy adaptés — sommation de dose obligatoire",en:"Re-irradiation • adapted 30–45 Gy — dose summation mandatory"},
+      sbrt:{fr:"Réirradiation SBRT • 25–35 Gy/5 fr — ancienne dose = boss final",en:"Re-irradiation SBRT • 25–35 Gy/5 fx — prior dose = final boss"},
+      chaos:{fr:"Réirradiation chaos • PDF 2009 flou, contrainte moelle en sueur",en:"Re-irradiation chaos • blurry 2009 PDF, sweaty cord constraint"}
+    }, base:{tcp:12,ntcp:20,satisfaction:70,machine:70,robustness:48,stress:50}, sensitivity:1.1, toxicity:1.55},
+    {key:"pediatrics", icon:"🧸", accent:"#8fffe0", tags:["pediatrics","sedation"], name:{fr:"Pédiatrie",en:"Pediatrics"}, rxByMode:{
+      quick:{fr:"Pédiatrie • run rapide 20–30 Gy/10 fr — douceur, parents, sédation possible",en:"Pediatrics • quick run 20–30 Gy/10 fx — kindness, parents, possible sedation"},
+      standard:{fr:"Pédiatrie • 50,4–54 Gy/28–30 fr — précision et croissance à protéger",en:"Pediatrics • 50.4–54 Gy/28–30 fx — precision and growth to protect"},
+      sbrt:{fr:"Pédiatrie SBRT • 24–30 Gy/3–5 fr — chaque millimètre compte double",en:"Pediatric SBRT • 24–30 Gy/3–5 fx — every millimeter counts twice"},
+      chaos:{fr:"Pédiatrie chaos • doudou perdu, anesthésie en retard, parents stressés",en:"Pediatrics chaos • missing teddy, late anesthesia, stressed parents"}
+    }, base:{tcp:14,ntcp:12,satisfaction:74,machine:72,robustness:56,stress:48}, sensitivity:1.1, toxicity:1.4}
+  ];
+
+  function caseRx(c, modeKey = selectedMode){
+    const bank = c.rxByMode || {};
+    return loc(bank[modeKey] || bank.standard || c.rx || {fr:"Prescription personnalisée", en:"Personalized prescription"});
+  }
+
+  const modes = [
+    {key:"quick", nameKey:"mode_quick_name", descKey:"mode_quick_desc", fractions:10, intensity:.9, timePressure:1, scoreMultiplier:1},
+    {key:"standard", nameKey:"mode_standard_name", descKey:"mode_standard_desc", fractions:"standard", intensity:1, timePressure:1, scoreMultiplier:1.08},
+    {key:"sbrt", nameKey:"mode_sbrt_name", descKey:"mode_sbrt_desc", fractions:5, intensity:1.28, timePressure:1.12, scoreMultiplier:1.15, sbrt:true},
+    {key:"chaos", nameKey:"mode_chaos_name", descKey:"mode_chaos_desc", fractions:18, intensity:1.75, timePressure:1.42, scoreMultiplier:1.22, chaos:true}
+  ];
+
+  const actionIcons = {
+    treat:"⚡", repeatImaging:"📸", adaptPlan:"🧩", pause:"⏸️", callDoctor:"📞", adjustImmobilization:"🎭", replan:"🛠️", reduceMargin:"📏", checkLabs:"🧪", supportiveCare:"🫶", reschedule:"🗓️", optimizePlan:"📈", validateAI:"🤖", askPhysics:"🧑‍🔬"
+  };
+
+  const actionProfiles = {
+    treat:{tcp:1.00,ntcp:1,satisfaction:2,machine:-2,robustness:-1,stress:-2,time:4},
+    repeatImaging:{tcp:.52,ntcp:-1,satisfaction:-1,machine:-7,robustness:4,stress:1,time:9},
+    adaptPlan:{tcp:.68,ntcp:-2,satisfaction:0,machine:-13,robustness:9,stress:3,time:18,adapt:1},
+    pause:{tcp:-.18,ntcp:-3,satisfaction:-3,machine:-10,robustness:1,stress:4,time:22},
+    callDoctor:{tcp:.45,ntcp:-1,satisfaction:0,machine:-5,robustness:3,stress:0,time:7},
+    adjustImmobilization:{tcp:.82,ntcp:-1,satisfaction:1,machine:-5,robustness:5,stress:0,time:8},
+    replan:{tcp:.50,ntcp:-3,satisfaction:-1,machine:-18,robustness:12,stress:5,time:30,adapt:1},
+    reduceMargin:{tcp:-.12,ntcp:-4,satisfaction:0,machine:-4,robustness:-4,stress:2,time:8},
+    checkLabs:{tcp:.35,ntcp:-2,satisfaction:0,machine:-5,robustness:2,stress:0,time:8},
+    supportiveCare:{tcp:.55,ntcp:-2,satisfaction:5,machine:-3,robustness:0,stress:-2,time:6},
+    reschedule:{tcp:-.25,ntcp:-3,satisfaction:-2,machine:-11,robustness:1,stress:3,time:20},
+    optimizePlan:{tcp:.68,ntcp:-2,satisfaction:0,machine:-12,robustness:8,stress:2,time:16},
+    validateAI:{tcp:.72,ntcp:0,satisfaction:0,machine:-3,robustness:1,stress:-1,time:5},
+    askPhysics:{tcp:.55,ntcp:-2,satisfaction:0,machine:-8,robustness:6,stress:1,time:11}
+  };
+
+  const events = [
+    {key:"emptyBladder", icon:"🫗", tag:"anatomy", severity:2, tags:["pelvis","prostate","rectum"], title:{fr:"Vessie vide",en:"Empty bladder"}, desc:{fr:"Le CBCT montre une vessie minuscule. Le PTV sourit, les anses aussi.",en:"CBCT shows a tiny bladder. The PTV smiles; the bowel does too."}, best:["repeatImaging","reschedule","callDoctor"], ok:["supportiveCare","adaptPlan"], bad:["treat","reduceMargin"], options:["treat","repeatImaging","reschedule","supportiveCare","callDoctor"]},
+    {key:"fullRectum", icon:"🎈", tag:"anatomy", severity:3, tags:["pelvis","prostate","rectum"], title:{fr:"Rectum plein",en:"Full rectum"}, desc:{fr:"Le rectum occupe l’espace avec une confiance de chef de service.",en:"The rectum occupies space with chair-of-department confidence."}, best:["reschedule","repeatImaging","supportiveCare"], ok:["callDoctor","adaptPlan"], bad:["treat","reduceMargin"], options:["treat","reschedule","repeatImaging","supportiveCare","adaptPlan"]},
+    {key:"weightLoss", icon:"📉", tag:"anatomy", severity:3, tags:["headneck","pancreas","mediastinum","weight"], title:{fr:"Perte de poids",en:"Weight loss"}, desc:{fr:"Le masque flotte, le bolus doute de lui-même et le plan devient vintage.",en:"The mask is loose, the bolus doubts itself, and the plan feels vintage."}, best:["adaptPlan","adjustImmobilization","replan"], ok:["repeatImaging","callDoctor"], bad:["treat","reduceMargin"], options:["treat","adjustImmobilization","adaptPlan","replan","repeatImaging"]},
+    {key:"neutropenia", icon:"🧫", tag:"clinical", severity:3, tags:["chemo","rectum","pancreas","mediastinum","headneck"], title:{fr:"Neutropénie",en:"Neutropenia"}, desc:{fr:"La biologie arrive avec une petite musique inquiétante.",en:"The lab results arrive with ominous background music."}, best:["checkLabs","callDoctor","pause"], ok:["supportiveCare","reschedule"], bad:["treat","optimizePlan"], options:["treat","checkLabs","callDoctor","pause","supportiveCare"]},
+    {key:"pain", icon:"😖", tag:"clinical", severity:2, tags:["general"], title:{fr:"Douleur en séance",en:"Pain during setup"}, desc:{fr:"Le patient tient la position, mais son visage écrit une plainte circonstanciée.",en:"The patient holds position, but their face is filing a formal complaint."}, best:["supportiveCare","callDoctor","adjustImmobilization"], ok:["reschedule","repeatImaging"], bad:["treat","reduceMargin"], options:["treat","supportiveCare","adjustImmobilization","callDoctor","reschedule"]},
+    {key:"machineBreak", icon:"🔧", tag:"machine", severity:3, tags:["general"], title:{fr:"Panne machine",en:"Machine fault"}, desc:{fr:"Le linac affiche un code erreur qui ressemble à un mot de passe Wi‑Fi.",en:"The linac shows an error code that looks like a Wi‑Fi password."}, best:["reschedule","askPhysics","pause"], ok:["callDoctor"], bad:["treat","adaptPlan"], options:["reschedule","askPhysics","pause","callDoctor","treat"]},
+    {key:"cbctShift", icon:"🛰️", tag:"image", severity:3, tags:["general"], title:{fr:"CBCT décalé",en:"CBCT shift"}, desc:{fr:"Le décalage est assez grand pour devenir une destination de vacances.",en:"The shift is large enough to become a vacation destination."}, best:["repeatImaging","adjustImmobilization","callDoctor"], ok:["adaptPlan","askPhysics"], bad:["treat","reduceMargin"], options:["treat","repeatImaging","adjustImmobilization","callDoctor","adaptPlan"]},
+    {key:"toxicity", icon:"🔥", tag:"clinical", severity:3, tags:["general"], title:{fr:"Toxicité qui grimpe",en:"Rising toxicity"}, desc:{fr:"Le score patient clignote comme une alarme de sous-marin.",en:"The patient score blinks like a submarine alarm."}, best:["supportiveCare","callDoctor","pause"], ok:["adaptPlan","reduceMargin"], bad:["treat","optimizePlan"], options:["treat","supportiveCare","callDoctor","pause","reduceMargin"]},
+    {key:"uncertainImage", icon:"🔎", tag:"image", severity:2, tags:["brain","lung","prostate","general"], title:{fr:"Image douteuse",en:"Suspicious image"}, desc:{fr:"Artefact ? Récidive ? Ombre de café sur l’écran ?",en:"Artifact? Recurrence? Coffee shadow on the screen?"}, best:["repeatImaging","callDoctor","validateAI"], ok:["askPhysics"], bad:["treat","reduceMargin"], options:["treat","repeatImaging","validateAI","callDoctor","askPhysics"]},
+    {key:"needReplan", icon:"🧮", tag:"planning", severity:4, tags:["headneck","pancreas","reirradiation","mediastinum"], title:{fr:"Besoin de replanification",en:"Replanning needed"}, desc:{fr:"Le DVH a cessé de prétendre que tout va bien.",en:"The DVH has stopped pretending everything is fine."}, best:["replan","adaptPlan","askPhysics"], ok:["optimizePlan","callDoctor"], bad:["treat","reduceMargin"], options:["treat","adaptPlan","replan","askPhysics","optimizePlan"]},
+    {key:"breathHold", icon:"🌬️", tag:"motion", severity:2, tags:["breast","breathhold"], title:{fr:"DIBH capricieux",en:"Capricious DIBH"}, desc:{fr:"Le cœur fait une apparition surprise dans le champ.",en:"The heart makes an unexpected cameo in the field."}, best:["adjustImmobilization","repeatImaging","supportiveCare"], ok:["callDoctor","reschedule"], bad:["treat","reduceMargin"], options:["treat","adjustImmobilization","repeatImaging","supportiveCare","reschedule"]},
+    {key:"lungMotion", icon:"🫁", tag:"motion", severity:4, tags:["lung","motion","sbrt"], title:{fr:"Mouvement respiratoire",en:"Respiratory motion"}, desc:{fr:"La cible danse un slow que l’ITV n’avait pas prévu.",en:"The target dances a slow dance the ITV did not plan for."}, best:["repeatImaging","adjustImmobilization","adaptPlan"], ok:["askPhysics","reschedule"], bad:["treat","reduceMargin"], options:["treat","repeatImaging","adjustImmobilization","adaptPlan","askPhysics"]},
+    {key:"aiContour", icon:"🤖", tag:"ai", severity:2, tags:["general"], title:{fr:"Contour IA trop confiant",en:"Overconfident AI contour"}, desc:{fr:"L’IA a inclus une parotide, un ganglion et probablement une idée philosophique.",en:"The AI included a parotid, a node, and possibly a philosophical idea."}, best:["validateAI","callDoctor","repeatImaging"], ok:["askPhysics","adaptPlan"], bad:["treat","optimizePlan"], options:["validateAI","treat","callDoctor","repeatImaging","askPhysics"]},
+    {key:"brainEdema", icon:"🌩️", tag:"clinical", severity:3, tags:["brain","edema"], title:{fr:"Œdème cérébral",en:"Brain edema"}, desc:{fr:"Le cerveau demande un peu moins d’enthousiasme thérapeutique.",en:"The brain requests slightly less therapeutic enthusiasm."}, best:["callDoctor","supportiveCare","pause"], ok:["repeatImaging","adaptPlan"], bad:["treat","reduceMargin"], options:["treat","callDoctor","supportiveCare","pause","repeatImaging"]},
+    {key:"duodenumClose", icon:"🥨", tag:"anatomy", severity:4, tags:["pancreas","duodenum"], title:{fr:"Duodénum trop proche",en:"Duodenum too close"}, desc:{fr:"Le duodénum vient coller son nez sur l’isodose.",en:"The duodenum presses its nose against the isodose."}, best:["adaptPlan","replan","askPhysics"], ok:["reduceMargin","callDoctor"], bad:["treat","optimizePlan"], options:["treat","adaptPlan","replan","reduceMargin","askPhysics"]},
+    {key:"heartDose", icon:"💔", tag:"anatomy", severity:3, tags:["mediastinum","heart","breast"], title:{fr:"Dose cœur limite",en:"Borderline heart dose"}, desc:{fr:"La contrainte cardiaque envoie un SMS passif-agressif.",en:"The cardiac constraint sends a passive-aggressive text."}, best:["optimizePlan","adaptPlan","askPhysics"], ok:["repeatImaging","reduceMargin"], bad:["treat","pause"], options:["treat","optimizePlan","adaptPlan","askPhysics","repeatImaging"]},
+    {key:"oldDose", icon:"📜", tag:"planning", severity:4, tags:["reirradiation","scar","nerve"], title:{fr:"Ancienne dose retrouvée",en:"Prior dose discovered"}, desc:{fr:"Un PDF scanné de 2009 surgit comme un boss final.",en:"A scanned 2009 PDF appears like a final boss."}, best:["callDoctor","askPhysics","replan"], ok:["adaptPlan","reduceMargin"], bad:["treat","validateAI"], options:["treat","callDoctor","askPhysics","replan","reduceMargin"]},
+    {key:"pediatricToy", icon:"🧸", tag:"patient", severity:2, rare:true, tags:["pediatrics","sedation"], title:{fr:"Doudou non compatible IRM",en:"MRI-incompatible plushie"}, desc:{fr:"Le doudou est indispensable, mais contient plus de métal qu’un vieux PACS.",en:"The plushie is essential, but contains more metal than an old PACS."}, best:["supportiveCare","adjustImmobilization","callDoctor"], ok:["reschedule","repeatImaging"], bad:["treat","pause"], options:["supportiveCare","adjustImmobilization","callDoctor","reschedule","treat"]},
+    {key:"twoLiters", icon:"🚰", tag:"rare", severity:3, rare:true, tags:["pelvis","prostate","rectum"], title:{fr:"2 litres au lieu de 500 ml",en:"2 liters instead of 500 ml"}, desc:{fr:"Le patient a suivi la consigne avec un zèle océanique.",en:"The patient followed instructions with oceanic enthusiasm."}, best:["reschedule","supportiveCare","repeatImaging"], ok:["callDoctor"], bad:["treat","reduceMargin"], options:["treat","reschedule","supportiveCare","repeatImaging","callDoctor"]},
+    {key:"rectumBoss", icon:"👹", tag:"rare", severity:5, rare:true, tags:["pelvis","prostate","rectum"], title:{fr:"Le rectum devient un OAR boss",en:"The rectum becomes an OAR boss"}, desc:{fr:"Barre de vie, musique épique, contrainte impossible. Tout y est.",en:"Health bar, epic music, impossible constraint. The full package."}, best:["replan","adaptPlan","supportiveCare"], ok:["reschedule","askPhysics"], bad:["treat","reduceMargin"], options:["treat","replan","adaptPlan","supportiveCare","askPhysics"]},
+    {key:"physics24h", icon:"⏳", tag:"rare", severity:3, rare:true, tags:["planning","general"], title:{fr:"La physique demande 24 h de plus",en:"Physics asks for 24 more hours"}, desc:{fr:"Le plan est presque prêt. Mot clé : presque.",en:"The plan is almost ready. Keyword: almost."}, best:["reschedule","askPhysics","callDoctor"], ok:["optimizePlan"], bad:["treat","validateAI"], options:["treat","reschedule","askPhysics","callDoctor","optimizePlan"]},
+    {key:"machineStrike", icon:"✊", tag:"rare", severity:4, rare:true, tags:["machine","general"], title:{fr:"La machine décide de faire grève",en:"The machine goes on strike"}, desc:{fr:"Elle réclame une maintenance, un café et une meilleure convention collective.",en:"It demands maintenance, coffee, and a better labor agreement."}, best:["askPhysics","reschedule","pause"], ok:["callDoctor"], bad:["treat","adaptPlan"], options:["askPhysics","reschedule","pause","callDoctor","treat"]}
+  ];
+
+  let lang = "fr";
+  let selectedCase = "prostate";
+  let selectedMode = "quick";
+  let state = null;
+  let currentEvent = null;
+  let finalPayload = null;
+  let soundOn = false;
+  let leaderFilter = "global";
+
+  const $ = sel => document.querySelector(sel);
+  const $$ = sel => Array.from(document.querySelectorAll(sel));
+  const clamp = (n,min=0,max=100)=>Math.max(min,Math.min(max,n));
+  const rnd = (min,max)=>Math.floor(Math.random()*(max-min+1))+min;
+  const choice = arr => arr[Math.floor(Math.random()*arr.length)];
+  const t = key => (i18n[lang] && i18n[lang][key]) || i18n.fr[key] || key;
+  const loc = obj => obj ? (obj[lang] || obj.fr || obj.en || "") : "";
+
+  function applyTheme(mode){ document.documentElement.setAttribute("data-theme",mode); try{localStorage.setItem("oa-theme",mode);}catch(e){} const b=$("#themeBtn"); if(b) b.textContent = mode==="light"?"☀":"☾"; }
+  function init(){
+    loadSettings();
+    try{ applyTheme(localStorage.getItem("oa-theme")||"dark"); }catch(e){ applyTheme("dark"); }
+    try{ var _u=(new URLSearchParams(location.search).get("lang")||"").toLowerCase(); if(_u==="fr"||_u==="en") lang=_u; }catch(e){}
+    renderTexts();
+    renderModes();
+    renderCases();
+    bindUI();
+    updateContinue();
+    if(!localStorage.getItem(STORAGE.seenTutorial)) showModal("tutorialModal");
+  }
+
+  function bindUI(){
+    $("#langBtn").addEventListener("click",()=>{lang=lang==="fr"?"en":"fr"; saveSettings(); renderTexts(); renderModes(); renderCases(); if(state) renderGame(); if(finalPayload) renderEnd(finalPayload); renderLeader();});
+    $("#soundBtn").addEventListener("click",()=>{soundOn=!soundOn; saveSettings(); $("#soundBtn").classList.toggle("active",soundOn); toast(soundOn?t("soundOn"):t("soundOff")); blip("ok");});
+    $("#startBtn").addEventListener("click",startGame);
+    $("#continueBtn").addEventListener("click",continueGame);
+    $("#againBtn").addEventListener("click",()=>{finalPayload=null; showScreen("home");});
+    $("#tutorialBtn").addEventListener("click",()=>showModal("tutorialModal"));
+    $("#closeTutorial").addEventListener("click",()=>{localStorage.setItem(STORAGE.seenTutorial,"1"); hideModal("tutorialModal");});
+    $("#leaderBtn").addEventListener("click",()=>{showModal("leaderModal"); loadLeader();});
+    $("#endLeaderBtn").addEventListener("click",()=>{showModal("leaderModal"); loadLeader();});
+    $("#closeLeader").addEventListener("click",()=>hideModal("leaderModal"));
+    $("#refreshLeader").addEventListener("click",loadLeader);
+    $("#settingsBtn").addEventListener("click",()=>{populateSettings(); showModal("settingsModal");});
+    $("#closeSettings").addEventListener("click",()=>hideModal("settingsModal"));
+    $("#saveSettings").addEventListener("click",saveConfigFromModal);
+    $("#saveScoreBtn").addEventListener("click",saveFinalScore);
+    $("#themeBtn").addEventListener("click",()=>applyTheme(document.documentElement.getAttribute("data-theme")==="light"?"dark":"light"));
+    $("#aboutBtn").addEventListener("click",()=>showModal("aboutModal"));
+    $("#closeAbout").addEventListener("click",()=>hideModal("aboutModal"));
+    $$("[data-leader-filter]").forEach(btn=>btn.addEventListener("click",()=>{leaderFilter=btn.dataset.leaderFilter; $$("[data-leader-filter]").forEach(b=>b.classList.toggle("selected",b===btn)); renderLeader();}));
+  }
+
+  function renderTexts(){
+    document.documentElement.lang = lang;
+    $("#langBtn").textContent = lang === "fr" ? "EN" : "FR";
+    $("#langBtn").setAttribute("aria-label", lang === "fr" ? "Switch to English" : "Passer en français");
+    $("#soundBtn").classList.toggle("active",soundOn);
+    $$('[data-i18n]').forEach(el=>{el.textContent=t(el.dataset.i18n);});
+  }
+
+  function renderModes(){
+    const box=$("#modeChips"); box.innerHTML="";
+    modes.forEach(m=>{
+      const btn=document.createElement("button"); btn.className="chip"+(selectedMode===m.key?" selected":""); btn.type="button";
+      btn.innerHTML=`<span>${t(m.nameKey)}</span>`;
+      btn.title=t(m.descKey);
+      btn.addEventListener("click",()=>{selectedMode=m.key; renderModes(); renderCases(); toast(t(m.descKey));});
+      box.appendChild(btn);
+    });
+  }
+
+  function renderCases(){
+    const box=$("#caseList"); box.innerHTML="";
+    cases.forEach(c=>{
+      const btn=document.createElement("button"); btn.type="button"; btn.className="case-card"+(selectedCase===c.key?" selected":""); btn.style.setProperty("--accent",c.accent);
+      btn.innerHTML=`<div class="emoji">${c.icon}</div><div class="name">${loc(c.name)}</div><div class="rx">${caseRx(c, selectedMode)}</div>`;
+      btn.addEventListener("click",()=>{selectedCase=c.key; renderCases();});
+      box.appendChild(btn);
+    });
+  }
+
+  function showScreen(id){
+    $$(".screen").forEach(s=>s.classList.toggle("active",s.id===id));
+  }
+  function showModal(id){$("#"+id).classList.add("show");}
+  function hideModal(id){$("#"+id).classList.remove("show");}
+
+  function startGame(){
+    const c=cases.find(x=>x.key===selectedCase);
+    const m=modes.find(x=>x.key===selectedMode);
+    const total=m.fractions==="standard"?rnd(25,35):m.fractions;
+    state={
+      caseKey:c.key, modeKey:m.key, total, fraction:1, metrics:{...c.base}, machineTime:0, adaptations:0,
+      log:[], streak:0, rareSolved:0, seed:Date.now(), patient:makePatientName(c), finished:false
+    };
+    normalizeInitialForMode(state,c,m);
+    currentEvent=drawEvent();
+    saveGame();
+    renderGame();
+    showScreen("game");
+    blip("start");
+  }
+
+  function normalizeInitialForMode(s,c,m){
+    if(m.sbrt){s.metrics.tcp=28;s.metrics.ntcp+=4;s.metrics.robustness-=5;s.metrics.stress+=8;}
+    if(m.chaos){s.metrics.machine-=14;s.metrics.stress+=14;s.metrics.satisfaction-=4;}
+    Object.keys(s.metrics).forEach(k=>s.metrics[k]=clamp(s.metrics[k]));
+  }
+
+  function makePatientName(c){
+    const namesFr=["Mme Martin","M. Bernard","Mme Dubois","M. Petit","Mme Moreau","M. Laurent","Mme Garnier","M. Roche","Mme Vidal","M. Cohen"];
+    const namesEn=["Ms Martin","Mr Bernard","Ms Dubois","Mr Petit","Ms Moreau","Mr Laurent","Ms Garnier","Mr Roche","Ms Vidal","Mr Cohen"];
+    return (lang==="fr"?choice(namesFr):choice(namesEn)) + " · " + loc(c.name);
+  }
+
+  function drawEvent(){
+    const c=cases.find(x=>x.key===state.caseKey);
+    const m=modes.find(x=>x.key===state.modeKey);
+    const pool=events.filter(e=> e.tags.includes("general") || e.tags.some(tag=>c.tags.includes(tag)) || (m.chaos && (e.tags.includes("machine")||e.rare)) );
+    const weighted=[];
+    pool.forEach(e=>{
+      let w=e.rare?2:8;
+      if(e.tags.some(tag=>c.tags.includes(tag))) w+=7;
+      if(m.chaos) w+= e.rare?7:3;
+      if(m.sbrt && (e.tags.includes("motion")||e.tags.includes("sbrt")||e.tag==="image")) w+=5;
+      for(let i=0;i<w;i++) weighted.push(e);
+    });
+    const base=choice(weighted);
+    const sev=clamp(Math.round(base.severity * m.intensity + rnd(-1,1)),1,5);
+    return {...base, severity:sev};
+  }
+
+  function renderGame(){
+    const c=cases.find(x=>x.key===state.caseKey);
+    const m=modes.find(x=>x.key===state.modeKey);
+    $("#avatar").textContent=c.icon;
+    $("#patientName").textContent=state.patient;
+    $("#rxLine").textContent=`${t(m.nameKey)} · ${caseRx(c, m.key)}`;
+    $("#fractionText").textContent=`${state.fraction}/${state.total}`;
+    $("#progress").style.width=`${((state.fraction-1)/state.total)*100}%`;
+    renderMetrics();
+    renderEvent();
+    renderLog();
+    renderTexts();
+  }
+
+  function renderMetrics(){
+    const box=$("#metrics");
+    const ms=state.metrics;
+    const items=[
+      ["tcp",ms.tcp,false], ["ntcp",ms.ntcp,true], ["satisfaction",ms.satisfaction,false], ["machine",ms.machine,false], ["robustness",ms.robustness,false], ["stress",ms.stress,true]
+    ];
+    box.innerHTML=items.map(([key,val,bad])=>`<div class="metric" data-metric="${key}"><div class="metric-top"><span>${t(key)}</span><b>${Math.round(val)}</b></div><div class="bar"><div class="fill ${bad?'badfill':''}" style="width:${clamp(val)}%"></div></div></div>`).join("");
+  }
+
+  function renderEvent(){
+    $("#eventIcon").textContent=currentEvent.icon;
+    $("#eventTitle").textContent=loc(currentEvent.title);
+    $("#eventDesc").textContent=loc(currentEvent.desc);
+    $("#eventTag").textContent=t("tag_"+currentEvent.tag);
+    const dots=$("#severityDots"); dots.innerHTML="";
+    for(let i=1;i<=5;i++){const d=document.createElement("div");d.className="dot"+(i<=currentEvent.severity?" on":"")+(currentEvent.severity>=4?" danger":"");dots.appendChild(d);}
+    $("#feedback").classList.remove("show");
+    const options=shuffle(currentEvent.options.slice()).slice(0,5);
+    const actionBox=$("#actions"); actionBox.innerHTML="";
+    options.forEach(a=>{
+      const card=document.createElement("button"); card.type="button"; card.className="action-card";
+      card.innerHTML=`<div class="aicon">${actionIcons[a]}</div><div class="alabel">${t("action_"+a)}</div><div class="ahint">${t("hint_"+a)}</div>`;
+      card.addEventListener("click",()=>chooseAction(a,card));
+      actionBox.appendChild(card);
+    });
+  }
+
+  function enableSwipe(card, action){
+    let startX=0, dx=0, active=false;
+    card.addEventListener("pointerdown",e=>{active=true;startX=e.clientX;dx=0;card.setPointerCapture(e.pointerId);});
+    card.addEventListener("pointermove",e=>{if(!active)return;dx=e.clientX-startX;if(Math.abs(dx)>8){card.style.transform=`translateX(${dx*.35}px) rotate(${dx/35}deg)`;}});
+    const end=e=>{if(!active)return;active=false;card.style.transform="";if(Math.abs(dx)>82){card.classList.add(dx>0?"commit":"reject");setTimeout(()=>chooseAction(action,card),90);}};
+    card.addEventListener("pointerup",end); card.addEventListener("pointercancel",end);
+  }
+
+  function chooseAction(action, card){
+    if(!state || state.finished) return;
+    $("#actions").style.pointerEvents="none";
+    $$(".action-card").forEach(c=>c.disabled=true);
+    if(card) card.classList.add("commit");
+    const result=resolveAction(currentEvent,action);
+    applyDelta(result.delta);
+    const line=`<b>${state.fraction}/${state.total}</b> ${currentEvent.icon} ${loc(currentEvent.title)} → ${t("action_"+action)}. ${result.short}`;
+    state.log.unshift(line);
+    state.log=state.log.slice(0,8);
+    $("#feedback").textContent=result.message;
+    $("#feedback").classList.add("show");
+    renderMetrics(); flashMetrics(result.delta); renderLog(); blip(result.quality);
+    saveGame();
+    setTimeout(()=>nextFraction(),760);
+  }
+
+  function resolveAction(ev, action){
+    const c=cases.find(x=>x.key===state.caseKey);
+    const m=modes.find(x=>x.key===state.modeKey);
+    const profile=actionProfiles[action];
+    const perFx=(78/state.total)*c.sensitivity*(m.sbrt?1.12:1);
+    const sev=ev.severity;
+    let quality="ok";
+    if(ev.best.includes(action)) quality="best";
+    else if(ev.bad.includes(action)) quality="bad";
+    const qMod={best:1.18, ok:.86, bad:.46}[quality];
+    let delta={
+      tcp: profile.tcp*perFx*qMod,
+      ntcp: profile.ntcp + (quality==="bad"?sev*2.6:quality==="ok"?sev*.55:-sev*.65),
+      satisfaction: profile.satisfaction + (quality==="bad"?-sev:quality==="best"?1:0),
+      machine: (profile.machine || 0) * (m.timePressure||1),
+      robustness: profile.robustness + (quality==="bad"?-sev*2:quality==="best"?sev:0),
+      stress: profile.stress + (quality==="bad"?sev*1.7:quality==="best"?-1:1)
+    };
+    if(action==="treat" && quality!=="bad") delta.tcp += perFx*.25;
+    if(action==="pause" || action==="reschedule") delta.tcp -= perFx*.35;
+    if(action==="reduceMargin" && quality!=="best") delta.tcp -= perFx*.35;
+    if(m.sbrt && quality==="bad"){delta.ntcp+=sev*1.8;delta.robustness-=4;delta.stress+=3;}
+    if(m.chaos){delta.machine-=2;delta.stress+=1.5;}
+    delta.ntcp*=c.toxicity;
+    if(profile.adapt && quality!=="bad") { state.adaptations += profile.adapt; delta.satisfaction += .5; }
+    state.machineTime += Math.round((profile.time||4)*(m.timePressure||1));
+    if(ev.rare && quality!=="bad") state.rareSolved++;
+    if(quality==="best") state.streak++; else state.streak=0;
+    const msgKey=ev.rare && quality==="best"?"fb_rare":"fb_"+quality;
+    const short=quality==="best"?"✓":quality==="ok"?"·":"!";
+    return {quality,delta,message:t(msgKey),short};
+  }
+
+  function applyDelta(delta){
+    Object.entries(delta).forEach(([k,v])=>{state.metrics[k]=clamp((state.metrics[k]||0)+v);});
+    // Natural drift: treatment days are tiring, robustness slowly erodes unless maintained.
+    state.metrics.ntcp=clamp(state.metrics.ntcp + .45);
+    state.metrics.satisfaction=clamp(state.metrics.satisfaction - .15);
+    state.metrics.robustness=clamp(state.metrics.robustness - .25);
+    state.metrics.stress=clamp(state.metrics.stress + .18);
+  }
+
+  function flashMetrics(delta){
+    Object.keys(delta).forEach(k=>{const el=document.querySelector(`[data-metric="${k}"]`); if(el){el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash");}});
+  }
+
+  function nextFraction(){
+    $("#actions").style.pointerEvents="auto";
+    if(state.fraction>=state.total){endGame(); return;}
+    state.fraction++;
+    currentEvent=drawEvent();
+    saveGame();
+    renderGame();
+    $("#eventCard").classList.remove("fade-pop"); void $("#eventCard").offsetWidth; $("#eventCard").classList.add("fade-pop");
+  }
+
+  function renderLog(){
+    $("#roundLog").innerHTML=state.log.map(x=>`<div class="log-item">${x}</div>`).join("");
+  }
+
+  function endGame(){
+    state.finished=true;
+    const payload=buildFinalPayload();
+    finalPayload=payload;
+    localStorage.removeItem(STORAGE.save);
+    renderEnd(payload);
+    showScreen("end");
+    blip("end");
+  }
+
+  function buildFinalPayload(){
+    const c=cases.find(x=>x.key===state.caseKey);
+    const m=modes.find(x=>x.key===state.modeKey);
+    const ms=state.metrics;
+    const score=Math.round((ms.tcp*4.1)+((100-ms.ntcp)*2.35)+(ms.satisfaction*1.18)+(ms.machine*.9)+(ms.robustness*1.35)+((100-ms.stress)*.95)+(state.rareSolved*18)+(state.streak*4)-(state.adaptations*2));
+    const finalScore=Math.max(0,Math.round(score*m.scoreMultiplier));
+    const badges=[];
+    if(ms.robustness>=78 && ms.ntcp<36) badges.push("robust");
+    if(ms.satisfaction>=84) badges.push("happy");
+    if(ms.machine>=72 && ms.stress<48) badges.push("machine");
+    if(ms.ntcp<=27) badges.push("toxicity");
+    if(state.adaptations>=3 && ms.tcp>=74) badges.push("adaptive");
+    if(ms.stress<=32) badges.push("calm");
+    if(m.sbrt && finalScore>=720) badges.push("sbrt");
+    return {
+      pseudo:"", score:finalScore, case_key:c.key, case_name:loc(c.name), mode_key:m.key, mode_name:t(m.nameKey),
+      tcp:Math.round(ms.tcp), ntcp:Math.round(ms.ntcp), satisfaction:Math.round(ms.satisfaction), machine_time:state.machineTime,
+      machine:Math.round(ms.machine), robustness:Math.round(ms.robustness), stress:Math.round(ms.stress), adaptations:state.adaptations,
+      badges, created_at:new Date().toISOString()
+    };
+  }
+
+  function renderEnd(p){
+    $("#finalScore").textContent=p.score;
+    $("#endMessage").textContent=p.score>820?t("end_excellent"):p.score>650?t("end_good"):p.score>470?t("end_mid"):t("end_low");
+    $("#badgeBox").innerHTML=p.badges.map(b=>badgeHtml(b)).join("") || `<span class="badge red">No badge run</span>`;
+    const tiles=[
+      [t("finalCase"),p.case_name], [t("finalMode"),p.mode_name], [t("finalTCP"),p.tcp+"%"], [t("finalNTCP"),p.ntcp+"%"], [t("satisfaction"),p.satisfaction+"%"], [t("finalMachine"),p.machine_time+" "+t("minutes")], [t("robustness"),p.robustness+"%"], [t("adaptations"),p.adaptations]
+    ];
+    $("#summaryGrid").innerHTML=tiles.map(([a,b])=>`<div class="summary-tile"><span>${a}</span><b>${b}</b></div>`).join("");
+  }
+
+  function badgeHtml(b){
+    const cls={robust:"",happy:"purple",machine:"orange",toxicity:"",adaptive:"purple",calm:"",sbrt:"orange"}[b]||"";
+    const key={robust:"badge_robust",happy:"badge_happy",machine:"badge_machine",toxicity:"badge_toxicity",adaptive:"badge_adaptive",calm:"badge_calm",sbrt:"badge_sbrt"}[b];
+    return `<span class="badge ${cls}">${t(key)}</span>`;
+  }
+
+  async function saveFinalScore(){
+    if(!finalPayload) return;
+    const pseudo=($("#pseudoInput").value || "Dr Fraction").trim().slice(0,22);
+    const payload={...finalPayload,pseudo};
+    saveLocalScore(payload);
+    const ok=await saveRemoteScore(payload);
+    toast(ok?t("savedRemote"):t("savedLocal"));
+    loadLeader();
+  }
+
+  function saveLocalScore(score){
+    const arr=JSON.parse(localStorage.getItem(STORAGE.scores)||"[]");
+    arr.push(score);
+    arr.sort((a,b)=>b.score-a.score);
+    localStorage.setItem(STORAGE.scores,JSON.stringify(arr.slice(0,100)));
+  }
+
+  /* ---- API Onco Arcade (OVH — PHP + MySQL) ---- */
+  const API_ROOT="../../api", GAME_SLUG="fraction-hero";   // "" = local uniquement
+  function fhPackMeta(sc){ return JSON.stringify({ck:sc.case_key||"",mk:sc.mode_key||"",cn:sc.case_name||"",mn:sc.mode_name||"",tcp:Math.round(sc.tcp||0),ntcp:Math.round(sc.ntcp||0),b:(sc.badges||[]).slice(0,3)}).slice(0,255); }
+  function fhUnpack(r){ var m={}; try{m=JSON.parse(r.meta||"{}");}catch(e){} return {pseudo:r.name,score:r.score,case_key:m.ck,mode_key:m.mk,case_name:m.cn,mode_name:m.mn,tcp:m.tcp,ntcp:m.ntcp,badges:m.b||[]}; }
+  async function saveRemoteScore(score){
+    if(!API_ROOT) return false;
+    try{
+      const res=await fetch(API_ROOT+"/submit.php",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({game:GAME_SLUG,name:(score.pseudo||"Dr Fraction"),score:score.score,ts:Date.now(),meta:fhPackMeta(score)})});
+      const d=res.ok?await res.json():null; return !!(d&&d.ok);
+    }catch(e){return false;}
+  }
+  async function fetchRemoteScores(){
+    if(!API_ROOT) return [];
+    try{
+      const res=await fetch(API_ROOT+"/top.php?game="+GAME_SLUG+"&period=all&limit=50",{cache:"no-store"});
+      if(!res.ok) return []; const d=await res.json();
+      if(!d||!d.ok||!Array.isArray(d.rows)) return [];
+      return d.rows.map(fhUnpack);
+    }catch(e){return [];}
+  }
+
+  async function loadLeader(){
+    const remote=await fetchRemoteScores();
+    const local=JSON.parse(localStorage.getItem(STORAGE.scores)||"[]");
+    window.__leaderScores=[...remote,...local].sort((a,b)=>b.score-a.score).slice(0,50);
+    renderLeader();
+  }
+
+  function renderLeader(){
+    const table=$("#leaderTable"); if(!table) return;
+    const scores=(window.__leaderScores || JSON.parse(localStorage.getItem(STORAGE.scores)||"[]")).slice().sort((a,b)=>b.score-a.score);
+    if(!scores.length){table.innerHTML=`<div class="card muted">${t("noScores")}</div>`;return;}
+
+    const rowHtml=(s,i)=>{
+      const meta=`${s.case_name||s.case_key} · ${s.mode_name||s.mode_key} · TCP ${Math.round(s.tcp||0)} / NTCP ${Math.round(s.ntcp||0)}`;
+      return `<div class="score-row"><div class="rank">${i+1}</div><div class="score-main"><b>${escapeHtml(s.pseudo||"Dr Fraction")}</b><span>${escapeHtml(meta)}</span><div class="badges">${(s.badges||[]).slice(0,3).map(b=>badgeHtml(b)).join("")}</div></div><div class="score-num">${s.score}</div></div>`;
+    };
+
+    if(leaderFilter==="case" || leaderFilter==="mode"){
+      const keyName=leaderFilter==="case"?"case_name":"mode_name";
+      const keyId=leaderFilter==="case"?"case_key":"mode_key";
+      const groups={};
+      scores.forEach(s=>{const g=s[keyName]||s[keyId]||"—"; (groups[g] ||= []).push(s);});
+      table.innerHTML=Object.entries(groups).map(([group,items])=>`<div class="card"><h4>${escapeHtml(group)}</h4><div class="leader-table">${items.slice(0,5).map(rowHtml).join("")}</div></div>`).join("");
+      return;
+    }
+
+    table.innerHTML=scores.slice(0,20).map(rowHtml).join("");
+  }
+
+  function saveGame(){
+    if(!state || state.finished) return;
+    localStorage.setItem(STORAGE.save,JSON.stringify({state,currentEvent,lang,selectedCase,selectedMode}));
+    updateContinue();
+  }
+  function updateContinue(){
+    $("#continueBtn").classList.toggle("hidden",!localStorage.getItem(STORAGE.save));
+  }
+  function continueGame(){
+    const raw=localStorage.getItem(STORAGE.save); if(!raw) return;
+    try{const data=JSON.parse(raw); state=data.state; currentEvent=data.currentEvent; selectedCase=data.selectedCase||state.caseKey; selectedMode=data.selectedMode||state.modeKey; lang=data.lang||lang; renderTexts(); renderModes(); renderCases(); renderGame(); showScreen("game");}catch(e){localStorage.removeItem(STORAGE.save); updateContinue();}
+  }
+
+  function loadSettings(){
+    try{
+      const s=JSON.parse(localStorage.getItem(STORAGE.settings)||"{}");
+      lang=s.lang||lang; soundOn=!!s.soundOn;
+      window.FRACTION_HERO_CONFIG={...window.FRACTION_HERO_CONFIG,...(s.config||{})};
+    }catch(e){}
+  }
+  function saveSettings(){
+    localStorage.setItem(STORAGE.settings,JSON.stringify({lang,soundOn,config:getConfig()}));
+  }
+  function getConfig(){return {...window.FRACTION_HERO_CONFIG, tableName:window.FRACTION_HERO_CONFIG.tableName||"fraction_hero_scores"};}
+  function populateSettings(){const c=getConfig();$("#supabaseUrl").value=c.supabaseUrl||"";$("#supabaseKey").value=c.supabaseAnonKey||"";$("#supabaseTable").value=c.tableName||"fraction_hero_scores";}
+  function saveConfigFromModal(){window.FRACTION_HERO_CONFIG={supabaseUrl:$("#supabaseUrl").value.trim(),supabaseAnonKey:$("#supabaseKey").value.trim(),tableName:$("#supabaseTable").value.trim()||"fraction_hero_scores"};saveSettings();hideModal("settingsModal");toast(t("configSaved"));}
+
+  function toast(msg){const el=$("#toast"); el.textContent=msg; el.classList.add("show"); clearTimeout(el._to); el._to=setTimeout(()=>el.classList.remove("show"),1800);}
+
+  function blip(type){
+    if(!soundOn) return;
+    try{
+      const C=window.AudioContext||window.webkitAudioContext; const ctx=new C();
+      const o=ctx.createOscillator(); const g=ctx.createGain(); o.connect(g); g.connect(ctx.destination);
+      const freq={start:440,best:720,ok:520,bad:180,end:880,success:760,ok2:620}[type]||500;
+      o.type=type==="bad"?"sawtooth":"sine"; o.frequency.value=freq; g.gain.setValueAtTime(.0001,ctx.currentTime); g.gain.exponentialRampToValueAtTime(.08,ctx.currentTime+.02); g.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+.16); o.start(); o.stop(ctx.currentTime+.18);
+    }catch(e){}
+  }
+
+  function shuffle(arr){for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}return arr;}
+  function escapeHtml(str){return String(str).replace(/[&<>"]/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[s]));}
+
+  init();
+  </script>
+<div id="oaNameAsk" style="display:none;position:fixed;inset:0;z-index:2147483000;background:rgba(3,8,18,.74);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif">
+  <div style="width:min(360px,94vw);background:#0f1626;color:#f8fafc;border:1px solid rgba(255,255,255,.14);border-radius:18px;padding:22px;box-shadow:0 30px 80px rgba(0,0,0,.55)">
+    <div id="oaNameAskTitle" style="font-size:18px;font-weight:560;letter-spacing:-.01em;margin-bottom:4px">Ton pseudo</div>
+    <div id="oaNameAskSub" style="font-size:13px;color:#a7b0c2;line-height:1.4;margin-bottom:14px">Pour enregistrer ton score au classement.</div>
+    <input id="oaNameAskInput" maxlength="18" placeholder="Dr …" autocomplete="off" spellcheck="false" style="width:100%;box-sizing:border-box;font:inherit;font-size:15px;font-weight:520;color:#f8fafc;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:12px 14px;outline:none">
+    <div id="oaTeamLabel" style="font-size:12px;color:#a7b0c2;margin:12px 0 5px">Équipe (optionnel)</div>
+    <div id="oaTeamWrap" style="position:relative">
+    <input id="oaNameAskTeam" maxlength="24" placeholder="Ton équipe…" autocomplete="off" spellcheck="false" style="width:100%;box-sizing:border-box;font:inherit;font-size:15px;font-weight:520;color:#f8fafc;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:12px 14px;outline:none">
+    <div id="oaTeamMenu" style="position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:6;background:#0f1626;border:1px solid rgba(255,255,255,.16);border-radius:12px;box-shadow:0 22px 55px rgba(0,0,0,.55);max-height:172px;overflow:auto;display:none"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
+      <button id="oaNameAskSkip" type="button" style="font:inherit;font-weight:520;color:#a7b0c2;background:none;border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:9px 14px;cursor:pointer">Passer</button>
+      <button id="oaNameAskOk" type="button" style="font:inherit;font-weight:560;color:#fff;background:linear-gradient(135deg,#2557d6,#0891b2);border:none;border-radius:999px;padding:9px 16px;cursor:pointer">Enregistrer</button>
+    </div>
+  </div>
+</div>
+<script id="oa-namegate">
+(function(){
+  var DEFAULTS = ['','—','-','dr','dr …','dr...','anonyme','anonymous','ninja','joueur','player','name','nom','pseudo'];
+  function isDefault(n){ return DEFAULTS.indexOf((n||'').trim().toLowerCase()) >= 0; }
+  function isEn(){ var l=(document.documentElement.getAttribute('lang')||document.documentElement.lang||navigator.language||'fr'); return String(l).slice(0,2).toLowerCase()==='en'; }
+  function lget(k){ try{ return localStorage.getItem(k)||''; }catch(e){ return ''; } }
+  function lset(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+
+  var teamsLoaded=false;
+  function loadTeams(){
+    if(teamsLoaded) return; teamsLoaded=true;
+    try{
+      fetch('../../api/teams.php',{cache:'no-store'}).then(function(r){return r.ok?r.json():null;}).then(function(d){
+        if(d&&d.ok&&Array.isArray(d.teams)){ window.__oaTeams=d.teams.map(function(t){return String(t);}); }
+      }).catch(function(){});
+    }catch(e){}
+  }
+
+  function oaRenderTeamMenu(){
+    var tinp=document.getElementById('oaNameAskTeam'), menu=document.getElementById('oaTeamMenu');
+    if(!tinp||!menu) return;
+    var q=(tinp.value||'').toLowerCase();
+    var list=(window.__oaTeams||[]).filter(function(t){return t && t.toLowerCase().indexOf(q)>=0;}).slice(0,8);
+    if(!list.length){ menu.style.display='none'; menu.innerHTML=''; return; }
+    menu.innerHTML=list.map(function(t){return '<div style="padding:11px 14px;font-size:14px;color:#f8fafc;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.07)">'+String(t).replace(/</g,'&lt;')+'</div>';}).join('');
+    Array.prototype.forEach.call(menu.children,function(el){
+      el.onmousedown=function(e){ e.preventDefault(); tinp.value=el.textContent; menu.style.display='none'; };
+      el.ontouchstart=function(e){ e.preventDefault(); tinp.value=el.textContent; menu.style.display='none'; };
+    });
+    menu.style.display='block';
+  }
+  function oaWireTeam(){
+    var tinp=document.getElementById('oaNameAskTeam'), menu=document.getElementById('oaTeamMenu');
+    if(!tinp||tinp._oaWired) return; tinp._oaWired=true;
+    tinp.addEventListener('focus', oaRenderTeamMenu);
+    tinp.addEventListener('input', oaRenderTeamMenu);
+    tinp.addEventListener('blur', function(){ setTimeout(function(){ if(menu) menu.style.display='none'; }, 180); });
+  }
+
+  // Renvoie une Promise<{name, team}>. Demande une seule fois (pseudo + équipe), puis réutilise.
+  window.oaEnsureIdentity = function(bodyName){
+    return new Promise(function(resolve){
+      var sName=lget('oa-name').trim(), sTeam=lget('oa-team').trim(), asked=lget('oa-id2')==='1';
+      var haveName = (bodyName && !isDefault(bodyName)) ? String(bodyName).trim() : sName;
+      if(asked && haveName){ resolve({name:haveName, team:sTeam}); return; }
+      var el=document.getElementById('oaNameAsk');
+      if(!el){ resolve({name:haveName||(isEn()?'Anonymous':'Anonyme'), team:sTeam}); return; }
+      loadTeams(); oaWireTeam();
+      var inp=document.getElementById('oaNameAskInput'), tinp=document.getElementById('oaNameAskTeam');
+      var ok=document.getElementById('oaNameAskOk'), skip=document.getElementById('oaNameAskSkip');
+      var en=isEn();
+      document.getElementById('oaNameAskTitle').textContent = en?'Your name':'Ton pseudo';
+      document.getElementById('oaNameAskSub').textContent   = en?'To save your score on the leaderboard.':'Pour enregistrer ton score au classement.';
+      document.getElementById('oaTeamLabel').textContent    = en?'Team (optional)':'Équipe (optionnel)';
+      tinp.placeholder = en?'Your team…':'Ton équipe…';
+      ok.textContent = en?'Save':'Enregistrer'; skip.textContent = en?'Skip':'Passer';
+      inp.value=haveName||''; tinp.value=sTeam||'';
+      el.style.display='flex'; setTimeout(function(){ try{(inp.value?tinp:inp).focus();}catch(e){} },60);
+      function done(nm,tm,persist){
+        el.style.display='none'; ok.onclick=null; skip.onclick=null; inp.onkeydown=null; tinp.onkeydown=null;
+        if(persist){ lset('oa-name',nm); lset('oa-team',tm); lset('oa-identity','1'); lset('oa-id2','1'); }
+        resolve({name:nm, team:tm});
+      }
+      ok.onclick=function(){ done(inp.value.trim()||(en?'Anonymous':'Anonyme'), tinp.value.trim(), true); };
+      skip.onclick=function(){ done(haveName||(en?'Anonymous':'Anonyme'), sTeam||'', false); };
+      inp.onkeydown=function(e){ if(e.key==='Enter'){ e.preventDefault(); tinp.focus(); } };
+      tinp.onkeydown=function(e){ if(e.key==='Enter'){ e.preventDefault(); ok.onclick(); } };
+    });
+  };
+  // Compat : oaAskName -> renvoie juste le pseudo
+  window.oaAskName = function(cur){ return window.oaEnsureIdentity(cur).then(function(id){ return id.name; }); };
+  /* oa-pregame-ask : demander pseudo+equipe a l'arrivee si pas encore renseigne */
+  setTimeout(function(){ try{ if(lget('oa-id2')!=='1') window.oaEnsureIdentity(''); }catch(e){} }, 500);
+
+  // Interception : tout POST vers submit.php -> injecte pseudo + équipe (demande si première fois)
+  if(window.fetch && !window.__oaNameGate){
+    window.__oaNameGate = true;
+    var orig = window.fetch;
+    window.fetch = function(url, opts){
+      try{
+        var u = (typeof url==='string') ? url : (url && url.url) || '';
+        if(u.indexOf('submit.php')>=0 && opts && opts.method && String(opts.method).toUpperCase()==='POST' && typeof opts.body==='string'){
+          var body = JSON.parse(opts.body);
+          if(body && ('name' in body)){
+            return window.oaEnsureIdentity(body.name).then(function(id){
+              body.name = id.name; body.team = id.team || '';
+              var o2 = {}; for(var k in opts){ o2[k]=opts[k]; } o2.body = JSON.stringify(body);
+              return orig.call(window, url, o2);
+            });
+          }
+        }
+      }catch(e){}
+      return orig.apply(window, arguments);
+    };
+  }
+})();
+</script>
+<button id="oaReportBtn" type="button" aria-label="Signaler un problème" style="position:fixed;left:12px;bottom:12px;z-index:2147482000;width:38px;height:38px;border-radius:50%;border:1px solid rgba(148,163,184,.35);background:rgba(15,22,38,.55);color:#e5e9f0;font-size:17px;line-height:1;cursor:pointer;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);opacity:.55;transition:opacity .15s;font-family:ui-sans-serif,system-ui,sans-serif" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.55" title="Signaler un problème">⚠</button>
+<div id="oaReport" style="display:none;position:fixed;inset:0;z-index:2147483100;background:rgba(3,8,18,.74);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif">
+  <div style="width:min(420px,94vw);background:#0f1626;color:#f8fafc;border:1px solid rgba(255,255,255,.14);border-radius:18px;padding:22px;box-shadow:0 30px 80px rgba(0,0,0,.55)">
+    <div id="oaReportTitle" style="font-size:18px;font-weight:560;letter-spacing:-.01em;margin-bottom:4px">Signaler un problème</div>
+    <div id="oaReportSub" style="font-size:13px;color:#a7b0c2;line-height:1.4;margin-bottom:14px">Décrivez le souci ; il me sera envoyé par e-mail. Aucune adresse n’est affichée.</div>
+    <div id="oaReportForm">
+      <label id="oaReportGameLbl" style="font-size:12px;color:#a7b0c2;display:block;margin-bottom:5px">Jeu concerné</label>
+      <select id="oaReportGame" style="width:100%;box-sizing:border-box;font:inherit;font-size:14px;font-weight:500;color:#f8fafc;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:11px 12px;outline:none;margin-bottom:12px"></select>
+      <label id="oaReportMsgLbl" style="font-size:12px;color:#a7b0c2;display:block;margin-bottom:5px">Description</label>
+      <textarea id="oaReportMsg" rows="5" maxlength="4000" placeholder="Que s’est-il passé ?" style="width:100%;box-sizing:border-box;font:inherit;font-size:14px;color:#f8fafc;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:11px 12px;outline:none;resize:vertical"></textarea>
+      <div id="oaReportErr" style="display:none;font-size:12px;color:#fb7185;margin-top:8px"></div>
+      <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
+        <button id="oaReportCancel" type="button" style="font:inherit;font-weight:520;color:#a7b0c2;background:none;border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:9px 14px;cursor:pointer">Annuler</button>
+        <button id="oaReportSend" type="button" style="font:inherit;font-weight:560;color:#fff;background:linear-gradient(135deg,#2557d6,#0891b2);border:none;border-radius:999px;padding:9px 16px;cursor:pointer">Envoyer</button>
+      </div>
+    </div>
+    <div id="oaReportDone" style="display:none;text-align:center;padding:10px 0">
+      <div style="font-size:34px;line-height:1">✅</div>
+      <div id="oaReportDoneTxt" style="font-size:15px;font-weight:520;margin-top:8px">Merci, c’est envoyé.</div>
+      <button id="oaReportClose2" type="button" style="margin-top:16px;font:inherit;font-weight:560;color:#fff;background:linear-gradient(135deg,#2557d6,#0891b2);border:none;border-radius:999px;padding:9px 18px;cursor:pointer">Fermer</button>
+    </div>
+  </div>
+</div>
+<script id="oa-report">
+(function(){
+  var GAMES=[['plan-please','Plan, Please'],['ok-chimio','OK Chimio'],['arc-racer','Arc Racer'],['beamlet','Beamlet'],['bragg-peak','Bragg Peak'],['fraction-hero','Fraction Hero'],['seed-master','Seed Master'],['mlc-ninja','MLC Ninja'],['tumor-board','Tumor Board'],['radcraft','RadCraft']];
+  function isEn(){ var l=(document.documentElement.getAttribute('lang')||document.documentElement.lang||navigator.language||'fr'); return String(l).slice(0,2).toLowerCase()==='en'; }
+  function API(){ return /\/games\/[^/]+\//.test(location.pathname) ? '../../api' : 'api'; }
+  function curGame(){ var m=location.pathname.match(/\/games\/([a-z0-9-]+)\//i); return m?m[1]:''; }
+  var el=document.getElementById('oaReport');
+  var sel=document.getElementById('oaReportGame'), msg=document.getElementById('oaReportMsg'), err=document.getElementById('oaReportErr');
+  var form=document.getElementById('oaReportForm'), done=document.getElementById('oaReportDone');
+  function labels(){
+    var en=isEn();
+    document.getElementById('oaReportTitle').textContent=en?'Report a problem':'Signaler un problème';
+    document.getElementById('oaReportSub').textContent=en?'Describe the issue; it will be emailed to me. No address is shown.':'Décrivez le souci ; il me sera envoyé par e-mail. Aucune adresse n’est affichée.';
+    document.getElementById('oaReportGameLbl').textContent=en?'Game concerned':'Jeu concerné';
+    document.getElementById('oaReportMsgLbl').textContent=en?'Description':'Description';
+    msg.placeholder=en?'What happened?':'Que s’est-il passé ?';
+    document.getElementById('oaReportCancel').textContent=en?'Cancel':'Annuler';
+    document.getElementById('oaReportSend').textContent=en?'Send':'Envoyer';
+    document.getElementById('oaReportDoneTxt').textContent=en?'Thanks, it’s been sent.':'Merci, c’est envoyé.';
+    document.getElementById('oaReportClose2').textContent=en?'Close':'Fermer';
+    document.getElementById('oaReportBtn').setAttribute('aria-label',en?'Report a problem':'Signaler un problème');
+    document.getElementById('oaReportBtn').title=en?'Report a problem':'Signaler un problème';
+  }
+  function fillSelect(){
+    var en=isEn(), cur=curGame();
+    var html='<option value="">'+(en?'The site / hub':'Le site / le hub')+'</option>';
+    GAMES.forEach(function(g){ html+='<option value="'+g[0]+'">'+g[1]+'</option>'; });
+    html+='<option value="other">'+(en?'Other':'Autre')+'</option>';
+    sel.innerHTML=html; sel.value=cur||'';
+  }
+  window.oaReport=function(){
+    labels(); fillSelect();
+    err.style.display='none'; msg.value=''; form.style.display='block'; done.style.display='none';
+    el.style.display='flex'; setTimeout(function(){ try{msg.focus();}catch(e){} },60);
+  };
+  function close(){ el.style.display='none'; }
+  document.getElementById('oaReportBtn').onclick=window.oaReport;
+  document.getElementById('oaReportCancel').onclick=close;
+  document.getElementById('oaReportClose2').onclick=close;
+  el.addEventListener('click',function(e){ if(e.target===el) close(); });
+  document.getElementById('oaReportSend').onclick=function(){
+    var en=isEn(); var text=(msg.value||'').trim();
+    if(text.length<3){ err.textContent=en?'Please describe the problem.':'Merci de décrire le problème.'; err.style.display='block'; return; }
+    var btn=this; btn.disabled=true; btn.style.opacity=.6;
+    fetch(API()+'/report.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({game:sel.value,message:text,page:location.href})})
+      .then(function(r){return r.ok?r.json():null;}).then(function(d){
+        btn.disabled=false; btn.style.opacity=1;
+        if(d&&d.ok){ form.style.display='none'; done.style.display='block'; }
+        else { err.textContent=en?'Sending failed. Please try again later.':'Envoi impossible. Réessayez plus tard.'; err.style.display='block'; }
+      }).catch(function(){ btn.disabled=false; btn.style.opacity=1; err.textContent=en?'Network error.':'Erreur réseau.'; err.style.display='block'; });
+  };
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#070a12">
+<title>Tumor Board — RCP</title>
+<style>
+:root{
+  --bg:#f7f8fb; --bg-2:#ffffff; --text:#111827; --muted:#667085; --soft:#98a2b3;
+  --card:rgba(255,255,255,.86); --card-strong:rgba(255,255,255,.97);
+  --stroke:rgba(17,24,39,.11); --stroke-strong:rgba(17,24,39,.18);
+  --shadow:0 16px 42px rgba(15,23,42,.08); --shadow-soft:0 8px 24px rgba(15,23,42,.06);
+  --primary:#2557d6; --cyan:#0891b2; --magenta:#c02678; --violet:#6d28d9;
+  --green:#047857; --amber:#b45309; --red:#c2414b;
+  --chip:rgba(37,87,214,.08); --mist:rgba(37,87,214,.055);
+  --radius:14px; --radius-sm:9px;
+  --font:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+[data-theme="dark"]{
+  --bg:#070a12; --bg-2:#0d1323; --text:#f8fafc; --muted:#a7b0c2; --soft:#7d8798;
+  --card:rgba(15,23,42,.74); --card-strong:rgba(15,23,42,.96);
+  --stroke:rgba(255,255,255,.12); --stroke-strong:rgba(255,255,255,.2);
+  --shadow:0 24px 72px rgba(0,0,0,.38); --shadow-soft:0 14px 36px rgba(0,0,0,.24);
+  --primary:#7aa2ff; --cyan:#22d3ee; --magenta:#f472b6; --violet:#a78bfa;
+  --green:#34d399; --amber:#f6bd60; --red:#fb7185;
+  --chip:rgba(122,162,255,.14); --mist:rgba(122,162,255,.08);
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{
+  background:var(--bg); color:var(--text); font-family:var(--font); font-weight:450;
+  -webkit-tap-highlight-color:transparent; padding:env(safe-area-inset-top) 0 0;
+  line-height:1.5;
+}
+#app{max-width:760px;margin:0 auto;padding:18px 16px 56px;position:relative}
+h1,h2,h3{font-weight:520;letter-spacing:-.01em;margin:0}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+button{font-family:inherit;cursor:pointer;color:inherit;font-weight:500}
+.hidden{display:none!important}
+
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.brand{display:flex;align-items:center;gap:10px}
+.logo{width:38px;height:38px;border-radius:11px;background:linear-gradient(150deg,var(--primary),var(--violet));
+  display:flex;align-items:center;justify-content:center;color:#fff;font-weight:560;font-size:15px;box-shadow:var(--shadow-soft)}
+.brand h1{font-size:18px}
+.brand .sub{font-size:11px;color:var(--soft);font-weight:520;letter-spacing:.06em;text-transform:uppercase}
+.ctl{display:flex;gap:8px}
+.ctl button{background:var(--card);border:1px solid var(--stroke);border-radius:10px;padding:7px 11px;font-size:12px;color:var(--muted)}
+.ctl button:hover{border-color:var(--stroke-strong);color:var(--text)}
+
+.card{background:var(--card);border:1px solid var(--stroke);border-radius:var(--radius);box-shadow:var(--shadow-soft);
+  padding:18px;backdrop-filter:blur(8px)}
+
+.hero h2{font-size:24px;margin-bottom:8px}
+.hero p{color:var(--muted);margin:0 0 14px}
+.concept{display:flex;flex-direction:column;gap:9px;margin:14px 0 18px}
+.concept .row{display:flex;gap:10px;align-items:flex-start;font-size:14px}
+.concept .n{flex:none;width:22px;height:22px;border-radius:7px;background:var(--chip);color:var(--primary);
+  display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:560;margin-top:1px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--stroke);
+  background:var(--card-strong);border-radius:11px;padding:12px 18px;font-size:15px;font-weight:520;color:var(--text);
+  transition:.15s;width:100%;text-decoration:none}
+.btn:hover{border-color:var(--stroke-strong)}
+.btn.primary{background:linear-gradient(150deg,var(--primary),var(--violet));color:#fff;border:none;box-shadow:var(--shadow-soft)}
+.btn.primary:hover{filter:brightness(1.05)}
+.btn.ghost{background:transparent}
+.menu-actions{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+.disc{font-size:11.5px;color:var(--soft);margin-top:16px;line-height:1.5}
+
+.pbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.pchips{display:flex;gap:5px;flex-wrap:wrap}
+.pchip{width:20px;height:6px;border-radius:3px;background:var(--stroke)}
+.pchip.ok{background:var(--green)}
+.pchip.bad{background:var(--red)}
+.pchip.cur{background:var(--primary)}
+.pscore{font-size:14px;font-weight:520;white-space:nowrap}
+.pscore b{color:var(--primary)}
+
+.rcp-tag{display:inline-flex;align-items:center;gap:7px;font-size:11px;font-weight:560;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--cyan);margin-bottom:10px}
+.rcp-tag::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--cyan)}
+.vignette{font-size:16px;line-height:1.6;margin:0 0 4px}
+.vitals{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 4px}
+.vital{font-size:12px;padding:4px 9px;border-radius:8px;background:var(--chip);color:var(--muted);border:1px solid var(--stroke)}
+.vital b{color:var(--text);font-weight:520}
+.question{font-size:15px;font-weight:520;margin:16px 0 12px}
+
+.opts{display:flex;flex-direction:column;gap:9px}
+.opt{display:flex;gap:11px;align-items:flex-start;text-align:left;width:100%;
+  background:var(--bg-2);border:1px solid var(--stroke);border-radius:11px;padding:13px 14px;font-size:14.5px;
+  color:var(--text);transition:.12s;line-height:1.45}
+.opt:hover:not(:disabled){border-color:var(--primary);background:var(--mist)}
+.opt .key{flex:none;width:24px;height:24px;border-radius:7px;background:var(--chip);color:var(--primary);
+  display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:560}
+.opt:disabled{cursor:default}
+.opt.correct{border-color:var(--green);background:color-mix(in srgb,var(--green) 12%,transparent)}
+.opt.correct .key{background:var(--green);color:#fff}
+.opt.wrong{border-color:var(--red);background:color-mix(in srgb,var(--red) 10%,transparent)}
+.opt.wrong .key{background:var(--red);color:#fff}
+.opt.dim{opacity:.5}
+
+.feedback{margin-top:14px;border-radius:11px;padding:14px;border:1px solid var(--stroke);background:var(--bg-2)}
+.feedback.good{border-color:var(--green);background:color-mix(in srgb,var(--green) 8%,transparent)}
+.feedback.bad{border-color:var(--amber);background:color-mix(in srgb,var(--amber) 9%,transparent)}
+.feedback .verdict{font-weight:560;font-size:14px;margin-bottom:6px;display:flex;align-items:center;gap:7px}
+.feedback.good .verdict{color:var(--green)}
+.feedback.bad .verdict{color:var(--amber)}
+.feedback .why{font-size:13.5px;color:var(--muted);line-height:1.55}
+.feedback .why b{color:var(--text);font-weight:520}
+.nccn{margin-top:8px;font-size:11.5px;color:var(--soft);font-weight:520;letter-spacing:.03em}
+.next-row{margin-top:14px}
+
+.result h2{font-size:22px;margin-bottom:4px}
+.big-score{font-size:52px;font-weight:560;letter-spacing:-.02em;line-height:1;margin:14px 0 2px;
+  background:linear-gradient(150deg,var(--primary),var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
+.grade{display:inline-block;font-size:13px;font-weight:560;padding:4px 12px;border-radius:20px;margin-top:8px}
+.rstats{display:flex;gap:10px;margin:16px 0;flex-wrap:wrap}
+.rstat{flex:1;min-width:100px;background:var(--bg-2);border:1px solid var(--stroke);border-radius:11px;padding:12px}
+.rstat .v{font-size:22px;font-weight:560}
+.rstat .l{font-size:11.5px;color:var(--soft);text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
+
+.lb{margin-top:16px}
+.lb-head{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--soft);
+  text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;font-weight:520}
+.lb-list{display:flex;flex-direction:column;gap:5px;max-height:300px;overflow:auto}
+.lb-row{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:9px;background:var(--bg-2);
+  border:1px solid var(--stroke);font-size:13.5px}
+.lb-row .rk{width:22px;font-weight:560;color:var(--soft);text-align:right}
+.lb-row .nm{flex:1;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lb-row .tm{font-size:11px;color:var(--soft);background:var(--chip);padding:2px 7px;border-radius:6px}
+.lb-row .sc{font-weight:560;color:var(--primary)}
+.foot-links{display:flex;gap:16px;justify-content:center;margin-top:20px;font-size:13px}
+.foot-links a,.foot-links button{color:var(--muted);text-decoration:none;background:none;border:none;font-size:13px;cursor:pointer}
+.foot-links a:hover,.foot-links button:hover{color:var(--primary)}
+
+@media(max-width:560px){
+  #app{padding:14px 12px 48px}
+  .big-score{font-size:44px}
+  .vignette{font-size:15px}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="top">
+    <div class="brand">
+      <div class="logo">RCP</div>
+      <div>
+        <h1>Tumor Board</h1>
+        <div class="sub" id="tagline">Réunion de concertation</div>
+      </div>
+    </div>
+    <div class="ctl">
+      <button id="langBtn">EN</button>
+      <button id="themeBtn">◐</button>
+    </div>
+  </div>
+
+  <section id="menu" class="card hero">
+    <h2 id="mTitle">La RCP, en conditions réelles</h2>
+    <p id="mLede" class="muted"></p>
+    <div class="concept" id="mConcept"></div>
+    <div class="menu-actions">
+      <button class="btn primary" id="startBtn">Démarrer une RCP</button>
+      <button class="btn ghost" id="lbBtn">Classement mondial</button>
+      <a class="btn ghost" href="../../index.html" id="allBtn">Tous les jeux</a>
+    </div>
+    <p class="disc" id="mDisc"></p>
+  </section>
+
+  <section id="play" class="hidden">
+    <div class="pbar">
+      <div class="pchips" id="pchips"></div>
+      <div class="pscore"><span id="pScoreLbl">Score</span> <b id="pScore">0</b></div>
+    </div>
+    <div class="card">
+      <div class="rcp-tag" id="caseSite">RCP</div>
+      <p class="vignette" id="caseVignette"></p>
+      <div class="vitals" id="caseVitals"></div>
+      <p class="question" id="caseQuestion"></p>
+      <div class="opts" id="caseOpts"></div>
+      <div class="feedback hidden" id="feedback">
+        <div class="verdict" id="fVerdict"></div>
+        <div class="why" id="fWhy"></div>
+        <div class="nccn" id="fNccn"></div>
+        <div class="next-row"><button class="btn primary" id="nextBtn">Cas suivant</button></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="result" class="hidden">
+    <div class="card">
+      <div class="result">
+        <div class="rcp-tag" id="rTag">RCP terminée</div>
+        <h2 id="rTitle">Séance terminée</h2>
+        <div class="big-score" id="rScore">0</div>
+        <div class="muted small" id="rScoreLbl">points</div>
+        <div><span class="grade" id="rGrade"></span></div>
+        <div class="rstats">
+          <div class="rstat"><div class="v" id="rCorrect">0</div><div class="l" id="rCorrectLbl">Bonnes réponses</div></div>
+          <div class="rstat"><div class="v" id="rAcc">0%</div><div class="l" id="rAccLbl">Concordance NCCN</div></div>
+          <div class="rstat"><div class="v" id="rStreak">0</div><div class="l" id="rStreakLbl">Meilleure série</div></div>
+        </div>
+        <div class="menu-actions">
+          <button class="btn primary" id="againBtn">Nouvelle RCP</button>
+          <button class="btn ghost" id="lbBtn2">Classement mondial</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="board" class="hidden">
+    <div class="card lb">
+      <div class="lb-head"><span id="lbTitle">Classement mondial</span><span id="lbStatus">—</span></div>
+      <div class="lb-list" id="lbList"></div>
+      <div class="menu-actions" style="margin-top:14px">
+        <button class="btn ghost" id="lbBack">Retour</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="foot-links">
+    <a href="../../index.html" id="footAll">Tous les jeux</a>
+    <button id="aboutBtn">À propos</button>
+  </div>
+</div>
+
+<script>
+(()=>{'use strict';
+const API_ROOT="../../api", GAME_SLUG="tumor-board";
+const $=id=>document.getElementById(id);
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+let LANG = (new URLSearchParams(location.search).get('lang')) || localStorage.getItem('oa-lang') || 'fr';
+function L(o){ return (o && (o[LANG]!==undefined?o[LANG]:o.fr)); }
+
+const NAMES={
+  M:['M. Bernard','M. Lefèvre','M. Moreau','M. Girard','M. Dupont','M. Roy','M. Faure','M. Mercier','M. Blanc','M. Henry','M. Colin','M. Renaud','M. Perrin','M. Morel','M. Fontaine','M. Chevalier','M. Robin','M. Gauthier','M. Masson','M. Noël'],
+  F:['Mme Martin','Mme Petit','Mme Durand','Mme Leroy','Mme Garnier','Mme Rousseau','Mme Vincent','Mme Muller','Mme Lemoine','Mme Aubert','Mme Marchand','Mme Bonnet','Mme Dumas','Mme Meunier','Mme Brun','Mme Lucas','Mme Guérin','Mme Fournier','Mme Lambert','Mme Roussel']
+};
+const PS=['OMS 0','OMS 1','OMS 0','OMS 1','OMS 2'];
+
+const ARCHETYPES = [
+
+{ id:'breast-dcis', sex:'F', age:[48,70], site:{fr:'RCP Sénologie',en:'Breast board'},
+  gen(c){ return {
+    vignette:{fr:`${c.name}, ${c.age} ans, microcalcifications suspectes au dépistage. Biopsie : carcinome canalaire in situ (CCIS) de grade intermédiaire, RE positif, sans micro-invasion.`,
+              en:`${c.name}, age ${c.age}, suspicious screening microcalcifications. Biopsy: intermediate-grade ductal carcinoma in situ (DCIS), ER-positive, no invasion.`},
+    vitals:[{l:'Stade',v:'CCIS (Tis)'},{l:'RE',v:'positif'},{l:'PS',v:c.ps}],
+    question:{fr:'Quelle prise en charge proposez-vous ?',en:'Which management do you propose?'},
+    correct:{fr:'Tumorectomie avec marges saines + radiothérapie du sein, puis hormonothérapie (RE+).',
+             en:'Lumpectomy with clear margins + whole-breast radiotherapy, then endocrine therapy (ER+).'},
+    distractors:[
+      {fr:'Chimiothérapie néoadjuvante puis chirurgie.',en:'Neoadjuvant chemotherapy then surgery.'},
+      {fr:'Mastectomie totale avec curage axillaire systématique.',en:'Total mastectomy with routine axillary dissection.'},
+      {fr:'Surveillance simple, sans traitement local.',en:'Active surveillance only, no local treatment.'}],
+    why:{fr:'Le CCIS n\u2019est pas invasif : pas de chimiothérapie ni de curage axillaire systématique. Le standard est la <b>chirurgie conservatrice + radiothérapie</b>, avec hormonothérapie si RE+.',
+         en:'DCIS is non-invasive: no chemotherapy or routine axillary dissection. Standard is <b>breast-conserving surgery + radiotherapy</b>, with endocrine therapy if ER+.'},
+    nccn:'NCCN Breast — DCIS' }; } },
+
+{ id:'breast-early', sex:'F', age:[50,74], site:{fr:'RCP Sénologie',en:'Breast board'},
+  gen(c){ return {
+    vignette:{fr:`${c.name}, ${c.age} ans, nodule de 15 mm. Carcinome infiltrant, RE+ / RP+ / HER2 négatif, grade 2, sans atteinte ganglionnaire.`,
+              en:`${c.name}, age ${c.age}, 15 mm mass. Invasive carcinoma, ER+/PR+/HER2-negative, grade 2, node-negative.`},
+    vitals:[{l:'Stade',v:'cT1 N0'},{l:'Profil',v:'RH+ HER2−'},{l:'PS',v:c.ps}],
+    question:{fr:'Après chirurgie conservatrice, comment décidez-vous d\u2019une chimiothérapie adjuvante ?',en:'After conserving surgery, how do you decide on adjuvant chemotherapy?'},
+    correct:{fr:'Chirurgie conservatrice + radiothérapie + hormonothérapie ; signature génomique (type Oncotype) pour poser l\u2019indication de chimiothérapie.',
+             en:'Conserving surgery + radiotherapy + endocrine therapy; genomic assay (e.g. Oncotype) to decide on chemotherapy.'},
+    distractors:[
+      {fr:'Chimiothérapie systématique pour toutes les patientes RH+.',en:'Chemotherapy for every ER+ patient.'},
+      {fr:'Trastuzumab, car tout cancer du sein en bénéficie.',en:'Trastuzumab, since all breast cancers benefit.'},
+      {fr:'Immunothérapie par pembrolizumab en adjuvant.',en:'Adjuvant pembrolizumab immunotherapy.'}],
+    why:{fr:'En RH+/HER2− N0, la chimiothérapie n\u2019est pas systématique : une <b>signature génomique</b> guide l\u2019indication. Le trastuzumab ne concerne que les tumeurs HER2+.',
+         en:'In ER+/HER2- N0 disease chemo is not automatic: a <b>genomic assay</b> guides it. Trastuzumab is only for HER2+ tumours.'},
+    nccn:'NCCN Breast — invasif RH+/HER2−' }; } },
+
+{ id:'breast-her2', sex:'F', age:[42,68], site:{fr:'RCP Sénologie',en:'Breast board'},
+  gen(c){ return {
+    vignette:{fr:`${c.name}, ${c.age} ans, tumeur de 32 mm avec adénopathie axillaire. Carcinome infiltrant HER2 positif (IHC 3+), RE faiblement positif.`,
+              en:`${c.name}, age ${c.age}, 32 mm tumour with axillary node. Invasive carcinoma, HER2-positive (IHC 3+), weakly ER+.`},
+    vitals:[{l:'Stade',v:'cT2 N1'},{l:'HER2',v:'positif (3+)'},{l:'PS',v:c.ps}],
+    question:{fr:'Quelle séquence thérapeutique retenez-vous ?',en:'Which treatment sequence do you choose?'},
+    correct:{fr:'Chimiothérapie néoadjuvante associée à une double thérapie anti-HER2 (trastuzumab + pertuzumab), puis chirurgie.',
+             en:'Neoadjuvant chemotherapy with dual anti-HER2 therapy (trastuzumab + pertuzumab), then surgery.'},
+    distractors:[
+      {fr:'Hormonothérapie seule, sans traitement anti-HER2.',en:'Endocrine therapy alone, no anti-HER2.'},
+      {fr:'Chirurgie d\u2019emblée puis surveillance.',en:'Upfront surgery then surveillance.'},
+      {fr:'Radiothérapie exclusive du sein et de l\u2019aisselle.',en:'Radiotherapy alone to breast and axilla.'}],
+    why:{fr:'Une tumeur HER2+ ≥ T2 ou N+ relève d\u2019une <b>chimiothérapie néoadjuvante + anti-HER2 (trastuzumab ± pertuzumab)</b>, puis chirurgie, permettant d\u2019adapter le traitement adjuvant à la réponse.',
+         en:'A HER2+ tumour ≥ T2 or N+ warrants <b>neoadjuvant chemo + anti-HER2 (trastuzumab ± pertuzumab)</b>, then surgery, allowing response-adapted adjuvant therapy.'},
+    nccn:'NCCN Breast — HER2+' }; } },
+
+{ id:'breast-tnbc', sex:'F', age:[38,64], site:{fr:'RCP Sénologie',en:'Breast board'},
+  gen(c){ return {
+    vignette:{fr:`${c.name}, ${c.age} ans, tumeur de 28 mm avec ganglion axillaire suspect. Carcinome triple négatif (RE−/RP−/HER2−), grade 3.`,
+              en:`${c.name}, age ${c.age}, 28 mm tumour with suspicious axillary node. Triple-negative carcinoma (ER-/PR-/HER2-), grade 3.`},
+    vitals:[{l:'Stade',v:'cT2 N1'},{l:'Profil',v:'Triple négatif'},{l:'PS',v:c.ps}],
+    question:{fr:'Quelle est la stratégie de première intention ?',en:'What is the first-line strategy?'},
+    correct:{fr:'Chimiothérapie néoadjuvante associée au pembrolizumab, puis chirurgie et radiothérapie.',
+             en:'Neoadjuvant chemotherapy plus pembrolizumab, then surgery and radiotherapy.'},
+    distractors:[
+      {fr:'Hormonothérapie par inhibiteur de l\u2019aromatase.',en:'Aromatase-inhibitor endocrine therapy.'},
+      {fr:'Trastuzumab + pertuzumab en néoadjuvant.',en:'Neoadjuvant trastuzumab + pertuzumab.'},
+      {fr:'Chirurgie première sans traitement systémique.',en:'Upfront surgery, no systemic therapy.'}],
+    why:{fr:'Le triple négatif ne répond ni à l\u2019hormonothérapie ni aux anti-HER2. Pour une tumeur ≥ T2 ou N+, le standard est la <b>chimiothérapie néoadjuvante + pembrolizumab</b> (KEYNOTE-522).',
+         en:'Triple-negative disease responds to neither endocrine nor anti-HER2 therapy. For ≥ T2 or N+, standard is <b>neoadjuvant chemo + pembrolizumab</b> (KEYNOTE-522).'},
+    nccn:'NCCN Breast — triple négatif' }; } },
+
+{ id:'nsclc-early', sex:'any', age:[58,78], site:{fr:'RCP Thoracique',en:'Thoracic board'},
+  gen(c){ const op = Math.random()<0.6;
+    return {
+    vignette:{fr:`${c.name}, ${c.age} ans, nodule pulmonaire de 22 mm en périphérie du lobe supérieur droit. Adénocarcinome prouvé, sans atteinte ganglionnaire ni métastase. ${op?'Fonction respiratoire conservée, patient opérable.':'Fonction respiratoire limitée : patient jugé non opérable.'}`,
+              en:`${c.name}, age ${c.age}, 22 mm peripheral nodule in the right upper lobe. Proven adenocarcinoma, node-negative, no metastasis. ${op?'Preserved lung function, operable.':'Limited lung function: deemed inoperable.'}`},
+    vitals:[{l:'Stade',v:'cT1 N0 M0'},{l:'Opérabilité',v:op?'opérable':'non opérable'},{l:'PS',v:c.ps}],
+    question:{fr:'Quel traitement à visée curative proposez-vous ?',en:'Which curative treatment do you propose?'},
+    correct: op
+      ? {fr:'Lobectomie avec curage ganglionnaire médiastinal.',en:'Lobectomy with mediastinal nodal dissection.'}
+      : {fr:'Radiothérapie stéréotaxique (SBRT) de la lésion.',en:'Stereotactic radiotherapy (SBRT) of the lesion.'},
+    distractors: op
+      ? [{fr:'Radiochimiothérapie concomitante.',en:'Concurrent chemoradiotherapy.'},
+         {fr:'Chimiothérapie palliative seule.',en:'Palliative chemotherapy alone.'},
+         {fr:'Surveillance scanographique simple.',en:'CT surveillance only.'}]
+      : [{fr:'Lobectomie malgré la contre-indication respiratoire.',en:'Lobectomy despite respiratory contraindication.'},
+         {fr:'Chimiothérapie palliative seule.',en:'Palliative chemotherapy alone.'},
+         {fr:'Abstention thérapeutique.',en:'No treatment.'}],
+    why: op
+      ? {fr:'Un CBNPC de stade I opérable relève de la <b>chirurgie (lobectomie + curage)</b>, traitement de référence à visée curative.',en:'Operable stage I NSCLC is treated with <b>surgery (lobectomy + nodal dissection)</b>, the curative standard.'}
+      : {fr:'En stade I non opérable, la <b>SBRT</b> offre un excellent contrôle local à visée curative.',en:'For inoperable stage I, <b>SBRT</b> provides excellent curative local control.'},
+    nccn:'NCCN NSCLC — stade I' }; } },
+
+{ id:'nsclc-III', sex:'any', age:[56,76], site:{fr:'RCP Thoracique',en:'Thoracic board'},
+  gen(c){ return {
+    vignette:{fr:`${c.name}, ${c.age} ans, adénocarcinome pulmonaire avec adénopathies médiastinales homolatérales (N2), non résécable, sans métastase à distance.`,
+              en:`${c.name}, age ${c.age}, lung adenocarcinoma with ipsilateral mediastinal nodes (N2), unresectable, no distant metastasis.`},
+    vitals:[{l:'Stade',v:'III (N2) non résécable'},{l:'M',v:'M0'},{l:'PS',v:c.ps}],
+    question:{fr:'Quel schéma retenez-vous ?',en:'Which regimen do you choose?'},
+    correct:{fr:'Radiochimiothérapie concomitante, suivie d\u2019une consolidation par durvalumab.',en:'Concurrent chemoradiotherapy, followed by durvalumab consolidation.'},
+    distractors:[
+      {fr:'Chirurgie d\u2019emblée par pneumonectomie.',en:'Upfront pneumonectomy.'},
+      {fr:'Chimiothérapie palliative exclusive.',en:'Palliative chemotherapy alone.'},
+      {fr:'Radiothérapie seule sans traitement systémique.',en:'Radiotherapy alone, no systemic therapy.'}],
+    why:{fr:'Le stade III non résécable relève d\u2019une <b>radiochimiothérapie concomitante puis durvalumab</b> en consolidation (schéma PACIFIC), à visée curative.',
+         en:'Unresectable stage III is treated with <b>concurrent chemoradiotherapy then consolidation durvalumab</b> (PACIFIC), with curative intent.'},
+    nccn:'NCCN NSCLC — stade III' }; } },
+
+{ id:'nsclc-IV', sex:'any', age:[52,80], site:{fr:'RCP Thoracique',en:'Thoracic board'},
+  gen(c){ const b = pick(['EGFR','ALK','PDL1','none']);
+    const bio = {EGFR:'mutation EGFR (délétion exon 19)',ALK:'réarrangement ALK',PDL1:'PD-L1 ≥ 50 %, sans mutation ciblable',none:'PD-L1 < 1 %, sans mutation ciblable'}[b];
+    const bioEn = {EGFR:'EGFR mutation (exon 19 deletion)',ALK:'ALK rearrangement',PDL1:'PD-L1 ≥ 50%, no targetable mutation',none:'PD-L1 < 1%, no targetable mutation'}[b];
+    const corr={EGFR:{fr:'Inhibiteur de tyrosine kinase anti-EGFR (osimertinib).',en:'EGFR tyrosine-kinase inhibitor (osimertinib).'},
+                ALK:{fr:'Inhibiteur d\u2019ALK (alectinib).',en:'ALK inhibitor (alectinib).'},
+                PDL1:{fr:'Immunothérapie par pembrolizumab en monothérapie.',en:'Pembrolizumab monotherapy.'},
+                none:{fr:'Chimiothérapie associée à l\u2019immunothérapie.',en:'Chemotherapy combined with immunotherapy.'}}[b];
+    let dist;
+    if(b==='EGFR') dist=[{fr:'Immunothérapie seule (pembrolizumab).',en:'Immunotherapy alone (pembrolizumab).'},{fr:'Alectinib (anti-ALK).',en:'Alectinib (anti-ALK).'},{fr:'Radiothérapie thoracique exclusive.',en:'Thoracic radiotherapy alone.'}];
+    else if(b==='ALK') dist=[{fr:'Osimertinib (anti-EGFR).',en:'Osimertinib (anti-EGFR).'},{fr:'Chimiothérapie seule.',en:'Chemotherapy alone.'},{fr:'Hormonothérapie.',en:'Endocrine therapy.'}];
+    else if(b==='PDL1') dist=[{fr:'Osimertinib, sans mutation EGFR.',en:'Osimertinib, without EGFR mutation.'},{fr:'Alectinib, sans réarrangement ALK.',en:'Alectinib, without ALK rearrangement.'},{fr:'Abstention thérapeutique.',en:'No treatment.'}];
+    else dist=[{fr:'Osimertinib, sans mutation EGFR.',en:'Osimertinib, without EGFR mutation.'},{fr:'Pembrolizumab en monothérapie (PD-L1 < 1 %).',en:'Single-agent pembrolizumab (PD-L1 < 1%).'},{fr:'Chirurgie de la tumeur primitive.',en:'Surgery of the primary tumour.'}];
+    return {
+    vignette:{fr:`${c.name}, ${c.age} ans, adénocarcinome pulmonaire métastatique (osseux et hépatique). Biologie moléculaire : ${bio}.`,
+              en:`${c.name}, age ${c.age}, metastatic lung adenocarcinoma (bone and liver). Molecular profile: ${bioEn}.`},
+    vitals:[{l:'Stade',v:'IV (métastatique)'},{l:'Biomarqueur',v:{EGFR:'EGFR muté',ALK:'ALK+',PDL1:'PD-L1 ≥ 50 %',none:'PD-L1 < 1 %'}[b]},{l:'PS',v:c.ps}],
+    question:{fr:'Quel traitement de première ligne est le plus adapté ?',en:'Which first-line treatment fits best?'},
+    correct:corr, distractors:dist,
+    why: (b==='EGFR'||b==='ALK')
+      ? {fr:'En présence d\u2019une <b>altération moléculaire ciblable</b>, la thérapie ciblée orale correspondante est le traitement de 1re ligne — pas l\u2019immunothérapie.',en:'With a <b>targetable driver</b>, the matching oral targeted therapy is first-line — not immunotherapy.'}
+      : (b==='PDL1' ? {fr:'Sans mutation ciblable et avec <b>PD-L1 ≥ 50 %</b>, l\u2019immunothérapie en monothérapie est appropriée.',en:'Without a targetable driver and with <b>PD-L1 ≥ 50%</b>, single-agent immunotherapy is appropriate.'}
+                     : {fr:'Sans cible et avec <b>PD-L1 faible</b>, on associe <b>chimiothérapie + immunothérapie</b>.',en:'Without a driver and with <b>low PD-L1</b>, combine <b>chemotherapy + immunotherapy</b>.'}),
+    nccn:'NCCN NSCLC — stade IV, guidé par les biomarqueurs' }; } },
+
+{ id:'prostate-low', sex:'M', age:[55,72], site:{fr:'RCP Uro-oncologie',en:'GU board'},
+  gen(c){ return {
+    vignette:{fr:`${c.name}, ${c.age} ans, découverte sur PSA à 6 ng/mL. Biopsies : adénocarcinome prostatique Gleason 6 (ISUP 1) sur 2 carottes, tumeur non palpable.`,
+              en:`${c.name}, age ${c.age}, PSA 6 ng/mL. Biopsy: Gleason 6 (ISUP 1) prostate adenocarcinoma, 2 cores, non-palpable.`},
+    vitals:[{l:'Risque',v:'faible'},{l:'Gleason',v:'6 (ISUP 1)'},{l:'PSA',v:'6 ng/mL'}],
+    question:{fr:'Quelle est l\u2019option recommandée en priorité ?',en:'Which option is recommended first?'},
+    correct:{fr:'Surveillance active (PSA, IRM et biopsies programmées).',en:'Active surveillance (scheduled PSA, MRI and biopsies).'},
+    distractors:[
+      {fr:'Prostatectomie totale immédiate.',en:'Immediate radical prostatectomy.'},
+      {fr:'Radiothérapie + hormonothérapie longue.',en:'Radiotherapy + long-term androgen deprivation.'},
+      {fr:'Chimiothérapie par docétaxel.',en:'Docetaxel chemotherapy.'}],
+    why:{fr:'Un cancer de prostate de <b>faible risque</b> relève en priorité de la <b>surveillance active</b> ; traiter d\u2019emblée expose à un surtraitement.',
+         en:'Low-risk prostate cancer is best managed with <b>active surveillance</b>; upfront treatment risks overtreatment.'},
+    nccn:'NCCN Prostate — faible risque' }; } },
+
+{ id:'prostate-high', sex:'M', age:[60,78], site:{fr:'RCP Uro-oncologie',en:'GU board'},
+  gen(c){ return {
+    vignette:{fr:`${c.name}, ${c.age} ans, PSA à 28 ng/mL. Biopsies : adénocarcinome Gleason 9 (ISUP 5), tumeur localisée mais à haut risque, sans métastase.`,
+              en:`${c.name}, age ${c.age}, PSA 28 ng/mL. Biopsy: Gleason 9 (ISUP 5), localised high-risk tumour, no metastasis.`},
+    vitals:[{l:'Risque',v:'élevé'},{l:'Gleason',v:'9 (ISUP 5)'},{l:'PSA',v:'28 ng/mL'}],
+    question:{fr:'Quelle stratégie retenez-vous ?',en:'Which strategy do you choose?'},
+    correct:{fr:'Radiothérapie associée à une hormonothérapie longue (2-3 ans), ou prostatectomie dans une approche multimodale.',
+             en:'Radiotherapy with long-term androgen deprivation (2-3 years), or prostatectomy within a multimodal approach.'},
+    distractors:[
+      {fr:'Surveillance active.',en:'Active surveillance.'},
+      {fr:'Hormonothérapie seule, sans traitement local.',en:'Androgen deprivation alone, no local therapy.'},
+      {fr:'Abstention et surveillance du PSA.',en:'Watchful waiting on PSA.'}],
+    why:{fr:'Un cancer <b>localisé à haut risque</b> nécessite un traitement local (radiothérapie + <b>hormonothérapie longue</b>, ou chirurgie) : la surveillance active est inadaptée.',
+         en:'<b>High-risk localised</b> disease needs local therapy (radiotherapy + <b>long-term ADT</b>, or surgery): active surveillance is inappropriate.'},
+    nccn:'NCCN Prostate — haut risque' }; } },
+
+{ id:'prostate-mhspc', sex:'M', age:[62,82], site:{fr:'RCP Uro-oncologie',en:'GU board'},
+  gen(c){ return {
+    vignette:{fr:`${c.name}, ${c.age} ans, adénocarcinome prostatique avec métastases osseuses multiples d\u2019emblée, naïf de tout traitement (hormonosensible).`,
+              en:`${c.name}, age ${c.age}, prostate adenocarcinoma with multiple bone metastases at diagnosis, treatment-naïve (hormone-sensitive).`},
+    vitals:[{l:'Stade',v:'métastatique'},{l:'Statut',v:'hormonosensible'},{l:'PS',v:c.ps}],
+    question:{fr:'Quel traitement de première intention ?',en:'Which first-line treatment?'},
+    correct:{fr:'Suppression androgénique (ADT) associée à un inhibiteur de la voie des androgènes (abiratérone ou enzalutamide), ± docétaxel.',
+             en:'Androgen-deprivation therapy plus an androgen-receptor pathway inhibitor (abiraterone or enzalutamide), ± docetaxel.'},
+    distractors:[
+      {fr:'Suppression androgénique seule (monothérapie).',en:'Androgen deprivation alone (monotherapy).'},
+      {fr:'Surveillance jusqu\u2019à progression symptomatique.',en:'Surveillance until symptomatic progression.'},
+      {fr:'Radiothérapie exclusive de la prostate.',en:'Prostate radiotherapy alone.'}],
+    why:{fr:'Dans le cancer métastatique <b>hormonosensible</b>, l\u2019ADT seule est sous-optimale : le standard est l\u2019<b>ADT intensifiée</b> par un inhibiteur de la voie des androgènes (± docétaxel).',
+         en:'In metastatic <b>hormone-sensitive</b> disease, ADT alone is suboptimal: standard is <b>intensified ADT</b> with an ARPI (± docetaxel).'},
+    nccn:'NCCN Prostate — mHSPC' }; } },
+
+{ id:'colon-III', sex:'any', age:[52,78], site:{fr:'RCP Digestive',en:'GI board'},
+  gen(c){ return {
+    vignette:{fr:`${c.name}, ${c.age} ans, adénocarcinome du côlon opéré (colectomie). Anatomopathologie : envahissement de la paroi et 3 ganglions atteints sur 18 (stade III).`,
+              en:`${c.name}, age ${c.age}, resected colon adenocarcinoma (colectomy). Pathology: bowel-wall invasion and 3/18 positive nodes (stage III).`},
+    vitals:[{l:'Stade',v:'III (pN+)'},{l:'Chirurgie',v:'R0'},{l:'PS',v:c.ps}],
+    question:{fr:'Quel traitement adjuvant proposez-vous ?',en:'Which adjuvant treatment do you propose?'},
+    correct:{fr:'Chimiothérapie adjuvante à base d\u2019oxaliplatine (FOLFOX ou CAPOX).',en:'Adjuvant oxaliplatin-based chemotherapy (FOLFOX or CAPOX).'},
+    distractors:[
+      {fr:'Radiothérapie adjuvante du lit tumoral.',en:'Adjuvant radiotherapy to the tumour bed.'},
+      {fr:'Surveillance simple, sans traitement adjuvant.',en:'Surveillance only, no adjuvant treatment.'},
+      {fr:'Immunothérapie systématique.',en:'Routine immunotherapy.'}],
+    why:{fr:'Un cancer du côlon <b>stade III</b> (ganglions envahis) relève d\u2019une <b>chimiothérapie adjuvante à base d\u2019oxaliplatine</b>. La radiothérapie n\u2019a pas de place dans le côlon.',
+         en:'Stage III colon cancer (node-positive) warrants <b>adjuvant oxaliplatin-based chemotherapy</b>. Radiotherapy has no role in colon cancer.'},
+    nccn:'NCCN Colon — stade III' }; } },
+
+{ id:'rectum-LA', sex:'any', age:[50,76], site:{fr:'RCP Digestive',en:'GI board'},
+  gen(c){ return {
+    vignette:{fr:`${c.name}, ${c.age} ans, adénocarcinome du bas rectum, cT3 avec adénopathies mésorectales (N+), sans métastase. Fascia mésorectal menacé à l\u2019IRM.`,
+              en:`${c.name}, age ${c.age}, low rectal adenocarcinoma, cT3 with mesorectal nodes (N+), no metastasis. Threatened mesorectal fascia on MRI.`},
+    vitals:[{l:'Stade',v:'cT3 N+ M0'},{l:'Siège',v:'bas rectum'},{l:'PS',v:c.ps}],
+    question:{fr:'Quelle séquence proposez-vous ?',en:'Which sequence do you propose?'},
+    correct:{fr:'Traitement néoadjuvant (radiochimiothérapie / traitement total néoadjuvant) avant l\u2019exérèse chirurgicale (TME).',
+             en:'Neoadjuvant therapy (chemoradiotherapy / total neoadjuvant therapy) before surgery (TME).'},
+    distractors:[
+      {fr:'Chirurgie d\u2019emblée, sans traitement préopératoire.',en:'Upfront surgery, no preoperative treatment.'},
+      {fr:'Chimiothérapie palliative exclusive.',en:'Palliative chemotherapy alone.'},
+      {fr:'Radiothérapie seule, sans chirurgie.',en:'Radiotherapy alone, without surgery.'}],
+    why:{fr:'Un cancer du rectum <b>localement avancé</b> (cT3-4 ou N+) bénéficie d\u2019un <b>traitement néoadjuvant</b> pour réduire le risque de rechute locale avant l\u2019exérèse totale du mésorectum.',
+         en:'<b>Locally advanced</b> rectal cancer (cT3-4 or N+) benefits from <b>neoadjuvant therapy</b> to reduce local recurrence before total mesorectal excision.'},
+    nccn:'NCCN Rectal — localement avancé' }; } },
+
+{ id:'crc-meta', sex:'any', age:[48,78], site:{fr:'RCP Digestive',en:'GI board'},
+  gen(c){ const msi = Math.random()<0.4;
+    return {
+    vignette:{fr:`${c.name}, ${c.age} ans, cancer colorectal métastatique (hépatique). Biologie : ${msi?'tumeur dMMR / MSI élevé':'RAS et BRAF non mutés (sauvages), tumeur du côlon gauche'}.`,
+              en:`${c.name}, age ${c.age}, metastatic colorectal cancer (liver). Molecular: ${msi?'dMMR / MSI-high tumour':'RAS and BRAF wild-type, left-sided colon tumour'}.`},
+    vitals:[{l:'Stade',v:'métastatique'},{l:'Profil',v:msi?'dMMR / MSI-H':'RAS/BRAF sauvage, gauche'},{l:'PS',v:c.ps}],
+    question:{fr:'Quel traitement de première ligne privilégiez-vous ?',en:'Which first-line treatment do you favour?'},
+    correct: msi
+      ? {fr:'Immunothérapie (inhibiteur de point de contrôle, ex. pembrolizumab).',en:'Immunotherapy (checkpoint inhibitor, e.g. pembrolizumab).'}
+      : {fr:'Chimiothérapie associée à un anti-EGFR (cétuximab ou panitumumab).',en:'Chemotherapy combined with an anti-EGFR (cetuximab or panitumumab).'},
+    distractors: msi
+      ? [{fr:'Chimiothérapie seule, sans immunothérapie.',en:'Chemotherapy alone, no immunotherapy.'},{fr:'Anti-EGFR en monothérapie.',en:'Single-agent anti-EGFR.'},{fr:'Radiothérapie hépatique exclusive.',en:'Liver radiotherapy alone.'}]
+      : [{fr:'Anti-EGFR alors que RAS serait muté.',en:'Anti-EGFR when RAS would be mutated.'},{fr:'Immunothérapie (tumeur MSS).',en:'Immunotherapy (MSS tumour).'},{fr:'Hormonothérapie.',en:'Endocrine therapy.'}],
+    why: msi
+      ? {fr:'Une tumeur colorectale <b>dMMR / MSI élevé</b> répond remarquablement à l\u2019<b>immunothérapie</b>, qui devient le traitement de 1re ligne.',en:'A <b>dMMR / MSI-high</b> colorectal tumour responds strikingly to <b>immunotherapy</b>, now first-line.'}
+      : {fr:'Tumeur <b>RAS/BRAF sauvage du côlon gauche</b> : l\u2019association <b>chimiothérapie + anti-EGFR</b> est indiquée. L\u2019anti-EGFR serait inefficace si RAS était muté.',en:'<b>RAS/BRAF wild-type left-sided</b> tumour: <b>chemo + anti-EGFR</b> is indicated. Anti-EGFR would be useless if RAS were mutated.'},
+    nccn:'NCCN Colorectal — métastatique, guidé par la biologie' }; } },
+
+{ id:'cervix-LA', sex:'F', age:[35,64], site:{fr:'RCP Gynécologie',en:'Gyn board'},
+  gen(c){ return {
+    vignette:{fr:`${c.name}, ${c.age} ans, carcinome épidermoïde du col utérin, tumeur de 5 cm avec extension paramétriale (stade FIGO IIIB), sans métastase à distance.`,
+              en:`${c.name}, age ${c.age}, cervical squamous carcinoma, 5 cm with parametrial extension (FIGO IIIB), no distant metastasis.`},
+    vitals:[{l:'Stade',v:'FIGO IIIB'},{l:'Histologie',v:'épidermoïde'},{l:'PS',v:c.ps}],
+    question:{fr:'Quel est le traitement de référence ?',en:'What is the standard treatment?'},
+    correct:{fr:'Radiochimiothérapie concomitante (cisplatine) suivie d\u2019une curiethérapie utéro-vaginale.',en:'Concurrent chemoradiotherapy (cisplatin) followed by uterovaginal brachytherapy.'},
+    distractors:[
+      {fr:'Hystérectomie élargie première.',en:'Upfront radical hysterectomy.'},
+      {fr:'Chimiothérapie palliative exclusive.',en:'Palliative chemotherapy alone.'},
+      {fr:'Hormonothérapie.',en:'Endocrine therapy.'}],
+    why:{fr:'Un cancer du col <b>localement avancé</b> relève d\u2019une <b>radiochimiothérapie concomitante + curiethérapie</b> : la chirurgie première n\u2019est pas indiquée à ce stade.',
+         en:'<b>Locally advanced</b> cervical cancer is treated with <b>concurrent chemoradiotherapy + brachytherapy</b>: upfront surgery is not indicated at this stage.'},
+    nccn:'NCCN Cervical — localement avancé' }; } },
+
+{ id:'hn-oro', sex:'any', age:[48,72], site:{fr:'RCP ORL',en:'Head & neck board'},
+  gen(c){ return {
+    vignette:{fr:`${c.name}, ${c.age} ans, carcinome épidermoïde de l\u2019oropharynx (amygdale) HPV/p16 positif, avec adénopathie cervicale, localement avancé, non métastatique.`,
+              en:`${c.name}, age ${c.age}, HPV/p16-positive oropharyngeal (tonsil) squamous carcinoma with cervical node, locally advanced, non-metastatic.`},
+    vitals:[{l:'Stade',v:'localement avancé'},{l:'p16 (HPV)',v:'positif'},{l:'PS',v:c.ps}],
+    question:{fr:'Quel traitement à visée curative proposez-vous ?',en:'Which curative treatment do you propose?'},
+    correct:{fr:'Radiochimiothérapie concomitante (cisplatine), ou chirurgie selon la résécabilité.',en:'Concurrent chemoradiotherapy (cisplatin), or surgery depending on resectability.'},
+    distractors:[
+      {fr:'Immunothérapie seule en première intention.',en:'First-line immunotherapy alone.'},
+      {fr:'Hormonothérapie.',en:'Endocrine therapy.'},
+      {fr:'Abstention et surveillance.',en:'Watchful waiting.'}],
+    why:{fr:'Un carcinome de l\u2019oropharynx <b>localement avancé</b> relève d\u2019une <b>radiochimiothérapie concomitante</b> (ou chirurgie) à visée curative ; l\u2019immunothérapie seule est réservée aux formes récidivantes/métastatiques.',
+         en:'<b>Locally advanced</b> oropharyngeal carcinoma is treated with <b>concurrent chemoradiotherapy</b> (or surgery) with curative intent; single-agent immunotherapy is reserved for recurrent/metastatic disease.'},
+    nccn:'NCCN Head & Neck — oropharynx' }; } },
+];
+
+const T={
+  fr:{ tagline:'Réunion de concertation', mTitle:'La RCP, en conditions réelles',
+    lede:'Des cas d\u2019oncologie courts et réalistes, générés à la volée parmi plus de 45 000 combinaisons. À chaque cas, choisissez la décision conforme aux référentiels — comme en réunion de concertation pluridisciplinaire.',
+    concept:['Vignette clinique cohérente (âge, sexe, stade, biomarqueurs).','Un QCM : une seule décision est conforme au NCCN.','Justification après chaque réponse pour apprendre.'],
+    start:'Démarrer une RCP', lb:'Classement mondial', all:'Tous les jeux',
+    disc:'Outil pédagogique. Simplifié à dessein : ne remplace pas les référentiels ni une RCP réelle. Décisions calquées sur les recommandations NCCN.',
+    score:'Score', next:'Cas suivant', good:'Décision conforme', bad:'Décision non conforme', correctWas:'Réponse conforme :',
+    done:'Séance terminée', points:'points', correct:'Bonnes réponses', acc:'Concordance NCCN', streak:'Meilleure série',
+    again:'Nouvelle RCP', back:'Retour', lbTitle:'Classement mondial', about:'À propos', footAll:'Tous les jeux', seeRes:'Voir le résultat',
+    grades:[[90,'Sénior de RCP','var(--green)'],[70,'Bon niveau','var(--primary)'],[50,'À consolider','var(--amber)'],[0,'À revoir','var(--red)']],
+    aboutTxt:'Tumor Board — QCM de décisions de RCP en oncologie, cas générés procéduralement et calqués sur les recommandations NCCN. Onco Arcade.' },
+  en:{ tagline:'Multidisciplinary board', mTitle:'The tumor board, for real',
+    lede:'Short, realistic oncology cases generated on the fly from 45,000+ combinations. For each, choose the guideline-concordant decision — just like a multidisciplinary tumor board.',
+    concept:['Coherent clinical vignette (age, sex, stage, biomarkers).','One MCQ: a single decision matches NCCN.','A rationale after every answer, to learn.'],
+    start:'Start a board', lb:'Global leaderboard', all:'All games',
+    disc:'Educational tool. Deliberately simplified: not a substitute for guidelines or a real tumor board. Decisions modelled on NCCN recommendations.',
+    score:'Score', next:'Next case', good:'Guideline-concordant', bad:'Not concordant', correctWas:'Concordant answer:',
+    done:'Session complete', points:'points', correct:'Correct answers', acc:'NCCN concordance', streak:'Best streak',
+    again:'New board', back:'Back', lbTitle:'Global leaderboard', about:'About', footAll:'All games', seeRes:'See result',
+    grades:[[90,'Board senior','var(--green)'],[70,'Solid','var(--primary)'],[50,'Keep working','var(--amber)'],[0,'Review needed','var(--red)']],
+    aboutTxt:'Tumor Board — MCQ of oncology tumor-board decisions, procedurally generated and modelled on NCCN recommendations. Onco Arcade.' }
+};
+function tr(k){ return (T[LANG]||T.fr)[k]; }
+
+const N_CASES=8;
+let queue=[], idx=0, score=0, correctCount=0, streak=0, bestStreak=0, answered=false;
+
+function buildQueue(){
+  const arch = shuffle(ARCHETYPES).slice(0, N_CASES);
+  return arch.map(a=>{
+    const sex = a.sex==='any' ? pick(['M','F']) : a.sex;
+    const ctx = { sex, name:pick(NAMES[sex]), age:rnd(a.age[0],a.age[1]), ps:pick(PS) };
+    const data = a.gen(ctx);
+    const opts = shuffle([{...data.correct, correct:true}, ...data.distractors.map(d=>({...d,correct:false}))]);
+    return { site:a.site, vignette:data.vignette, vitals:data.vitals, question:data.question,
+             opts, why:data.why, nccn:data.nccn };
+  });
+}
+
+function show(id){ ['menu','play','result','board'].forEach(s=>$(s).classList.toggle('hidden', s!==id)); }
+
+function renderMenu(){
+  $('tagline').textContent=tr('tagline');
+  $('mTitle').textContent=tr('mTitle');
+  $('mLede').textContent=tr('lede');
+  $('mConcept').innerHTML = tr('concept').map((t,i)=>`<div class="row"><span class="n">${i+1}</span><span>${t}</span></div>`).join('');
+  $('startBtn').textContent=tr('start');
+  $('lbBtn').textContent=tr('lb');
+  $('allBtn').textContent=tr('all');
+  $('mDisc').textContent=tr('disc');
+  $('footAll').textContent=tr('footAll');
+  $('aboutBtn').textContent=tr('about');
+  $('langBtn').textContent = LANG==='fr'?'EN':'FR';
+}
+
+function startGame(){
+  queue=buildQueue(); idx=0; score=0; correctCount=0; streak=0; bestStreak=0;
+  show('play'); renderCase();
+}
+
+function renderChips(){
+  $('pchips').innerHTML = queue.map((_,i)=>{
+    let cls='pchip';
+    if(i<idx) cls+= queue[i]._ok?' ok':' bad';
+    else if(i===idx) cls+=' cur';
+    return `<span class="${cls}"></span>`;
+  }).join('');
+  $('pScoreLbl').textContent=tr('score');
+  $('pScore').textContent=score;
+}
+
+function renderCase(){
+  answered=false;
+  const c=queue[idx];
+  $('caseSite').textContent=L(c.site);
+  $('caseVignette').textContent=L(c.vignette);
+  $('caseVitals').innerHTML = c.vitals.map(v=>`<span class="vital">${v.l} <b>${v.v}</b></span>`).join('');
+  $('caseQuestion').textContent=L(c.question);
+  $('feedback').classList.add('hidden');
+  const box=$('caseOpts'); box.innerHTML='';
+  c.opts.forEach((o,i)=>{
+    const b=document.createElement('button');
+    b.className='opt';
+    b.innerHTML=`<span class="key">${'ABCD'[i]}</span><span>${L(o)}</span>`;
+    b.onclick=()=>choose(i);
+    box.appendChild(b);
+  });
+  renderChips();
+}
+
+function choose(i){
+  if(answered) return; answered=true;
+  const c=queue[idx];
+  const opts=[...$('caseOpts').children];
+  const chosen=c.opts[i];
+  c._ok=!!chosen.correct;
+  opts.forEach((el,k)=>{
+    el.disabled=true;
+    if(c.opts[k].correct) el.classList.add('correct');
+    else if(k===i) el.classList.add('wrong');
+    else el.classList.add('dim');
+  });
+  if(chosen.correct){
+    correctCount++; streak++; bestStreak=Math.max(bestStreak,streak);
+    score += 100 + (streak-1)*20;
+  } else { streak=0; }
+  const fb=$('feedback');
+  fb.className='feedback '+(chosen.correct?'good':'bad');
+  $('fVerdict').textContent = chosen.correct?('\u2713 '+tr('good')):('\u2717 '+tr('bad'));
+  let why = L(c.why);
+  if(!chosen.correct){
+    const corr=c.opts.find(o=>o.correct);
+    why = `<b>${tr('correctWas')}</b> ${L(corr)}<br><br>`+why;
+  }
+  $('fWhy').innerHTML=why;
+  $('fNccn').textContent='\u25C7 '+c.nccn;
+  $('nextBtn').textContent = (idx===queue.length-1)? tr('seeRes') : tr('next');
+  renderChips();
+}
+
+function endGame(){
+  const acc = Math.round(correctCount/queue.length*100);
+  $('rTag').textContent=tr('done');
+  $('rTitle').textContent=tr('done');
+  $('rScore').textContent=score;
+  $('rScoreLbl').textContent=tr('points');
+  $('rCorrect').textContent=correctCount+'/'+queue.length;
+  $('rCorrectLbl').textContent=tr('correct');
+  $('rAcc').textContent=acc+'%';
+  $('rAccLbl').textContent=tr('acc');
+  $('rStreak').textContent=bestStreak;
+  $('rStreakLbl').textContent=tr('streak');
+  const grades=tr('grades');
+  const g = grades.find(x=>acc>=x[0]) || grades[grades.length-1];
+  const gEl=$('rGrade'); gEl.textContent=g[1];
+  gEl.style.background='color-mix(in srgb,'+g[2]+' 16%,transparent)'; gEl.style.color=g[2];
+  $('againBtn').textContent=tr('again');
+  $('lbBtn2').textContent=tr('lb');
+  show('result');
+  submitScore(score, acc);
+}
+
+function submitScore(sc, acc){
+  try{
+    fetch(API_ROOT+"/submit.php",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({game:GAME_SLUG, name:"", score:sc, ts:Date.now(), meta:"acc:"+acc})});
+  }catch(e){}
+}
+
+async function loadBoard(){
+  $('lbTitle').textContent=tr('lbTitle');
+  $('lbBack').textContent=tr('back');
+  $('lbStatus').textContent='\u2026';
+  $('lbList').innerHTML='';
+  show('board');
+  try{
+    const r=await fetch(API_ROOT+"/top.php?game="+GAME_SLUG+"&period=all&limit=50");
+    const d=await r.json();
+    const rows=(d&&d.rows)||[];
+    $('lbStatus').textContent = rows.length? '' : (LANG==='fr'?'aucun score':'no scores');
+    $('lbList').innerHTML = rows.map((x,i)=>{
+      const nm=(x.name||'\u2014'), tm=x.team?`<span class="tm">${x.team}</span>`:'';
+      return `<div class="lb-row"><span class="rk">${i+1}</span><span class="nm">${nm}</span>${tm}<span class="sc">${x.score}</span></div>`;
+    }).join('') || `<div class="muted small" style="padding:8px">${LANG==='fr'?'Aucun score pour l\u2019instant.':'No scores yet.'}</div>`;
+  }catch(e){ $('lbStatus').textContent=(LANG==='fr'?'hors ligne':'offline'); }
+}
+
+function applyTheme(t){ document.documentElement.setAttribute('data-theme',t); localStorage.setItem('oa-theme',t);
+  const m=document.querySelector('meta[name=theme-color]'); if(m) m.setAttribute('content', t==='dark'?'#070a12':'#f7f8fb'); }
+(function initTheme(){ const p=new URLSearchParams(location.search).get('theme'); const t=p||localStorage.getItem('oa-theme')||'dark'; applyTheme(t); })();
+
+$('nextBtn').onclick=()=>{ idx++; if(idx>=queue.length) endGame(); else renderCase(); };
+$('themeBtn').onclick=()=>applyTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');
+$('langBtn').onclick=()=>{ LANG=LANG==='fr'?'en':'fr'; localStorage.setItem('oa-lang',LANG); renderMenu();
+  if(!$('play').classList.contains('hidden')) renderCase();
+  if(!$('board').classList.contains('hidden')) loadBoard(); };
+$('startBtn').onclick=startGame;
+$('againBtn').onclick=startGame;
+$('lbBtn').onclick=loadBoard;
+$('lbBtn2').onclick=loadBoard;
+$('lbBack').onclick=()=>{ renderMenu(); show('menu'); };
+$('aboutBtn').onclick=()=>alert(tr('aboutTxt'));
+
+renderMenu(); show('menu');
+})();
+</script>
+<div id="oaNameAsk" style="display:none;position:fixed;inset:0;z-index:2147483000;background:rgba(3,8,18,.74);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif">
+  <div style="width:min(360px,94vw);background:#0f1626;color:#f8fafc;border:1px solid rgba(255,255,255,.14);border-radius:18px;padding:22px;box-shadow:0 30px 80px rgba(0,0,0,.55)">
+    <div id="oaNameAskTitle" style="font-size:18px;font-weight:560;letter-spacing:-.01em;margin-bottom:4px">Ton pseudo</div>
+    <div id="oaNameAskSub" style="font-size:13px;color:#a7b0c2;line-height:1.4;margin-bottom:14px">Pour enregistrer ton score au classement.</div>
+    <input id="oaNameAskInput" maxlength="18" placeholder="Dr …" autocomplete="off" spellcheck="false" style="width:100%;box-sizing:border-box;font:inherit;font-size:15px;font-weight:520;color:#f8fafc;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:12px 14px;outline:none">
+    <div id="oaTeamLabel" style="font-size:12px;color:#a7b0c2;margin:12px 0 5px">Équipe (optionnel)</div>
+    <div id="oaTeamWrap" style="position:relative">
+    <input id="oaNameAskTeam" maxlength="24" placeholder="Ton équipe…" autocomplete="off" spellcheck="false" style="width:100%;box-sizing:border-box;font:inherit;font-size:15px;font-weight:520;color:#f8fafc;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:12px 14px;outline:none">
+    <div id="oaTeamMenu" style="position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:6;background:#0f1626;border:1px solid rgba(255,255,255,.16);border-radius:12px;box-shadow:0 22px 55px rgba(0,0,0,.55);max-height:172px;overflow:auto;display:none"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
+      <button id="oaNameAskSkip" type="button" style="font:inherit;font-weight:520;color:#a7b0c2;background:none;border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:9px 14px;cursor:pointer">Passer</button>
+      <button id="oaNameAskOk" type="button" style="font:inherit;font-weight:560;color:#fff;background:linear-gradient(135deg,#2557d6,#0891b2);border:none;border-radius:999px;padding:9px 16px;cursor:pointer">Enregistrer</button>
+    </div>
+  </div>
+</div>
+<script id="oa-namegate">
+(function(){
+  var DEFAULTS = ['','—','-','dr','dr …','dr...','anonyme','anonymous','ninja','joueur','player','name','nom','pseudo'];
+  function isDefault(n){ return DEFAULTS.indexOf((n||'').trim().toLowerCase()) >= 0; }
+  function isEn(){ var l=(document.documentElement.getAttribute('lang')||document.documentElement.lang||navigator.language||'fr'); return String(l).slice(0,2).toLowerCase()==='en'; }
+  function lget(k){ try{ return localStorage.getItem(k)||''; }catch(e){ return ''; } }
+  function lset(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+
+  var teamsLoaded=false;
+  function loadTeams(){
+    if(teamsLoaded) return; teamsLoaded=true;
+    try{
+      fetch('../../api/teams.php',{cache:'no-store'}).then(function(r){return r.ok?r.json():null;}).then(function(d){
+        if(d&&d.ok&&Array.isArray(d.teams)){ window.__oaTeams=d.teams.map(function(t){return String(t);}); }
+      }).catch(function(){});
+    }catch(e){}
+  }
+
+  function oaRenderTeamMenu(){
+    var tinp=document.getElementById('oaNameAskTeam'), menu=document.getElementById('oaTeamMenu');
+    if(!tinp||!menu) return;
+    var q=(tinp.value||'').toLowerCase();
+    var list=(window.__oaTeams||[]).filter(function(t){return t && t.toLowerCase().indexOf(q)>=0;}).slice(0,8);
+    if(!list.length){ menu.style.display='none'; menu.innerHTML=''; return; }
+    menu.innerHTML=list.map(function(t){return '<div style="padding:11px 14px;font-size:14px;color:#f8fafc;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.07)">'+String(t).replace(/</g,'&lt;')+'</div>';}).join('');
+    Array.prototype.forEach.call(menu.children,function(el){
+      el.onmousedown=function(e){ e.preventDefault(); tinp.value=el.textContent; menu.style.display='none'; };
+      el.ontouchstart=function(e){ e.preventDefault(); tinp.value=el.textContent; menu.style.display='none'; };
+    });
+    menu.style.display='block';
+  }
+  function oaWireTeam(){
+    var tinp=document.getElementById('oaNameAskTeam'), menu=document.getElementById('oaTeamMenu');
+    if(!tinp||tinp._oaWired) return; tinp._oaWired=true;
+    tinp.addEventListener('focus', oaRenderTeamMenu);
+    tinp.addEventListener('input', oaRenderTeamMenu);
+    tinp.addEventListener('blur', function(){ setTimeout(function(){ if(menu) menu.style.display='none'; }, 180); });
+  }
+
+  // Renvoie une Promise<{name, team}>. Demande une seule fois (pseudo + équipe), puis réutilise.
+  window.oaEnsureIdentity = function(bodyName){
+    return new Promise(function(resolve){
+      var sName=lget('oa-name').trim(), sTeam=lget('oa-team').trim(), asked=lget('oa-id2')==='1';
+      var haveName = (bodyName && !isDefault(bodyName)) ? String(bodyName).trim() : sName;
+      if(asked && haveName){ resolve({name:haveName, team:sTeam}); return; }
+      var el=document.getElementById('oaNameAsk');
+      if(!el){ resolve({name:haveName||(isEn()?'Anonymous':'Anonyme'), team:sTeam}); return; }
+      loadTeams(); oaWireTeam();
+      var inp=document.getElementById('oaNameAskInput'), tinp=document.getElementById('oaNameAskTeam');
+      var ok=document.getElementById('oaNameAskOk'), skip=document.getElementById('oaNameAskSkip');
+      var en=isEn();
+      document.getElementById('oaNameAskTitle').textContent = en?'Your name':'Ton pseudo';
+      document.getElementById('oaNameAskSub').textContent   = en?'To save your score on the leaderboard.':'Pour enregistrer ton score au classement.';
+      document.getElementById('oaTeamLabel').textContent    = en?'Team (optional)':'Équipe (optionnel)';
+      tinp.placeholder = en?'Your team…':'Ton équipe…';
+      ok.textContent = en?'Save':'Enregistrer'; skip.textContent = en?'Skip':'Passer';
+      inp.value=haveName||''; tinp.value=sTeam||'';
+      el.style.display='flex'; setTimeout(function(){ try{(inp.value?tinp:inp).focus();}catch(e){} },60);
+      function done(nm,tm,persist){
+        el.style.display='none'; ok.onclick=null; skip.onclick=null; inp.onkeydown=null; tinp.onkeydown=null;
+        if(persist){ lset('oa-name',nm); lset('oa-team',tm); lset('oa-identity','1'); lset('oa-id2','1'); }
+        resolve({name:nm, team:tm});
+      }
+      ok.onclick=function(){ done(inp.value.trim()||(en?'Anonymous':'Anonyme'), tinp.value.trim(), true); };
+      skip.onclick=function(){ done(haveName||(en?'Anonymous':'Anonyme'), sTeam||'', false); };
+      inp.onkeydown=function(e){ if(e.key==='Enter'){ e.preventDefault(); tinp.focus(); } };
+      tinp.onkeydown=function(e){ if(e.key==='Enter'){ e.preventDefault(); ok.onclick(); } };
+    });
+  };
+  // Compat : oaAskName -> renvoie juste le pseudo
+  window.oaAskName = function(cur){ return window.oaEnsureIdentity(cur).then(function(id){ return id.name; }); };
+  /* oa-pregame-ask : demander pseudo+equipe a l'arrivee si pas encore renseigne */
+  setTimeout(function(){ try{ if(lget('oa-id2')!=='1') window.oaEnsureIdentity(''); }catch(e){} }, 500);
+
+  // Interception : tout POST vers submit.php -> injecte pseudo + équipe (demande si première fois)
+  if(window.fetch && !window.__oaNameGate){
+    window.__oaNameGate = true;
+    var orig = window.fetch;
+    window.fetch = function(url, opts){
+      try{
+        var u = (typeof url==='string') ? url : (url && url.url) || '';
+        if(u.indexOf('submit.php')>=0 && opts && opts.method && String(opts.method).toUpperCase()==='POST' && typeof opts.body==='string'){
+          var body = JSON.parse(opts.body);
+          if(body && ('name' in body)){
+            return window.oaEnsureIdentity(body.name).then(function(id){
+              body.name = id.name; body.team = id.team || '';
+              var o2 = {}; for(var k in opts){ o2[k]=opts[k]; } o2.body = JSON.stringify(body);
+              return orig.call(window, url, o2);
+            });
+          }
+        }
+      }catch(e){}
+      return orig.apply(window, arguments);
+    };
+  }
+})();
+</script>
+</body>
+</html>

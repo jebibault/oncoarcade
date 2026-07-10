@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no, viewport-fit=cover">
+<title>MLC Ninja — Auto Start</title>
+<style>
+:root{--bg:#050713;--panel:rgba(9,14,31,.78);--line:rgba(255,255,255,.14);--text:#edf8ff;--muted:#9fb2c8;--cyan:#35eaff;--green:#63ffae;--pink:#ff4fc3;--orange:#ffb04f;--red:#ff4268;--yellow:#ffe36e}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;height:100%;overflow:hidden;background:#03040a;color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial}canvas{position:fixed;inset:0;width:100%;height:100%;touch-action:none}button{font:inherit;cursor:pointer;font-weight:560;color:white;border:1px solid var(--line);border-radius:16px;padding:11px 14px;background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,.05));box-shadow:0 12px 30px rgba(0,0,0,.25),inset 0 1px rgba(255,255,255,.18)}button:active{transform:translateY(1px)}.primary{background:linear-gradient(135deg,#10d8ff,#805dff 52%,#ff4fd2)}.danger{background:linear-gradient(135deg,#ff4268,#ff9e3f)}#hud{position:fixed;inset:0;display:flex;flex-direction:column;justify-content:space-between;padding:14px;pointer-events:none}.top{display:flex;justify-content:space-between;gap:12px}.brand,.chips,.panel,.controls{pointer-events:auto;background:var(--panel);border:1px solid var(--line);backdrop-filter:blur(18px);box-shadow:0 22px 70px rgba(0,0,0,.34)}.brand{display:flex;gap:11px;align-items:center;border-radius:22px;padding:12px 14px}.logo{width:42px;height:42px;border-radius:15px;background:conic-gradient(from 120deg,var(--cyan),var(--pink),var(--yellow),var(--cyan));display:grid;place-items:center;color:#06101f;font-weight:560;box-shadow:0 0 34px rgba(53,234,255,.35)}h1{margin:0;font-size:17px;letter-spacing:-.03em}.sub{font-size:12px;color:var(--muted);margin-top:2px}.chips{border-radius:22px;padding:9px;display:grid;grid-template-columns:repeat(4,minmax(62px,1fr));gap:8px;min-width:min(620px,58vw)}.chip{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);border-radius:16px;padding:8px 10px}.chip small{display:block;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.08em}.chip b{font-size:19px}.bottom{display:flex;justify-content:space-between;align-items:flex-end;gap:14px}.panel{width:min(435px,100%);border-radius:24px;padding:13px}.row{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin:4px 0 7px}.bar{height:13px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.08);border-radius:999px;overflow:hidden;margin-bottom:8px}.fill{height:100%;width:0;background:linear-gradient(90deg,var(--cyan),var(--green));border-radius:999px;box-shadow:0 0 22px rgba(99,255,174,.45)}.red{background:linear-gradient(90deg,var(--yellow),var(--red))}.tip{font-size:12px;color:#c9d8ec;line-height:1.35}.controls{display:flex;gap:10px;align-items:center;border-radius:24px;padding:10px}#overlay{position:fixed;inset:0;display:grid;place-items:center;background:radial-gradient(circle at 50% 40%,rgba(27,37,80,.62),rgba(2,3,8,.88));backdrop-filter:blur(8px);z-index:5}.card{width:min(720px,calc(100vw - 28px));border-radius:32px;border:1px solid rgba(255,255,255,.16);background:linear-gradient(135deg,rgba(14,22,50,.94),rgba(7,8,22,.92));padding:28px;box-shadow:0 40px 120px rgba(0,0,0,.58),inset 0 0 70px rgba(53,234,255,.06)}.card h2{font-size:48px;line-height:.92;letter-spacing:-.06em;margin:0 0 10px}.card p{color:#c9d8ec;line-height:1.5;margin:0 0 18px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0}.mini{border-radius:18px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.06);padding:12px}.mini b{display:block;margin-bottom:4px}.mini span{font-size:12px;color:var(--muted)}#toast{position:fixed;left:50%;top:46%;transform:translate(-50%,-50%) scale(.92);opacity:0;z-index:4;padding:14px 20px;border-radius:19px;background:rgba(5,10,23,.76);border:1px solid rgba(255,255,255,.15);box-shadow:0 24px 90px rgba(0,0,0,.5),0 0 44px rgba(53,234,255,.18);font-size:30px;font-weight:560;letter-spacing:-.04em;pointer-events:none;transition:.18s}.show{opacity:1!important;transform:translate(-50%,-50%) scale(1)!important}.leader{max-height:120px;overflow:auto;font-size:13px}.scoreline{display:flex;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.08);padding:6px 0;color:#dceaff}@media(max-width:760px){#hud{padding:10px}.top,.bottom{flex-direction:column;align-items:stretch}.chips{width:100%;min-width:0;grid-template-columns:repeat(4,1fr)}.chip{padding:7px}.chip b{font-size:15px}.controls{justify-content:center;flex-wrap:wrap}.card{padding:20px}.card h2{font-size:38px}.grid{grid-template-columns:1fr}.brand{width:100%}}
+</style>
+<style id="oa-menu-style">
+  #overlay{ --oa-card:rgba(15,23,42,.86); --oa-text:#f8fafc; --oa-muted:#a7b0c2; --oa-stroke:rgba(255,255,255,.12);
+    --oa-primary:#7aa2ff; --oa-cyan:#22d3ee; --oa-green:#34d399; --oa-amber:#f6bd60;
+    background:radial-gradient(circle at 50% 30%, rgba(16,25,43,.92), rgba(7,10,18,.96))!important; }
+  html[data-theme="light"] #overlay{ --oa-card:rgba(255,255,255,.9); --oa-text:#111827; --oa-muted:#667085; --oa-stroke:rgba(17,24,39,.11);
+    --oa-primary:#2557d6; --oa-cyan:#0891b2; --oa-green:#047857; --oa-amber:#b45309;
+    background:radial-gradient(circle at 50% 20%, rgba(238,242,249,.95), rgba(247,248,251,.98))!important; }
+  #overlay .card{ background:var(--oa-card)!important; border:1px solid var(--oa-stroke)!important; color:var(--oa-text); max-width:min(520px,calc(100vw - 28px))!important; box-shadow:0 40px 120px rgba(0,0,0,.5)!important; }
+  #overlay .oa-ctl{ display:flex; justify-content:flex-end; gap:6px; margin-bottom:6px; }
+  #overlay .oa-ctl button{ font-size:11px; font-weight:560; color:var(--oa-muted); background:none; border:1px solid var(--oa-stroke); border-radius:999px; padding:6px 10px; box-shadow:none; }
+  #overlay .oa-eyebrow{ display:inline-flex; align-items:center; gap:8px; font-size:11px; font-weight:560; letter-spacing:.14em; text-transform:uppercase; color:var(--oa-muted); margin-bottom:6px; }
+  #overlay .oa-eyebrow i{ width:7px; height:7px; border-radius:999px; background:var(--oa-green); box-shadow:0 0 0 5px color-mix(in srgb,var(--oa-green) 14%,transparent); }
+  #overlay h2.oa-title{ background:linear-gradient(120deg,var(--oa-text),var(--oa-primary) 45%,var(--oa-cyan)); -webkit-background-clip:text; background-clip:text; color:transparent; -webkit-text-fill-color:transparent; }
+  #overlay .card p{ color:var(--oa-muted)!important; }
+  #overlay .mini{ background:color-mix(in srgb,var(--oa-text) 5%,transparent)!important; border:1px solid var(--oa-stroke)!important; }
+  #overlay .mini b{ color:var(--oa-text); } #overlay .mini span{ color:var(--oa-muted)!important; }
+  #overlay .oa-namerow{ margin:6px 0 12px; }
+  #overlay #nameInput{ width:100%; font:inherit; font-weight:520; color:var(--oa-text); background:color-mix(in srgb,var(--oa-text) 5%,transparent); border:1px solid var(--oa-stroke); border-radius:14px; padding:12px 14px; }
+  #overlay #nameInput:focus{ outline:none; border-color:var(--oa-primary); }
+  #overlay .primary{ background:linear-gradient(135deg,var(--oa-primary),color-mix(in srgb,var(--oa-primary) 66%,var(--oa-cyan)))!important; color:#fff!important; border:none!important; }
+  #overlay .leader{ margin-top:12px; border:1px solid var(--oa-stroke); border-radius:14px; padding:8px 12px; background:color-mix(in srgb,var(--oa-text) 4%,transparent); }
+  #overlay .leader b{ color:var(--oa-text); } #overlay .scoreline{ color:var(--oa-muted)!important; border-color:var(--oa-stroke)!important; }
+  #overlay .scoreline b{ color:var(--oa-text)!important; }
+  #overlay .oa-links{ display:flex; gap:9px; justify-content:center; margin-top:14px; }
+  #overlay .oa-links a, #overlay .oa-links button{ font-size:12.5px; font-weight:520; color:var(--oa-muted); text-decoration:none; background:none; border:1px solid var(--oa-stroke); border-radius:999px; padding:9px 14px; box-shadow:none; }
+  #overlay .oa-about{ margin-top:12px; text-align:left; border:1px solid var(--oa-stroke); border-radius:16px; background:color-mix(in srgb,var(--oa-text) 4%,transparent); padding:14px 16px; }
+  #overlay .oa-about p{ color:var(--oa-text)!important; font-size:13px; line-height:1.55; margin:0; }
+  #overlay .oa-sig{ display:flex; align-items:center; gap:11px; margin:12px 0; }
+  #overlay .oa-sig .mk{ width:32px; height:32px; border-radius:10px; flex:none; background:conic-gradient(from 180deg,var(--oa-primary),var(--oa-cyan),var(--oa-green),var(--oa-amber),var(--oa-primary)); }
+  #overlay .oa-sig b{ display:block; font-size:14px; color:var(--oa-text); } #overlay .oa-sig span{ display:block; font-size:12px; color:var(--oa-muted); }
+  #overlay .oa-disc{ color:var(--oa-muted)!important; font-size:12px!important; }
+</style>
+<script id="onco-arcade-query-sync">
+(function(){
+  try{
+    var p=new URLSearchParams(location.search);
+    var theme=(p.get('theme')||'').toLowerCase();
+    if(theme==='dark'||theme==='light'){document.documentElement.setAttribute('data-theme',theme);localStorage.setItem('oa-theme',theme);}
+    var lang=(p.get('lang')||'').toLowerCase();
+    if(lang==='fr'||lang==='en'){document.documentElement.lang=lang;localStorage.setItem('oa-lang',lang);localStorage.setItem('vrt_lang',lang);}
+  }catch(e){}
+})();
+</script>
+
+<style id="oa-mlc-scroll-final">
+/* Onco Arcade fix 2026-07: MLC Ninja launch reachable on mobile */
+html,body{height:auto !important; min-height:100% !important; overflow-x:hidden !important; overflow-y:auto !important; -webkit-overflow-scrolling:touch;}
+#overlay{overflow-x:hidden !important; overflow-y:auto !important; -webkit-overflow-scrolling:touch !important; backdrop-filter:none !important; place-items:start center !important; align-items:start !important; padding:calc(14px + env(safe-area-inset-top)) 14px calc(24px + env(safe-area-inset-bottom)) !important;}
+#overlay .card{margin:0 auto !important; max-height:none !important;}
+#overlay .card{max-height:none !important; overflow:visible !important; margin:0 auto !important; width:min(520px,100%) !important;}
+#overlay #playBtn{display:flex !important; width:100% !important; justify-content:center !important; min-height:48px !important; margin-top:10px !important;}
+@media(max-width:760px){
+  #overlay .card{padding:16px !important; border-radius:20px !important;}
+  #overlay .grid{grid-template-columns:1fr !important; gap:8px !important; margin:12px 0 !important;}
+  #overlay .mini{padding:10px !important; border-radius:14px !important;}
+  #overlay h2{font-size:34px !important;}
+  #overlay .leader{max-height:100px !important;}
+}
+</style>
+
+<style id="oa-mlc-mobile-launch-scroll-hardfix">
+
+/* Hard mobile fix: overlay itself scrolls; inline display:none still hides it during gameplay */
+@media (max-width: 760px), (pointer: coarse) {
+  html, body {
+    height: 100% !important;
+    overflow: hidden !important;
+  }
+  #overlay[style*="display: none"] { display: none !important; }
+  #overlay:not([style*="display: none"]) {
+    display: block !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y !important;
+    padding: calc(12px + env(safe-area-inset-top, 0px)) 10px calc(32px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+  #overlay .card {
+    width: min(520px, 100%) !important;
+    max-height: none !important;
+    margin: 0 auto 30px !important;
+    padding: 16px !important;
+    border-radius: 20px !important;
+  }
+  #overlay .card h2 {
+    font-size: clamp(30px, 12vw, 42px) !important;
+    line-height: .95 !important;
+  }
+  #overlay .card p {
+    font-size: 13px !important;
+    line-height: 1.42 !important;
+    margin-bottom: 12px !important;
+  }
+  #overlay .grid {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    margin: 12px 0 !important;
+  }
+  #overlay .mini { padding: 10px !important; border-radius: 14px !important; }
+  #overlay #nameInput,
+  #overlay #playBtn {
+    min-height: 46px !important;
+    width: 100% !important;
+  }
+  #overlay .leader { max-height: 118px !important; overflow-y: auto !important; }
+  #overlay .oa-links { flex-wrap: wrap !important; }
+}
+
+</style>
+<style id="oa-charte-conformance">
+/* Conformité charte : pas de capitales forcées, poids légers, police système sur le chrome du menu */
+.oa-eyebrow{ text-transform:none !important; letter-spacing:.01em !important; font-weight:500 !important; font-size:13px !important; }
+.oa-title{ font-weight:500 !important; }
+</style>
+<style id="oa-overlay-hidden-fix">
+/* start() masque l'overlay via .hidden ; l'id #overlay l'emporte sur la classe, d'où !important */
+#overlay.hidden{ display:none !important; }
+</style>
+<style id="oa-vh-fill">
+/* Plein ecran mobile : le fond remplit tout le viewport, y compris sous la Dynamic Island */
+html{ background:var(--bg, #070a12) !important; min-height:100dvh; }
+html[data-theme="light"]{ background:var(--bg, #f7f8fb) !important; }
+</style>
+<style id="oa-charter-weights">b,strong{font-weight:560}</style>
+<style id="oa-hide-inner-pseudo">/* pseudo demande une seule fois par l'overlay commun : saisie interne masquee */ .oa-namerow{display:none!important}</style>
+</head><body>
+<canvas id="game"></canvas>
+<div id="hud"><div class="top"><div class="brand"><div class="logo">MLC</div><div><h1>MLC Ninja</h1><div class="sub" data-i="tag">Découpe la dose. Sauve les OAR.</div></div></div><div class="chips"><div class="chip"><small data-i="score">Score</small><b id="score">0</b></div><div class="chip"><small data-i="combo">Combo</small><b id="combo">x1</b></div><div class="chip"><small data-i="wave">Vague</small><b id="wave">1</b></div><div class="chip"><small data-i="time">Temps</small><b id="time">75</b></div></div></div><div id="toast"></div><div class="bottom"><div class="panel"><div class="row"><span data-i="ptv">Couverture PTV</span><b id="ptvTxt">0%</b></div><div class="bar"><div class="fill" id="ptvBar"></div></div><div class="row"><span data-i="oar">Stress OAR</span><b id="oarTxt">0%</b></div><div class="bar"><div class="fill red" id="oarBar"></div></div><div class="tip" data-i="hint">Glisse horizontalement sur les lames. Ouvre sur la tumeur verte, ferme sur les organes roses/oranges. Espace = Focus.</div></div><div class="controls"><button class="primary" id="startBtn" data-i="start" onclick="window.startGame&&window.startGame(event)">Commencer</button><button id="focusBtn" data-i="focus">Focus</button><button id="langBtn">FR / EN</button><button class="danger" id="resetBtn">Reset</button></div></div></div>
+<div id="overlay"><div class="card"><div class="oa-ctl"><button id="langBtn2" type="button">FR / EN</button><button id="themeBtn" type="button" aria-label="Thème">☾</button></div><div class="oa-eyebrow"><i></i><span data-i="eyebrow">Onco Arcade · radiothérapie</span></div><h2 class="oa-title">MLC Ninja</h2><p data-i="intro"></p><div class="grid"><div class="mini"><b data-i="m1"></b><span data-i="m1b"></span></div><div class="mini"><b data-i="m2"></b><span data-i="m2b"></span></div><div class="mini"><b data-i="m3"></b><span data-i="m3b"></span></div><div class="mini"><b data-i="m4"></b><span data-i="m4b"></span></div></div><div class="oa-namerow"><input id="nameInput" maxlength="16" autocomplete="nickname" placeholder="Ninja"></div><button class="primary" id="playBtn" data-i="play" onclick="window.startGame&&window.startGame(event)">Commencer la première vague</button><div id="leader" class="leader"></div><div class="oa-links"><a href="../../index.html" data-i="allGames">Tous les jeux</a><button id="aboutBtn" type="button" data-i="about">À propos</button></div><div class="oa-about" id="aboutBox" hidden><p data-i="aboutLede"></p><div class="oa-sig"><span class="mk"></span><div><b>Pr Jean-Emmanuel Bibault</b><span data-i="aboutRole"></span></div></div><p class="oa-disc" data-i="aboutDisc"></p></div></div></div>
+<script>
+(()=>{'use strict';
+const API_ROOT="../../api",GAME_SLUG="mlc-ninja";
+const c=document.getElementById('game'),ctx=c.getContext('2d');let W=0,H=0,DPR=1;function resize(){DPR=Math.min(2,devicePixelRatio||1);W=innerWidth;H=innerHeight;c.width=W*DPR;c.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0)}addEventListener('resize',resize);resize();
+const $=id=>document.getElementById(id);const dict={fr:{tag:'Découpe la dose. Sauve les OAR.',score:'Score',combo:'Combo',wave:'Vague',time:'Temps',ptv:'Couverture PTV',oar:'Stress OAR',hint:'Clique/glisse sur une lame gauche ou droite : elle bouge seule. Ouvre sur la tumeur verte, ferme sur les organes roses/oranges. Espace = Focus.',start:'Commencer',focus:'Focus',intro:'Un vrai petit arcade de radiothérapie : manipule les lames MLC comme un ninja pour laisser passer les photons vers le PTV et protéger les OAR. Zéro librairie externe : le jeu fonctionne hors ligne.',m1:'Le geste',m1b:'Chaque ligne a deux lames indépendantes. Clique à gauche ou à droite puis glisse pour déplacer une seule lame.',m2:'Le score',m2b:'Couverture PTV, combos, toxicité minimale et vagues enchaînées.',m3:'Le danger',m3b:'À chaque vague, les formes et positions du PTV/OAR changent ; boss toutes les 4 vagues.',m4:'Le but',m4b:'Faire une coupe parfaite avant que le stress OAR ou le chrono ne te rattrape.',play:'Commencer la première vague',leader:'Meilleurs ninjas',perfect:'Coupe parfaite',hit:'PTV couvert',tox:'OAR touché',boss:'Boss OAR !',over:'Fin de traitement',again:'Rejouer',eyebrow:'Onco Arcade · radiothérapie',allGames:'Tous les jeux',about:'À propos',namePh:'Pseudo',aboutLede:'MLC Ninja est un mini-jeu de la collection Onco Arcade : manipule les lames du collimateur multi-lames pour couvrir la tumeur et épargner les organes à risque. Imaginé, conçu et développé par :',aboutRole:'Professeur de radiothérapie · créateur d’Onco Arcade',aboutDisc:'Jeu pédagogique et expérimental. Ce n’est pas un dispositif médical : il ne remplace pas une formation clinique et ne doit jamais servir à orienter une prise en charge réelle.'},en:{tag:'Cut the dose. Save the OARs.',score:'Score',combo:'Combo',wave:'Wave',time:'Time',ptv:'PTV coverage',oar:'OAR stress',hint:'Click/drag a left or right leaf: it moves independently. Open on the green tumour, close on pink/orange organs. Space = Focus.',start:'Play',focus:'Focus',intro:'A real radiation oncology arcade game: move the MLC leaves like a ninja to let photons reach the PTV while protecting the OARs. No external library: the game works offline.',m1:'The move',m1b:'Each row has two independent leaves. Click left or right and drag to move only that leaf.',m2:'Scoring',m2b:'PTV coverage, combos, minimal toxicity and chained waves.',m3:'Danger',m3b:'Every wave changes PTV/OAR shapes and positions; bosses appear every 4 waves.',m4:'Goal',m4b:'Make a perfect cut before OAR stress or the clock catches you.',play:'Start first wave',leader:'Best ninjas',perfect:'Perfect cut',hit:'PTV covered',tox:'OAR hit',boss:'OAR boss!',over:'Treatment over',again:'Play again',eyebrow:'Onco Arcade · radiation oncology',allGames:'All games',about:'About',namePh:'Nickname',aboutLede:'MLC Ninja is a mini-game from the Onco Arcade collection: move the multi-leaf collimator leaves to cover the tumour and spare the organs at risk. Imagined, designed and built by:',aboutRole:'Professor of radiation oncology · creator of Onco Arcade',aboutDisc:'Educational, experimental game. It is not a medical device: it does not replace clinical training and must never be used to guide real patient care.'}};let lang=(function(){try{var u=(new URLSearchParams(location.search).get('lang')||'').toLowerCase();if(u==='fr'||u==='en'){localStorage.setItem('mlcNinja.lang',u);return u;}var st=localStorage.getItem('mlcNinja.lang');if(st==='fr'||st==='en')return st;}catch(e){}return 'fr';})();function t(k){return dict[lang][k]||k}function applyLang(){document.querySelectorAll('[data-i]').forEach(e=>e.textContent=t(e.dataset.i));var ni=$('nameInput');if(ni)ni.placeholder=t('namePh');renderLeader()}$('langBtn').onclick=()=>{lang=lang==='fr'?'en':'fr';applyLang()};
+let state='menu',score=0,combo=1,wave=1,time=75,ptv=0,oar=0,focus=0,boss=false,last=performance.now(),shake=0,flash=0;const rows=10,minGap=.035;let leftLeaves=Array(rows).fill(.37),rightLeaves=Array(rows).fill(.63);let active=-1,activeSide='L',startX=0,startLeaf=0;const particles=[],sparks=[],stars=[];for(let i=0;i<170;i++)stars.push({x:Math.random(),y:Math.random(),z:Math.random(),s:Math.random()*1.5+.3});
+const anatomy={ptv:{x:.52,y:.50,rx:.11,ry:.09,r:.105,rot:0,type:'bean',pulse:0,lobes:[.10,-.05,.07]},oars:[]};
+const palettes=['#ff4fc3','#ffb04f','#ff4268','#9a78ff','#35eaff','#ffe36e'];
+function rnd(a,b){return a+Math.random()*(b-a)}
+function newShape(kind,x,y,rx,ry,rot,c){return{x,y,rx,ry,r:(rx+ry)/2,rot,type:kind,c,stress:0,lobes:[rnd(-.12,.14),rnd(-.10,.12),rnd(-.08,.10)],phase:rnd(0,6.28)}}
+function localPoint(sh,vx,vy){let dx=vx-sh.x,dy=vy-sh.y,co=Math.cos(-sh.rot),si=Math.sin(-sh.rot);return{x:(dx*co-dy*si)/(sh.rx||sh.r),y:(dx*si+dy*co)/(sh.ry||sh.r)}}
+function insideShape(sh,vx,vy){let p=localPoint(sh,vx,vy),x=p.x,y=p.y,d=Math.hypot(x,y),a=Math.atan2(y,x);if(sh.type==='capsuleH'){let qx=Math.abs(x)-.58,qy=Math.abs(y)-.52;return Math.hypot(Math.max(qx,0),Math.max(qy,0))+Math.min(Math.max(qx,qy),0)<0}if(sh.type==='capsuleV'){let qx=Math.abs(x)-.48,qy=Math.abs(y)-.66;return Math.hypot(Math.max(qx,0),Math.max(qy,0))+Math.min(Math.max(qx,qy),0)<0}if(sh.type==='triangle'){return y<.88&&y>-0.95&&Math.abs(x)<(1-y)*.62}let mod=1+(sh.lobes?.[0]||0)*Math.sin(2*a+sh.phase)+(sh.lobes?.[1]||0)*Math.cos(3*a)+(sh.lobes?.[2]||0)*Math.sin(5*a);return d<mod}
+function generateAnatomy(level=1){const ptvTypes=['bean','ellipse','capsuleH','capsuleV'];let pt=ptvTypes[level%ptvTypes.length];anatomy.ptv=newShape(pt,rnd(.43,.57),rnd(.40,.60),rnd(.085,.13),rnd(.07,.12),rnd(-.8,.8),'#63ffae');anatomy.ptv.pulse=0;let count=Math.min(6,3+Math.floor(level/3)+(level%4===0?1:0));anatomy.oars=[];let types=['ellipse','bean','capsuleH','capsuleV','triangle'];for(let i=0;i<count;i++){let ok=false,tries=0,sh;while(!ok&&tries++<160){let side=Math.random();let x=side<.25?rnd(.22,.38):side<.5?rnd(.62,.78):rnd(.27,.73);let y=side<.5?rnd(.25,.75):(Math.random()<.5?rnd(.24,.38):rnd(.62,.76));sh=newShape(types[(i+level)%types.length],x,y,rnd(.045,.075+level*.002),rnd(.042,.078+level*.002),rnd(-1.1,1.1),palettes[i%palettes.length]);let clear=Math.hypot((sh.x-anatomy.ptv.x)/(.16+sh.rx),(sh.y-anatomy.ptv.y)/(.14+sh.ry))>1.05;let oclear=anatomy.oars.every(o=>Math.hypot((sh.x-o.x)/(.09+sh.rx+o.rx),(sh.y-o.y)/(.09+sh.ry+o.ry))>0.55);ok=clear&&oclear}anatomy.oars.push(sh)} }
+generateAnatomy(1);
+function field(){const size=Math.min(W*.78,H*.68,680),x=W/2-size/2,y=H/2-size*.43;return{x,y,w:size,h:size*.82}}function mapX(v,F=field()){return F.x+v*F.w}function mapY(v,F=field()){return F.y+v*F.h}
+function rowAt(y){const F=field(),top=F.y+F.h*.13,bot=F.y+F.h*.87;return Math.max(0,Math.min(rows-1,Math.floor((y-top)/(bot-top)*rows)))}
+function setA(r,v){let open=Math.max(.025,Math.min(.30,v*.18));leftLeaves[r]=Math.max(.03,.5-open);rightLeaves[r]=Math.min(.97,.5+open)}
+function clampLeaf(r,side,v){if(side==='L')leftLeaves[r]=Math.max(.03,Math.min(rightLeaves[r]-minGap,v));else rightLeaves[r]=Math.min(.97,Math.max(leftLeaves[r]+minGap,v))}
+function pointerDown(e){const F=field();active=rowAt(e.clientY);let xNorm=(e.clientX-F.x)/F.w;let mid=(leftLeaves[active]+rightLeaves[active])/2;activeSide=xNorm<mid?'L':'R';startX=e.clientX;startLeaf=activeSide==='L'?leftLeaves[active]:rightLeaves[active];c.setPointerCapture?.(e.pointerId)}
+function pointerMove(e){if(active<0)return;const F=field();let dx=(e.clientX-startX)/F.w;clampLeaf(active,activeSide,startLeaf+dx)}
+function pointerUp(){active=-1}c.addEventListener('pointerdown',pointerDown);c.addEventListener('pointermove',pointerMove);c.addEventListener('pointerup',pointerUp);c.addEventListener('pointercancel',pointerUp);
+addEventListener('keydown',e=>{if(e.code==='Space'){toggleFocus();e.preventDefault()} if(e.key>='1'&&e.key<='9'){let r=+e.key-1;let gap=rightLeaves[r]-leftLeaves[r];setA(r,gap>.22?.18:1.05)}});function toggleFocus(){if(state!=='play')return;focus=focus>0?0:2.4;beep(250,.08,'triangle',.045)}$('focusBtn').onclick=toggleFocus;
+let ac;function beep(f=600,d=.04,type='sine',g=.035){try{ac=ac||new ((window.AudioContext||window.webkitAudioContext))();let o=ac.createOscillator(),gn=ac.createGain();o.type=type;o.frequency.value=f;gn.gain.value=g;o.connect(gn);gn.connect(ac.destination);o.start();gn.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+d);o.stop(ac.currentTime+d)}catch(e){}}function vib(ms){if(navigator.vibrate)navigator.vibrate(ms)}function toast(m,good=true){let el=$('toast');el.textContent=m;el.style.color=good?'#dcfff3':'#ffd4dc';el.classList.add('show');clearTimeout(toast.to);toast.to=setTimeout(()=>el.classList.remove('show'),650)}
+function start(){state='play';score=0;combo=1;wave=1;time=75;ptv=0;oar=0;focus=0;boss=false;shake=0;particles.length=0;sparks.length=0;generateAnatomy(1);for(let i=0;i<rows;i++)setA(i,.56+.08*Math.sin(i));anatomy.oars.forEach(o=>o.stress=0);$('overlay').classList.add('hidden');toast('MLC Ninja',true);beep(520,.06,'triangle',.05);setTimeout(()=>beep(760,.06,'triangle',.04),80);updateHud()}let lastStartTap=0;function triggerStart(e){if(e){e.preventDefault?.();e.stopPropagation?.()}let now=performance.now();if(now-lastStartTap<350)return;lastStartTap=now;start()}window.startGame=triggerStart;function bindStartButton(id){let el=$(id);if(!el)return;['click','pointerup','touchend'].forEach(type=>el.addEventListener(type,triggerStart,{passive:false}));el.onclick=triggerStart}bindStartButton('startBtn');bindStartButton('playBtn');$('resetBtn').onclick=()=>{localStorage.removeItem('mlcNinjaFixedBoard');renderLeader();toast('Reset',true)};
+function save(){var nm=(($('nameInput')&&$('nameInput').value.trim())||'').slice(0,16)||'Ninja';try{localStorage.setItem('mlcNinja.name',nm);}catch(e){}let b=[];try{b=JSON.parse(localStorage.mlcNinjaFixedBoard||'[]')}catch(e){}b.push({name:nm,score,wave,date:new Date().toLocaleDateString()});b.sort((a,b)=>b.score-a.score);localStorage.mlcNinjaFixedBoard=JSON.stringify(b.slice(0,10));if(API_ROOT){fetch(API_ROOT+'/submit.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({game:GAME_SLUG,name:nm,score:score,ts:Date.now(),meta:'w'+wave})}).then(()=>renderLeader()).catch(()=>{});}}function renderLeader(){var el=$('leader');if(!el)return;var paint=function(rows){el.innerHTML='<b>'+t('leader')+'</b>'+(rows.length?rows.map(function(x,i){return '<div class="scoreline"><span>#'+(i+1)+' — '+(x.name||'—')+' — '+(lang==='fr'?'vague':'wave')+' '+(x.wave||'')+'</span><b>'+x.score+'</b></div>';}).join(''):'<div class="scoreline"><span>—</span><b>0</b></div>');};var local=[];try{local=JSON.parse(localStorage.mlcNinjaFixedBoard||'[]')}catch(e){}if(!API_ROOT){paint(local);return;}try{fetch(API_ROOT+'/top.php?game='+GAME_SLUG+'&period=all&limit=10',{cache:'no-store'}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.ok&&Array.isArray(d.rows)){paint(d.rows.map(function(x){return {name:x.name,score:x.score,wave:String(x.meta||'').replace('w','')};}));}else paint(local);}).catch(function(){paint(local);});}catch(e){paint(local);}}
+function end(){if(state!=='play')return;state='over';save();$('overlay').classList.remove('hidden');document.querySelector('.card h2').textContent=t('over')+' — '+score;document.querySelector('.card p').textContent=(lang==='fr'?`Vague ${wave}. Couverture ${Math.round(ptv)}%, stress OAR ${Math.round(oar)}%. `:`Wave ${wave}. Coverage ${Math.round(ptv)}%, OAR stress ${Math.round(oar)}%. `)+(oar<35?'Ninja.':'À optimiser.');$('playBtn').textContent=t('again');renderLeader();beep(190,.18,'triangle',.05)}
+function nextWave(){wave++;time+=wave%4===0?18:13;ptv=Math.max(0,ptv-22);boss=wave%4===0;generateAnatomy(wave);for(let i=0;i<rows;i++)setA(i,.38+Math.random()*.50);toast(boss?t('boss'):(lang==='fr'?'Nouvelle anatomie — vague ':'New anatomy — wave ')+wave,!boss);beep(boss?170:740,.16,boss?'square':'sine',.04);if(boss)vib(45)}
+function hitTest(x,y){const F=field();let vx=(x-F.x)/F.w,vy=(y-F.y)/F.h;let hp=insideShape(anatomy.ptv,vx,vy);let ho=null;for(const oo of anatomy.oars){if(insideShape(oo,vx,vy)){ho=oo;break}}return{ptv:hp,oar:ho}}
+let beamT=0;function spawnBeam(dt){beamT-=dt;if(beamT>0)return;beamT=.038*(focus>0?2.0:1);const F=field();let r=Math.floor(Math.random()*rows),top=F.y+F.h*.13,rowH=F.h*.74/rows;let lx=F.x+leftLeaves[r]*F.w,rx=F.x+rightLeaves[r]*F.w;let x=lx+Math.random()*(rx-lx);let y=top+(r+.5+(.5-Math.random())*.72)*rowH;let h=hitTest(x,y);let good=h.ptv&&!h.oar,bad=!!h.oar;if(good){ptv=Math.min(100,ptv+1.05+combo*.035);score+=Math.round(18*combo);combo=Math.min(30,combo+.1);flash=.25;if(Math.random()<.08){toast(combo>9?t('perfect'):t('hit'),true);beep(720+combo*18,.035,'sine',.025)}}else if(bad){oar=Math.min(100,oar+2.5+(boss?1.1:0));h.oar.stress=Math.min(1,h.oar.stress+.22);score=Math.max(0,score-44);combo=1;shake=.18;toast(t('tox'),false);beep(120,.07,'sawtooth',.045);vib(20)}else combo=Math.max(1,combo-.035);particles.push({x:W/2,y:F.y-45,tx:x,ty:y,life:1,age:0,good,bad,row:r});if(good||bad)for(let i=0;i<7;i++)sparks.push({x,y,vx:(Math.random()-.5)*180,vy:(Math.random()-.5)*180,life:.45,c:bad?'#ff4268':'#63ffae'})}
+function update(dt){let mul=focus>0?.38:1;if(focus>0)focus-=dt;if(state==='play'){time-=dt*mul;spawnBeam(dt*mul);if(ptv>=95&&oar<70)nextWave();if(time<=0||oar>=100)end();anatomy.ptv.pulse+=dt*4;for(const oo of anatomy.oars){let amp=boss?.035:.009;oo.x+=Math.sin(performance.now()/560+oo.phase)*amp*dt*2;oo.y+=Math.cos(performance.now()/660+oo.phase)*amp*dt*1.5;oo.x=Math.max(.22,Math.min(.78,oo.x));oo.y=Math.max(.25,Math.min(.75,oo.y));oo.stress*=.96}}particles.forEach(p=>{p.age+=dt;p.life-=dt*1.35;p.x+=(p.tx-p.x)*dt*7;p.y+=(p.ty-p.y)*dt*7});for(let i=particles.length-1;i>=0;i--)if(particles[i].life<=0)particles.splice(i,1);sparks.forEach(s=>{s.life-=dt;s.x+=s.vx*dt;s.y+=s.vy*dt;s.vy+=120*dt});for(let i=sparks.length-1;i>=0;i--)if(sparks[i].life<=0)sparks.splice(i,1);shake=Math.max(0,shake-dt);flash=Math.max(0,flash-dt);updateHud()}
+function updateHud(){$('score').textContent=score;$('combo').textContent='x'+combo.toFixed(combo<10?1:0);$('wave').textContent=wave;$('time').textContent=Math.max(0,Math.ceil(time));$('ptvTxt').textContent=Math.round(ptv)+'%';$('oarTxt').textContent=Math.round(oar)+'%';$('ptvBar').style.width=ptv+'%';$('oarBar').style.width=oar+'%'}
+function roundRect(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath()}function glow(c,blur=18){ctx.shadowColor=c;ctx.shadowBlur=blur}function noGlow(){ctx.shadowBlur=0}
+function drawOrganic(sh,F,label,isPtv){let x=mapX(sh.x,F),y=mapY(sh.y,F),rx=sh.rx*F.w*(1+(sh.stress||0)*.18+(isPtv?Math.sin(sh.pulse)*.04:0)),ry=sh.ry*F.w*(1+(sh.stress||0)*.18);ctx.save();ctx.translate(x,y);ctx.rotate(sh.rot);ctx.beginPath();let N=72;for(let i=0;i<=N;i++){let a=i/N*Math.PI*2,mod=1+(sh.lobes?.[0]||0)*Math.sin(2*a+sh.phase)+(sh.lobes?.[1]||0)*Math.cos(3*a)+(sh.lobes?.[2]||0)*Math.sin(5*a);if(sh.type==='capsuleH')mod*=.95+.12*Math.cos(2*a);if(sh.type==='capsuleV')mod*=.95-.12*Math.cos(2*a);if(sh.type==='triangle')mod*=.80+.32*Math.max(0,Math.sin(a));let px=Math.cos(a)*rx*mod,py=Math.sin(a)*ry*mod;i?ctx.lineTo(px,py):ctx.moveTo(px,py)}ctx.closePath();let col=sh.c||'#63ffae';glow(col,isPtv?32:22+(sh.stress||0)*35);let grd=ctx.createRadialGradient(-rx*.25,-ry*.25,3,0,0,Math.max(rx,ry)*1.45);grd.addColorStop(0,isPtv?'#d6fff0':'#fff0f7');grd.addColorStop(.42,col);grd.addColorStop(1,isPtv?'rgba(99,255,174,.07)':'rgba(255,80,150,.07)');ctx.fillStyle=grd;ctx.fill();ctx.strokeStyle='rgba(255,255,255,.62)';ctx.lineWidth=isPtv?2:1.5;ctx.stroke();noGlow();if(!isPtv){ctx.fillStyle='#06101f';ctx.beginPath();ctx.arc(-rx*.27,-ry*.10,Math.min(rx,ry)*.085,0,7);ctx.arc(rx*.27,-ry*.10,Math.min(rx,ry)*.085,0,7);ctx.fill();ctx.strokeStyle='#06101f';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,ry*.18,Math.min(rx,ry)*.25,Math.PI,0,true);ctx.stroke()}ctx.restore();ctx.fillStyle=isPtv?'rgba(4,12,20,.70)':'rgba(255,255,255,.75)';ctx.font='800 12px system-ui';ctx.textAlign='center';ctx.fillText(label,x,y+4)}
+function draw(){ctx.clearRect(0,0,W,H);let sx=shake? (Math.random()-.5)*shake*22:0,sy=shake?(Math.random()-.5)*shake*22:0;ctx.save();ctx.translate(sx,sy);let g=ctx.createRadialGradient(W*.36,H*.18,20,W*.5,H*.5,Math.max(W,H)*.85);g.addColorStop(0,'#13285a');g.addColorStop(.45,'#070914');g.addColorStop(1,'#02030a');ctx.fillStyle=g;ctx.fillRect(-40,-40,W+80,H+80);for(const s of stars){ctx.globalAlpha=.28+s.z*.55;ctx.fillStyle=s.z>.75?'#ff7ce0':'#62eaff';ctx.beginPath();ctx.arc(s.x*W,(s.y*H+performance.now()*0.006*s.z)%H,s.s,0,7);ctx.fill()}ctx.globalAlpha=1;const F=field();
+// treatment couch / body
+ctx.save();ctx.translate(F.x+F.w/2,F.y+F.h/2);ctx.rotate(Math.sin(performance.now()/2800)*.025);let bg=ctx.createLinearGradient(-F.w*.43,0,F.w*.43,0);bg.addColorStop(0,'rgba(30,80,135,.38)');bg.addColorStop(.5,'rgba(66,180,210,.22)');bg.addColorStop(1,'rgba(30,80,135,.38)');ctx.fillStyle=bg;ctx.strokeStyle='rgba(116,234,255,.22)';ctx.lineWidth=2;roundRect(-F.w*.42,-F.h*.29,F.w*.84,F.h*.58,F.h*.22);ctx.fill();ctx.stroke();ctx.restore();
+// gantry rings
+ctx.save();ctx.translate(W/2,F.y+F.h*.5);ctx.rotate(performance.now()/9000);ctx.strokeStyle='rgba(53,234,255,.18)';ctx.lineWidth=6;glow('#35eaff',18);ctx.beginPath();ctx.ellipse(0,0,F.w*.48,F.h*.48,0,0,7);ctx.stroke();ctx.lineWidth=1.5;ctx.setLineDash([10,18]);ctx.strokeStyle='rgba(255,79,195,.22)';ctx.beginPath();ctx.ellipse(0,0,F.w*.56,F.h*.56,0,0,7);ctx.stroke();ctx.setLineDash([]);noGlow();ctx.restore();
+// anatomy objects
+drawOrganic(anatomy.ptv,F,'PTV',true);
+for(const oo of anatomy.oars){drawOrganic(oo,F,'OAR',false)}
+// MLC leaves
+let top=F.y+F.h*.13,rowH=F.h*.74/rows;for(let i=0;i<rows;i++){let y=top+i*rowH+rowH*.1,h=rowH*.8;let lx=F.x+leftLeaves[i]*F.w,rx=F.x+rightLeaves[i]*F.w;let grad=ctx.createLinearGradient(F.x,y,F.x+F.w,y);grad.addColorStop(0,'#dbe9ff');grad.addColorStop(.5,'#7892bd');grad.addColorStop(1,'#dbe9ff');ctx.fillStyle=grad;ctx.strokeStyle='rgba(255,255,255,.3)';ctx.lineWidth=1;let leftActive=active===i&&activeSide==='L',rightActive=active===i&&activeSide==='R';glow('#7db9ff',active===i?18:4);roundRect(F.x-28,y,lx-(F.x-28),h,8);ctx.fill();ctx.stroke();roundRect(rx,y,F.x+F.w+28-rx,h,8);ctx.fill();ctx.stroke();noGlow();ctx.fillStyle=leftActive?'rgba(255,227,110,.75)':'rgba(53,234,255,.18)';ctx.fillRect(lx-3,y,6,h);ctx.fillStyle=rightActive?'rgba(255,227,110,.75)':'rgba(53,234,255,.18)';ctx.fillRect(rx-3,y,6,h);ctx.fillStyle='rgba(99,255,174,.06)';ctx.fillRect(lx,y,Math.max(0,rx-lx),h)}
+// beam particles and path
+ctx.globalCompositeOperation='lighter';for(const p of particles){let a=Math.max(0,p.life);ctx.globalAlpha=a*.7;ctx.strokeStyle=p.bad?'#ff4268':(p.good?'#63ffae':'#42e8ff');ctx.lineWidth=p.good?2.2:1.3;glow(ctx.strokeStyle,14);ctx.beginPath();ctx.moveTo(W/2,F.y-50);ctx.quadraticCurveTo(W/2+(p.tx-W/2)*.25,p.ty*.55,p.x,p.y);ctx.stroke();ctx.globalAlpha=a;ctx.fillStyle=ctx.strokeStyle;ctx.beginPath();ctx.arc(p.x,p.y,p.good?4.2:3.2,0,7);ctx.fill()}for(const s of sparks){ctx.globalAlpha=Math.max(0,s.life/.45);ctx.fillStyle=s.c;glow(s.c,12);ctx.beginPath();ctx.arc(s.x,s.y,2.5,0,7);ctx.fill()}ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';noGlow();
+if(focus>0){ctx.fillStyle='rgba(130,100,255,.08)';ctx.fillRect(0,0,W,H);ctx.strokeStyle='rgba(255,255,255,.16)';ctx.lineWidth=1;for(let i=0;i<8;i++){ctx.beginPath();ctx.arc(W/2,H/2,80+i*55,0,7);ctx.stroke()}}if(flash>0){ctx.fillStyle=`rgba(99,255,174,${flash*.16})`;ctx.fillRect(0,0,W,H)}ctx.restore()}
+function loop(now){let dt=Math.min(.034,(now-last)/1000);last=now;update(dt);draw();requestAnimationFrame(loop)}function applyTheme(m){document.documentElement.setAttribute('data-theme',m);try{localStorage.setItem('oa-theme',m);}catch(e){}var b=$('themeBtn');if(b)b.textContent=m==='light'?'☀':'☾';}applyTheme((function(){try{return localStorage.getItem('oa-theme')}catch(e){return null}})()||'dark');try{var _n=localStorage.getItem('mlcNinja.name');if(_n&&$('nameInput'))$('nameInput').value=_n;}catch(e){}if($('themeBtn'))$('themeBtn').onclick=function(){applyTheme(document.documentElement.getAttribute('data-theme')==='light'?'dark':'light');};if($('langBtn2'))$('langBtn2').onclick=function(){lang=lang==='fr'?'en':'fr';try{localStorage.setItem('mlcNinja.lang',lang);}catch(e){}applyLang();};if($('aboutBtn'))$('aboutBtn').onclick=function(){var bx=$('aboutBox');if(bx)bx.hidden=!bx.hidden;};applyLang();updateHud();renderLeader();requestAnimationFrame(loop);
+})();
+</script><div id="oaNameAsk" style="display:none;position:fixed;inset:0;z-index:2147483000;background:rgba(3,8,18,.74);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif">
+  <div style="width:min(360px,94vw);background:#0f1626;color:#f8fafc;border:1px solid rgba(255,255,255,.14);border-radius:18px;padding:22px;box-shadow:0 30px 80px rgba(0,0,0,.55)">
+    <div id="oaNameAskTitle" style="font-size:18px;font-weight:560;letter-spacing:-.01em;margin-bottom:4px">Ton pseudo</div>
+    <div id="oaNameAskSub" style="font-size:13px;color:#a7b0c2;line-height:1.4;margin-bottom:14px">Pour enregistrer ton score au classement.</div>
+    <input id="oaNameAskInput" maxlength="18" placeholder="Dr …" autocomplete="off" spellcheck="false" style="width:100%;box-sizing:border-box;font:inherit;font-size:15px;font-weight:520;color:#f8fafc;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:12px 14px;outline:none">
+    <div id="oaTeamLabel" style="font-size:12px;color:#a7b0c2;margin:12px 0 5px">Équipe (optionnel)</div>
+    <div id="oaTeamWrap" style="position:relative">
+    <input id="oaNameAskTeam" maxlength="24" placeholder="Ton équipe…" autocomplete="off" spellcheck="false" style="width:100%;box-sizing:border-box;font:inherit;font-size:15px;font-weight:520;color:#f8fafc;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:12px 14px;outline:none">
+    <div id="oaTeamMenu" style="position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:6;background:#0f1626;border:1px solid rgba(255,255,255,.16);border-radius:12px;box-shadow:0 22px 55px rgba(0,0,0,.55);max-height:172px;overflow:auto;display:none"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
+      <button id="oaNameAskSkip" type="button" style="font:inherit;font-weight:520;color:#a7b0c2;background:none;border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:9px 14px;cursor:pointer">Passer</button>
+      <button id="oaNameAskOk" type="button" style="font:inherit;font-weight:560;color:#fff;background:linear-gradient(135deg,#2557d6,#0891b2);border:none;border-radius:999px;padding:9px 16px;cursor:pointer">Enregistrer</button>
+    </div>
+  </div>
+</div>
+<script id="oa-namegate">
+(function(){
+  var DEFAULTS = ['','—','-','dr','dr …','dr...','anonyme','anonymous','ninja','joueur','player','name','nom','pseudo'];
+  function isDefault(n){ return DEFAULTS.indexOf((n||'').trim().toLowerCase()) >= 0; }
+  function isEn(){ var l=(document.documentElement.getAttribute('lang')||document.documentElement.lang||navigator.language||'fr'); return String(l).slice(0,2).toLowerCase()==='en'; }
+  function lget(k){ try{ return localStorage.getItem(k)||''; }catch(e){ return ''; } }
+  function lset(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+
+  var teamsLoaded=false;
+  function loadTeams(){
+    if(teamsLoaded) return; teamsLoaded=true;
+    try{
+      fetch('../../api/teams.php',{cache:'no-store'}).then(function(r){return r.ok?r.json():null;}).then(function(d){
+        if(d&&d.ok&&Array.isArray(d.teams)){ window.__oaTeams=d.teams.map(function(t){return String(t);}); }
+      }).catch(function(){});
+    }catch(e){}
+  }
+
+  function oaRenderTeamMenu(){
+    var tinp=document.getElementById('oaNameAskTeam'), menu=document.getElementById('oaTeamMenu');
+    if(!tinp||!menu) return;
+    var q=(tinp.value||'').toLowerCase();
+    var list=(window.__oaTeams||[]).filter(function(t){return t && t.toLowerCase().indexOf(q)>=0;}).slice(0,8);
+    if(!list.length){ menu.style.display='none'; menu.innerHTML=''; return; }
+    menu.innerHTML=list.map(function(t){return '<div style="padding:11px 14px;font-size:14px;color:#f8fafc;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.07)">'+String(t).replace(/</g,'&lt;')+'</div>';}).join('');
+    Array.prototype.forEach.call(menu.children,function(el){
+      el.onmousedown=function(e){ e.preventDefault(); tinp.value=el.textContent; menu.style.display='none'; };
+      el.ontouchstart=function(e){ e.preventDefault(); tinp.value=el.textContent; menu.style.display='none'; };
+    });
+    menu.style.display='block';
+  }
+  function oaWireTeam(){
+    var tinp=document.getElementById('oaNameAskTeam'), menu=document.getElementById('oaTeamMenu');
+    if(!tinp||tinp._oaWired) return; tinp._oaWired=true;
+    tinp.addEventListener('focus', oaRenderTeamMenu);
+    tinp.addEventListener('input', oaRenderTeamMenu);
+    tinp.addEventListener('blur', function(){ setTimeout(function(){ if(menu) menu.style.display='none'; }, 180); });
+  }
+
+  // Renvoie une Promise<{name, team}>. Demande une seule fois (pseudo + équipe), puis réutilise.
+  window.oaEnsureIdentity = function(bodyName){
+    return new Promise(function(resolve){
+      var sName=lget('oa-name').trim(), sTeam=lget('oa-team').trim(), asked=lget('oa-id2')==='1';
+      var haveName = (bodyName && !isDefault(bodyName)) ? String(bodyName).trim() : sName;
+      if(asked && haveName){ resolve({name:haveName, team:sTeam}); return; }
+      var el=document.getElementById('oaNameAsk');
+      if(!el){ resolve({name:haveName||(isEn()?'Anonymous':'Anonyme'), team:sTeam}); return; }
+      loadTeams(); oaWireTeam();
+      var inp=document.getElementById('oaNameAskInput'), tinp=document.getElementById('oaNameAskTeam');
+      var ok=document.getElementById('oaNameAskOk'), skip=document.getElementById('oaNameAskSkip');
+      var en=isEn();
+      document.getElementById('oaNameAskTitle').textContent = en?'Your name':'Ton pseudo';
+      document.getElementById('oaNameAskSub').textContent   = en?'To save your score on the leaderboard.':'Pour enregistrer ton score au classement.';
+      document.getElementById('oaTeamLabel').textContent    = en?'Team (optional)':'Équipe (optionnel)';
+      tinp.placeholder = en?'Your team…':'Ton équipe…';
+      ok.textContent = en?'Save':'Enregistrer'; skip.textContent = en?'Skip':'Passer';
+      inp.value=haveName||''; tinp.value=sTeam||'';
+      el.style.display='flex'; setTimeout(function(){ try{(inp.value?tinp:inp).focus();}catch(e){} },60);
+      function done(nm,tm,persist){
+        el.style.display='none'; ok.onclick=null; skip.onclick=null; inp.onkeydown=null; tinp.onkeydown=null;
+        if(persist){ lset('oa-name',nm); lset('oa-team',tm); lset('oa-identity','1'); lset('oa-id2','1'); }
+        resolve({name:nm, team:tm});
+      }
+      ok.onclick=function(){ done(inp.value.trim()||(en?'Anonymous':'Anonyme'), tinp.value.trim(), true); };
+      skip.onclick=function(){ done(haveName||(en?'Anonymous':'Anonyme'), sTeam||'', false); };
+      inp.onkeydown=function(e){ if(e.key==='Enter'){ e.preventDefault(); tinp.focus(); } };
+      tinp.onkeydown=function(e){ if(e.key==='Enter'){ e.preventDefault(); ok.onclick(); } };
+    });
+  };
+  // Compat : oaAskName -> renvoie juste le pseudo
+  window.oaAskName = function(cur){ return window.oaEnsureIdentity(cur).then(function(id){ return id.name; }); };
+  /* oa-pregame-ask : demander pseudo+equipe a l'arrivee si pas encore renseigne */
+  setTimeout(function(){ try{ if(lget('oa-id2')!=='1') window.oaEnsureIdentity(''); }catch(e){} }, 500);
+
+  // Interception : tout POST vers submit.php -> injecte pseudo + équipe (demande si première fois)
+  if(window.fetch && !window.__oaNameGate){
+    window.__oaNameGate = true;
+    var orig = window.fetch;
+    window.fetch = function(url, opts){
+      try{
+        var u = (typeof url==='string') ? url : (url && url.url) || '';
+        if(u.indexOf('submit.php')>=0 && opts && opts.method && String(opts.method).toUpperCase()==='POST' && typeof opts.body==='string'){
+          var body = JSON.parse(opts.body);
+          if(body && ('name' in body)){
+            return window.oaEnsureIdentity(body.name).then(function(id){
+              body.name = id.name; body.team = id.team || '';
+              var o2 = {}; for(var k in opts){ o2[k]=opts[k]; } o2.body = JSON.stringify(body);
+              return orig.call(window, url, o2);
+            });
+          }
+        }
+      }catch(e){}
+      return orig.apply(window, arguments);
+    };
+  }
+})();
+</script>
+<button id="oaReportBtn" type="button" aria-label="Signaler un problème" style="position:fixed;left:12px;bottom:12px;z-index:2147482000;width:38px;height:38px;border-radius:50%;border:1px solid rgba(148,163,184,.35);background:rgba(15,22,38,.55);color:#e5e9f0;font-size:17px;line-height:1;cursor:pointer;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);opacity:.55;transition:opacity .15s;font-family:ui-sans-serif,system-ui,sans-serif" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.55" title="Signaler un problème">⚠</button>
+<div id="oaReport" style="display:none;position:fixed;inset:0;z-index:2147483100;background:rgba(3,8,18,.74);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif">
+  <div style="width:min(420px,94vw);background:#0f1626;color:#f8fafc;border:1px solid rgba(255,255,255,.14);border-radius:18px;padding:22px;box-shadow:0 30px 80px rgba(0,0,0,.55)">
+    <div id="oaReportTitle" style="font-size:18px;font-weight:560;letter-spacing:-.01em;margin-bottom:4px">Signaler un problème</div>
+    <div id="oaReportSub" style="font-size:13px;color:#a7b0c2;line-height:1.4;margin-bottom:14px">Décrivez le souci ; il me sera envoyé par e-mail. Aucune adresse n’est affichée.</div>
+    <div id="oaReportForm">
+      <label id="oaReportGameLbl" style="font-size:12px;color:#a7b0c2;display:block;margin-bottom:5px">Jeu concerné</label>
+      <select id="oaReportGame" style="width:100%;box-sizing:border-box;font:inherit;font-size:14px;font-weight:500;color:#f8fafc;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:11px 12px;outline:none;margin-bottom:12px"></select>
+      <label id="oaReportMsgLbl" style="font-size:12px;color:#a7b0c2;display:block;margin-bottom:5px">Description</label>
+      <textarea id="oaReportMsg" rows="5" maxlength="4000" placeholder="Que s’est-il passé ?" style="width:100%;box-sizing:border-box;font:inherit;font-size:14px;color:#f8fafc;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:11px 12px;outline:none;resize:vertical"></textarea>
+      <div id="oaReportErr" style="display:none;font-size:12px;color:#fb7185;margin-top:8px"></div>
+      <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
+        <button id="oaReportCancel" type="button" style="font:inherit;font-weight:520;color:#a7b0c2;background:none;border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:9px 14px;cursor:pointer">Annuler</button>
+        <button id="oaReportSend" type="button" style="font:inherit;font-weight:560;color:#fff;background:linear-gradient(135deg,#2557d6,#0891b2);border:none;border-radius:999px;padding:9px 16px;cursor:pointer">Envoyer</button>
+      </div>
+    </div>
+    <div id="oaReportDone" style="display:none;text-align:center;padding:10px 0">
+      <div style="font-size:34px;line-height:1">✅</div>
+      <div id="oaReportDoneTxt" style="font-size:15px;font-weight:520;margin-top:8px">Merci, c’est envoyé.</div>
+      <button id="oaReportClose2" type="button" style="margin-top:16px;font:inherit;font-weight:560;color:#fff;background:linear-gradient(135deg,#2557d6,#0891b2);border:none;border-radius:999px;padding:9px 18px;cursor:pointer">Fermer</button>
+    </div>
+  </div>
+</div>
+<script id="oa-report">
+(function(){
+  var GAMES=[['plan-please','Plan, Please'],['ok-chimio','OK Chimio'],['arc-racer','Arc Racer'],['beamlet','Beamlet'],['bragg-peak','Bragg Peak'],['fraction-hero','Fraction Hero'],['seed-master','Seed Master'],['mlc-ninja','MLC Ninja'],['tumor-board','Tumor Board'],['radcraft','RadCraft']];
+  function isEn(){ var l=(document.documentElement.getAttribute('lang')||document.documentElement.lang||navigator.language||'fr'); return String(l).slice(0,2).toLowerCase()==='en'; }
+  function API(){ return /\/games\/[^/]+\//.test(location.pathname) ? '../../api' : 'api'; }
+  function curGame(){ var m=location.pathname.match(/\/games\/([a-z0-9-]+)\//i); return m?m[1]:''; }
+  var el=document.getElementById('oaReport');
+  var sel=document.getElementById('oaReportGame'), msg=document.getElementById('oaReportMsg'), err=document.getElementById('oaReportErr');
+  var form=document.getElementById('oaReportForm'), done=document.getElementById('oaReportDone');
+  function labels(){
+    var en=isEn();
+    document.getElementById('oaReportTitle').textContent=en?'Report a problem':'Signaler un problème';
+    document.getElementById('oaReportSub').textContent=en?'Describe the issue; it will be emailed to me. No address is shown.':'Décrivez le souci ; il me sera envoyé par e-mail. Aucune adresse n’est affichée.';
+    document.getElementById('oaReportGameLbl').textContent=en?'Game concerned':'Jeu concerné';
+    document.getElementById('oaReportMsgLbl').textContent=en?'Description':'Description';
+    msg.placeholder=en?'What happened?':'Que s’est-il passé ?';
+    document.getElementById('oaReportCancel').textContent=en?'Cancel':'Annuler';
+    document.getElementById('oaReportSend').textContent=en?'Send':'Envoyer';
+    document.getElementById('oaReportDoneTxt').textContent=en?'Thanks, it’s been sent.':'Merci, c’est envoyé.';
+    document.getElementById('oaReportClose2').textContent=en?'Close':'Fermer';
+    document.getElementById('oaReportBtn').setAttribute('aria-label',en?'Report a problem':'Signaler un problème');
+    document.getElementById('oaReportBtn').title=en?'Report a problem':'Signaler un problème';
+  }
+  function fillSelect(){
+    var en=isEn(), cur=curGame();
+    var html='<option value="">'+(en?'The site / hub':'Le site / le hub')+'</option>';
+    GAMES.forEach(function(g){ html+='<option value="'+g[0]+'">'+g[1]+'</option>'; });
+    html+='<option value="other">'+(en?'Other':'Autre')+'</option>';
+    sel.innerHTML=html; sel.value=cur||'';
+  }
+  window.oaReport=function(){
+    labels(); fillSelect();
+    err.style.display='none'; msg.value=''; form.style.display='block'; done.style.display='none';
+    el.style.display='flex'; setTimeout(function(){ try{msg.focus();}catch(e){} },60);
+  };
+  function close(){ el.style.display='none'; }
+  document.getElementById('oaReportBtn').onclick=window.oaReport;
+  document.getElementById('oaReportCancel').onclick=close;
+  document.getElementById('oaReportClose2').onclick=close;
+  el.addEventListener('click',function(e){ if(e.target===el) close(); });
+  document.getElementById('oaReportSend').onclick=function(){
+    var en=isEn(); var text=(msg.value||'').trim();
+    if(text.length<3){ err.textContent=en?'Please describe the problem.':'Merci de décrire le problème.'; err.style.display='block'; return; }
+    var btn=this; btn.disabled=true; btn.style.opacity=.6;
+    fetch(API()+'/report.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({game:sel.value,message:text,page:location.href})})
+      .then(function(r){return r.ok?r.json():null;}).then(function(d){
+        btn.disabled=false; btn.style.opacity=1;
+        if(d&&d.ok){ form.style.display='none'; done.style.display='block'; }
+        else { err.textContent=en?'Sending failed. Please try again later.':'Envoi impossible. Réessayez plus tard.'; err.style.display='block'; }
+      }).catch(function(){ btn.disabled=false; btn.style.opacity=1; err.textContent=en?'Network error.':'Erreur réseau.'; err.style.display='block'; });
+  };
+})();
+</script>
+</body></html>
