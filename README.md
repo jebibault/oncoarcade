@@ -93,6 +93,6 @@ Onco Arcade is an **educational and experimental** project. The games are **not 
 
 ## Author
 
-Created by **Pr Jean-Emmanuel Bibault** — radiation oncologist & AI researcher (Hôpital Européen Georges-Pompidou, Université Paris Cité).
+Created by **Jean-Emmanuel Bibault** — physician-scientist (Hôpital Européen Georges-Pompidou, Université Paris Cité).
 
 Feedback and issues welcome via the repository's Issues tab.
