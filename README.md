@@ -29,7 +29,7 @@ Released one per week during the season (see the in-page season calendar):
 
 *(Arc Racer — a VMAT time-trial — is also included as an always-available game.)*
 
-Scenarios are grounded in **Recorad** and **NCCN** recommendations to stay realistic.
+Scenarios are grounded in recommendations to stay realistic.
 
 ---
 
